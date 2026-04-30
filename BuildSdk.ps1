@@ -65,6 +65,7 @@ $allFiles += @(
 if ($Configuration -eq "Debug")
 {
     $allFiles += @(
+        @(@("WukongMp.Api.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "Mods/WukongMp.Sdk"),
         @(@("WukongMp.Sdk.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "Mods/WukongMp.Sdk"),
         @(@("WukongMp.Coop.pdb"), "WukongMp.Coop/bin/Debug/netstandard2.0", "Mods/WukongMp.Coop"),
         @(@("WukongMp.Pvp.pdb"), "WukongMp.Pvp/bin/Debug/netstandard2.0", "Mods/WukongMp.Pvp")

@@ -330,6 +330,73 @@ internal class PatchCharacterAnimation
     }
 }
 
+[HarmonyPatch]
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class PatchSpiderMove
+{
+    [HarmonyTargetMethodHint("b1.BGU.BUAnim.BGAnimSpider", "BlueprintUpdateAnimation_Implementation")]
+    private static MethodBase TargetMethod()
+    {
+        return AccessTools.Method("b1.BGU.BUAnim.BGAnimSpider:BlueprintUpdateAnimation_Implementation");
+    }
+
+    public static void Postfix(AActor ___Owner, UBGUCharacterMovementComponent ___MovementComp)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        var ai = ___Owner as BGU_CharacterAI;
+
+        if (ai == null)
+            return;
+
+        if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(ai, out var tamerEntity))
+        {
+            var localTamer = tamerEntity.Value.GetLocalTamer();
+
+            if (!localTamer.IsTamerSynced || !tamerEntity.Value.IsTamerValid || tamerEntity.Value.Pawn == null)
+                return;
+
+            if (DI.Instance.MappedField.CanLoadFromGame<AnimationComponent>(tamerEntity.Value, out var loadAnim))
+            {
+                loadAnim.SetFromGame(AnimationComponent.Fields.Velocity, ___MovementComp.Velocity.ToVector3());
+                // loadAnim.SetFromGame(AnimationComponent.Fields.MoveAcceleration, moveComp.MoveAcceleration.ToVector3());
+            }
+            else if (DI.Instance.MappedField.CanSyncToGame<AnimationComponent>(tamerEntity.Value, out var syncAnim))
+            {
+                syncAnim.SyncToGame(static (comp, move) => { move.Velocity = comp.Velocity.ToFVector(); }, ___MovementComp);
+                // TODO: Acceleration?
+            }
+
+            if (DI.Instance.MappedField.CanLoadFromGame<TransformComponent>(tamerEntity.Value, out var loadTrans))
+            {
+                var trans = ai.GetActorTransform();
+                loadTrans.SetFromGame(TransformComponent.Fields.Position, trans.Translation.ToVector3());
+                loadTrans.SetFromGame(TransformComponent.Fields.Rotation, trans.Rotation.Rotator().ToVector3());
+            }
+            else if (DI.Instance.MappedField.CanSyncToGame<TransformComponent>(tamerEntity.Value, out var syncTrans))
+            {
+                var events = BUS_EventCollectionCS.Get(ai);
+                syncTrans.SyncToGame(static (comp, pair) =>
+                {
+                    var location = comp.Position.ToFVector();
+                    var rotation = comp.Rotation.ToFRotator();
+
+                    if (!location.Equals(pair.ai.GetActorLocation(), Constants.FloatComparisonTolerance))
+                    {
+                        pair.events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                    }
+                }, (events, ai));
+
+                if (___MovementComp.Velocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
+                {
+                    ___MovementComp.Velocity = FVector.ZeroVector;
+                }
+            }
+        }
+    }
+}
+
 [HarmonyPatch(typeof(BUS_MovementSystem), "TickForInterpolationMove")]
 [HarmonyPatchCategory(PatchCategory.Connected)]
 internal class PatchTickForInterpolationMove
