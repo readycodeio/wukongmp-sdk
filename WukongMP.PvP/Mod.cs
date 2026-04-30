@@ -14,12 +14,10 @@ namespace WukongMp.PvP;
 // ReSharper disable once UnusedType.Global
 public class Mod : ModBase
 {
-    public static Mod Instance { get; private set; } = null!;
     public override string Name => "WukongMp PvP";
     
     protected override void Initialize(IDependencyContainer services)
     {
-        Instance = this;
         Logger.LogInformation("Initializing {PluginName}", Name);
         
         services.RegisterSingleton<PvpRpc>();
@@ -35,7 +33,6 @@ public class Mod : ModBase
 
     public override void LateInit()
     {
-        Logger.LogInformation("LateInit {PluginName}", Name);
         base.LateInit();
         
         WukongApi.Input.RegisterKeyBind(Key.J, () =>

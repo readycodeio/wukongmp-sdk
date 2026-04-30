@@ -62,6 +62,7 @@ public abstract class ModBase : ICSharpModExV2
     /// </summary>
     public virtual void LateInit()
     {
+        Logger.LogInformation("LateInit: {ModName}", Name);
         _patcher = new WukongPatcher(GetType().Assembly, Name, DI.Instance.Prelude);
         if (!_patcher.IsPatched)
         {
@@ -74,6 +75,7 @@ public abstract class ModBase : ICSharpModExV2
     /// </summary>
     public virtual void DeInit()
     {
+        Logger.LogInformation("DeInit: {ModName}", Name);
         if (_patcher.IsPatched)
         {
             _patcher.Unpatch();
