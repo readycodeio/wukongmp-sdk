@@ -229,3 +229,36 @@ public class PatchOnClickOpenEquipUI
         return WukongApi.Sync.LocalMainCharacter?.IsSpectator is not true;
     }
 }
+
+[HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.IsArchiveNewGameplusReady))]
+[HarmonyPatchCategory(PatchCategory.Global)]
+public class PatchNewGamePlusArchiveCheck
+{
+    public static bool Prefix(ref bool __result)
+    {
+        __result = false;
+        return false;
+    }
+}
+
+[HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.IsNewGameplusReady))]
+[HarmonyPatchCategory(PatchCategory.Global)]
+public class PatchNewGamePlusCheck
+{
+    public static bool Prefix(ref bool __result)
+    {
+        __result = false;
+        return false;
+    }
+}
+
+[HarmonyPatch(typeof(BGW_GameArchiveMgr), nameof(BGW_GameArchiveMgr.LatestArchiveNewGameplus))]
+[HarmonyPatchCategory(PatchCategory.Global)]
+public class PatchNewGamePlusLatestCheck
+{
+    public static bool Prefix(ref bool __result)
+    {
+        __result = false;
+        return false;
+    }
+}
