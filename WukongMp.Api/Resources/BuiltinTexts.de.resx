@@ -280,4 +280,7 @@
   <data name="StallingMessage" xml:space="preserve">
     <value>Zeitspiel – HP-Verlust</value>
   </data>
+  <data name="ConnectionRejectedByServer" xml:space="preserve">
+    <value>Verbindung vom Server abgelehnt</value>
+  </data>
 </root>

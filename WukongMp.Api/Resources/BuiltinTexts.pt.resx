@@ -280,4 +280,7 @@
   <data name="StallingMessage" xml:space="preserve">
     <value>Atraso no combate – perda de HP</value>
   </data>
+  <data name="ConnectionRejectedByServer" xml:space="preserve">
+    <value>Ligação rejeitada pelo servidor</value>
+  </data>
 </root>

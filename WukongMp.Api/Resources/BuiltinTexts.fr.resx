@@ -283,4 +283,7 @@
   <data name="StallingMessage" xml:space="preserve">
     <value>Inactivité – perte de HP</value>
   </data>
+  <data name="ConnectionRejectedByServer" xml:space="preserve">
+    <value>Connexion refusée par le serveur</value>
+  </data>
 </root>
