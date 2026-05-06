@@ -123,3 +123,21 @@ internal class PatchOnLoadingScreenClose
         DI.Instance.EventBus.InvokeLoadingScreenClose();
     }
 }
+
+[HarmonyPatch]
+[HarmonyPatchCategory(PatchCategory.Global)]
+internal class PatchOnLoadingScreenOpen
+{
+    [HarmonyTargetMethodHint("b1.BGW_LoadingTipsMgr.FLoadingScreenTimeTracker", "OnLoadingScreenOpen")]
+    private static MethodBase TargetMethod()
+    {
+        var innerType = AccessTools.Inner(typeof(BGW_LoadingTipsMgr), "FLoadingScreenTimeTracker");
+        return AccessTools.Method(innerType, "OnLoadingScreenOpen");
+    }
+
+    public static void Postfix()
+    {
+        Logging.LogInformation("Loading screen open");
+        DI.Instance.EventBus.InvokeLoadingScreenOpen();
+    }
+}

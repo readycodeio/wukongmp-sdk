@@ -63,6 +63,48 @@ internal static class PatchAttrs
     }
 }
 
+[HarmonyPatch(typeof(BUS_AttrComp), "InitAttrByMaxAttr")]
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal static class PatchHpOnReset
+{
+    public static void Postfix(BUS_AttrComp __instance, BUC_AttrContainer ___AttrContainer)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return;
+
+        var owner = __instance.GetOwner() as BGUCharacterCS;
+
+        if (owner.IsNullOrDestroyed())
+        {
+            Logging.LogError("Owner is null or destroyed");
+            return;
+        }
+
+        if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var mainEntity))
+        {
+            if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(mainEntity.Value, out var loadHp))
+            {
+                loadHp.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), ___AttrContainer);
+            }
+
+            if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity.Value, out var loadMain))
+            {
+                foreach (var attrId in new[] { EBGUAttrFloat.B1Stun, EBGUAttrFloat.SkillSuperArmor, EBGUAttrFloat.BlockCollapseArmor, EBGUAttrFloat.BloodBottomNum })
+                {
+                    loadMain.LoadFromGame(MainCharacterComponent.Fields.Attributes.In<(EBGUAttrFloat, BUC_AttrContainer)>(), (attrId, ___AttrContainer));
+                }
+            }
+        }
+        else if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(owner, out var tamerEntity))
+        {
+            if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(tamerEntity.Value, out var loader))
+            {
+                loader.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), ___AttrContainer);
+            }
+        }
+    }
+}
+
 [HarmonyPatch(typeof(BUS_AttrComp), "SetFloatValue")]
 [HarmonyPatchCategory(PatchCategory.Connected)]
 internal static class PatchHp

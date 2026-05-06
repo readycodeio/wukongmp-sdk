@@ -19,6 +19,7 @@ internal sealed class WukongEventBus
     public event Action? OnBeginLoadGameplayLevel;
     public event Action? OnBeginPlayGameplayLevel;
     public event Action? OnEndPlayGameplayLevel;
+    public event Action? OnLoadingScreenOpen;
     public event Action? OnLoadingScreenClose;
     public event Action? OnLevelLoaded;
     public event Action? OnExitLevel;
@@ -55,6 +56,11 @@ internal sealed class WukongEventBus
         OnEndPlayGameplayLevel?.Invoke();
         IsGameplayLevel = false;
         return true;
+    }
+    
+    internal void InvokeLoadingScreenOpen()
+    {
+        OnLoadingScreenOpen?.Invoke();
     }
     
     internal void InvokeLoadingScreenClose()

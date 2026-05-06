@@ -397,6 +397,10 @@ internal class PatchOnUnitDead
 
         if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(ownerCharacter, out var tamerEntity))
         {
+            if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(tamerEntity.Value, out var load))
+            {
+                load.SetFromGame(HpComponent.Fields.IsDead, true);
+            }
             var payload = new UnitDeadEvent(tamerEntity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(payload, tamerEntity.Value.Entity);
             DI.Instance.GameplayEventRouter.RaiseOnUnitDead(tamerEntity.Value, attackerEntity);
