@@ -110,13 +110,6 @@ internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
     {
         get
         {
-            ref var localTamerComp = ref GetLocalTamer();
-
-            if (!localTamerComp.IsMonsterActive)
-            {
-                return null;
-            }
-
             var tamer = Tamer;
             if (tamer.IsNullOrDestroyed())
             {
