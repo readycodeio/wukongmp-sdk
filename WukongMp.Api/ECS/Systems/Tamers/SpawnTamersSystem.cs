@@ -32,7 +32,7 @@ internal sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter r
         {
             // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
             // ones spawned in PVP?)
-            if (localTamerComp.IsMonsterActive || !tamerComp.ForceKeepSpawned)
+            if ((localTamerComp.IsMonsterActive && !hpComp.IsDead) || !tamerComp.ForceKeepSpawned)
             {
                 return;
             }
@@ -76,16 +76,16 @@ internal sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter r
 
             if (attrs != null)
             {
+                if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(entity, out var loader))
+                {
+                    loader.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), attrs);
+                    loader.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), attrs);
+                }
+                
                 if (DI.Instance.ClientOwnership.OwnsEntity(entity))
                 {
-                    hpComp.HpMaxBase = attrs.GetFloatValue(EBGUAttrFloat.HpMaxBase);
-                    hpComp.Hp = attrs.GetFloatValue(EBGUAttrFloat.Hp);
                     if (configuration.SyncTamerTeamFromGameToEcs)
                         teamComp.TeamId = monster.GetTeamIDInCS();
-#if TESTING
-                    hpComp.Hp = 10;
-                    attrs.SetFloatValue(EBGUAttrFloat.Hp, hpComp.Hp);
-#endif
                 }
             }
 

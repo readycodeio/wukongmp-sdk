@@ -3,8 +3,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using b1;
+using Friflo.Engine.ECS;
 using HarmonyLib;
 using PreludeLib.Attributes;
+using ReadyM.Api.ECS.Components;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -109,6 +111,13 @@ internal class PatchTamerBeginPlayCS_Implementation
                 else
                 {
                     Logging.LogDebug("Monster already exists in ECS: {NetId}, guid: {Guid}", tamerEntity.Value.GetMeta().NetId, tamerEntity.Value.GetTamer().Guid);
+
+                    // ensure Tamer is mapped and not pointing to a destroyed instance
+                    if (tamerEntity.Value.Tamer.IsNullOrDestroyed())
+                    {
+                        tamerEntity.Value.SetTamer(__instance, true);
+                        Logging.LogDebug("Updated tamer mapping for entity {Entity} to new instance (BeginPlayCS_Implementation)", tamerEntity.Value.Entity.Id);
+                    }
                 }
             }
         }
@@ -206,6 +215,8 @@ internal class PatchTamerUnload
         if (!DI.Instance.AreaState.InRoom)
             return;
 
+        Logging.LogDebug("Tamer {Tamer} destroyed by game", __instance.TamerName);
+
         if (__instance.TamerType == ETamerType.Summoned || (__instance.TamerType == ETamerType.Spawned && DI.Instance.GameplayConfiguration.DeleteDestroyedTamersFromEcs))
         {
             var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(__instance.InstancePtr.Value);
@@ -215,6 +226,18 @@ internal class PatchTamerUnload
                 Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (DestroyTamer)", tamerEntity.Value.GetMeta().NetId);
                 DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
             }
+        }
+        else
+        {
+            // remove from any mappingcomponent pointing to it
+            DI.Instance.World.Query<MappingComponent<AActor>>().ForEachEntity((ref mapping, entity) =>
+            {
+                if (mapping.GameObject is not null && mapping.GameObject.IsNullOrDestroyed())
+                {
+                    entity.Set(new MappingComponent<AActor>(null));
+                    Logging.LogDebug("Removed destroyed actor from mapping component for entity {Entity}", entity.Id);
+                }
+            });
         }
     }
 }

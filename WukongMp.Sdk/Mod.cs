@@ -105,7 +105,6 @@ internal class Mod : ModBase
 
     public override void LateInit()
     {
-        Logger.LogInformation("LateInit WukongMP SDK");
         base.LateInit();
 
         if (!_apiPatcher.IsPatched)

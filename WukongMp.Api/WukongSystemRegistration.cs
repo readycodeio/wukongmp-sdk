@@ -1,4 +1,6 @@
-﻿using Friflo.Engine.ECS.Systems;
+﻿using System;
+using System.Linq;
+using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.DI;
 using ReadyM.Api.Multiplayer.ECS.Managers;
@@ -43,7 +45,7 @@ internal sealed class WukongSystemRegistration(
         new SpawnTamersSystem(state, gameplayEventRouter, configuration),
         new SyncTamersSystem(mappedEvent),
         new UnloadTamersSystem(),
-        new KillAlreadyDeadMonstersSystem(clientOwnership, playerState),
+        new KillAlreadyDeadMonstersSystem(clientOwnership, playerState, eventBus),
         new SyncMonsterTeamSystem(),
         new ChangeTamerTargetSystem(clientOwnership),
         new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, mappedField, logger),
@@ -69,5 +71,9 @@ internal sealed class WukongSystemRegistration(
     public void Dispose()
     {
         ecsLoop.RemoveSystem(_syncGroup);
+        foreach (var disposable in _syncGroup.ChildSystems.OfType<IDisposable>())
+        {
+            disposable.Dispose();
+        }
     }
 }
