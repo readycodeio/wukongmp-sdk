@@ -61,9 +61,9 @@ foreach ($p in $Mods)
 
 # Append non-SDK mod files
 $allFiles += @(
-    @(@("manifest.json"), "WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
-    @(@("WukongMp.Coop.dll"), "WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
-    @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Coop")
+    @(@("manifest.json"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
+    @(@("WukongMp.Coop.dll"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
+    @(@("ArchiveSaveFile.1.sav"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop")
 #    @(@("WukongMp.Pvp.dll"), "WukongMp.Pvp/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
 #    @(@("ArchiveSaveFile.0.sav"), "Deployment", "Mods/WukongMp.Pvp")
 )
