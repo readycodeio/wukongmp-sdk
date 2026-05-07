@@ -53,14 +53,14 @@ foreach ($p in $Mods)
 
 # Append non-SDK mod files
 $allFiles += @(
-    @(@("manifest.json"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
     @(@("WukongMp.Coop.dll"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
+    @(@("manifest.json"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop"),
     @(@("ArchiveSaveFile.1.sav"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop"),
     
-    @(@("manifest.json"), "WukongMp.Pvp", "Mods/WukongMp.Pvp"),
-    @(@("WukongMp.Pvp.dll"), "WukongMp.Pvp/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
-    @(@("ArchiveSaveFile.0.sav"), "Deployment", "Mods/WukongMp.Pvp"),
-    @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Pvp")
+    @(@("WukongMp.Pvp.dll"), "WukongMP-PvP-mod/WukongMp.PvP/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
+    @(@("manifest.json"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp"),
+    @(@("ArchiveSaveFile.0.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp"),
+    @(@("ArchiveSaveFile.1.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp")
 )
 
 if ($Configuration -eq "Debug")
@@ -69,7 +69,7 @@ if ($Configuration -eq "Debug")
         @(@("WukongMp.Api.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "Mods/WukongMp.Sdk"),
         @(@("WukongMp.Sdk.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "Mods/WukongMp.Sdk"),
         @(@("WukongMp.Coop.pdb"), "WukongMP-co-op-mod/WukongMp.Coop/bin/Debug/netstandard2.0", "Mods/WukongMp.Coop"),
-        @(@("WukongMp.Pvp.pdb"), "WukongMp.Pvp/bin/Debug/netstandard2.0", "Mods/WukongMp.Pvp")
+        @(@("WukongMp.Pvp.pdb"), "WukongMP-PvP-mod/WukongMp.Pvp/bin/Debug/netstandard2.0", "Mods/WukongMp.Pvp")
     )
 }
 

@@ -4,3 +4,6 @@
 [submodule "WukongMP-co-op-mod"]
 	path = WukongMP-co-op-mod
 	url = https://github.com/readycodeio/WukongMP-co-op-mod
+[submodule "WukongMP-PvP-mod"]
+	path = WukongMP-PvP-mod
+	url = https://github.com/readycodeio/WukongMP-PvP-mod.git
