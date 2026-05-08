@@ -117,13 +117,16 @@ internal class Mod : ModBase
             return;
         }
 
-        AddModSystemsToEcs();
-        SetUpRpcOffsets();
-        DebugUtils.LogUe4SsPresence();
-        DetectSdkVersion();
-        RegisterKeybinds(DI.Instance);
-        DI.Instance.StartHostedServices();
-        StartRelayClient();
+        Utils.TryRunOnGameThread(() =>
+        {
+            AddModSystemsToEcs();
+            SetUpRpcOffsets();
+            DebugUtils.LogUe4SsPresence();
+            DetectSdkVersion();
+            RegisterKeybinds(DI.Instance);
+            DI.Instance.StartHostedServices();
+            StartRelayClient();
+        });
     }
 
     private void DetectSdkVersion()
@@ -183,7 +186,7 @@ internal class Mod : ModBase
             DI.Instance.World.SystemRoot.Add(systemGroup);
         }
     }
-    
+
     private void SetUpRpcOffsets()
     {
         var rpcClasses = DI.Instance.Container.GetServiceRegistrations()
@@ -191,11 +194,11 @@ internal class Mod : ModBase
             .Where(r => r.Factory.Reuse is null or SingletonReuse)
             .OrderBy(t => t.FactoryRegistrationOrder) // ensure deterministic order
             .ToList();
-        
+
         Logger.LogDebug("Found {RpcCount} RPC classes", rpcClasses.Count);
         var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>();
         var schedulerSystem = DI.Instance.Container.Resolve<ReceiveSchedulerSystem>();
-        
+
         foreach (var rpcClassRegistration in rpcClasses)
         {
             var rpcObject = (RpcClassBase)DI.Instance.Container.Resolve(rpcClassRegistration.ServiceType, rpcClassRegistration.OptionalServiceKey);
