@@ -171,7 +171,7 @@ internal sealed class WukongWidgetManager(
         DeinitializeWidgets();
     }
 
-    private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
+    private void OnDisconnected(PlayerId playerId, Entity entity, DisconnectReason reason)
     {
         _infoMessageWidget.Value.SetVisibility(true);
         _lastDisconnectText = reason == DisconnectReason.ConnectionRejected ? BuiltinTexts.ConnectionRejectedByServer : BuiltinTexts.Disconnected;

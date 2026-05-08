@@ -224,7 +224,7 @@ internal class PatchTamerUnload
             {
                 tamerEntity.Value.SetTamer(null, false);
                 Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (DestroyTamer)", tamerEntity.Value.GetMeta().NetId);
-                DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
+                DI.Instance.Scheduler.Scheduler.Schedule(static (cb, tid) => cb.DeleteEntity(tid), tamerEntity.Value.Entity.Id);
             }
         }
         else

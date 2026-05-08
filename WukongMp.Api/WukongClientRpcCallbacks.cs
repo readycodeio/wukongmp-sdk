@@ -1,10 +1,9 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using b1;
-using BtlShare;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Api.Multiplayer.Generators;
 using ReadyM.Api.Multiplayer.Mapping.Events;
@@ -12,17 +11,13 @@ using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Api.Multiplayer.Serialization;
-using ReadyM.Relay.Client;
 using UnrealEngine.Engine;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
-using WukongMp.Api.Helpers;
 using WukongMp.Api.Mapping.Policies.Event;
 using WukongMp.Api.NameCompressors;
-using WukongMp.Api.Resources;
 using WukongMp.Api.State;
-using WukongMp.Api.UI;
 using INetworkedEntityManager = ReadyM.Api.Multiplayer.ECS.Managers.INetworkedEntityManager;
 
 // ReSharper disable InconsistentNaming
@@ -30,7 +25,7 @@ using INetworkedEntityManager = ReadyM.Api.Multiplayer.ECS.Managers.INetworkedEn
 namespace WukongMp.Api;
 
 internal partial class WukongClientRpcCallbacks(
-    IClientEcsUpdateLoop ecsLoop,
+    ReceiveSchedulerSystem scheduleSystem,
     WukongPlayerState playerState,
     WukongAreaState areaState,
     IMappedEventManager mappedEvent,
@@ -511,7 +506,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnExitPhantomRush(NetworkId netId)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, netId0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, netId0) =>
         {
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
                 return;
@@ -523,7 +518,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnAddBuff(BuffAddData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (self._playerState.GetMainCharacterById(data0.NetId) is not { } mainEntity)
                 return;
@@ -539,7 +534,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnRemoveBuff(BuffRemoveData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
@@ -557,7 +552,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnRemoveAllBuffs(BuffRemoveAllData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
@@ -573,7 +568,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnUnitStateTrigger(StateTriggerData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
@@ -590,7 +585,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnUnitSimpleState(SimpleStateData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
@@ -606,7 +601,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnTriggerFsmState(FsmStateData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
@@ -621,7 +616,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnMotionMatchingState(MotionMatchingStateData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
                 return;
@@ -636,7 +631,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnSpawnSummon(SpawnSummonData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             self._netEntity.TryGetEntityByNetworkId(data0.SummonerNetId, out var summoner);
             self._netEntity.TryGetEntityByNetworkId(data0.CatchTargetNetId, out var catchTarget);
@@ -674,7 +669,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnRequestSpawnUnits(RequestSpawnUnitsData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.RequesterId, out var entity))
             {
@@ -695,7 +690,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnBroadcastUnitSpawn(BroadcastUnitSpawnData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
             {
@@ -715,7 +710,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnPlayerTransBegin(PlayerTransBeginData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (self._playerState.GetMainCharacterById(data0.NetId) is not { } mainEntity)
                 return;
@@ -733,7 +728,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnPlayerTransEnd(PlayerTransEndData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (self._playerState.GetMainCharacterById(data0.NetId) is not { } mainEntity)
                 return;
@@ -751,7 +746,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnPlayMovieRequest(PlayerId __sender, PlayMovieRequestData requestData)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0, _) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0, _) =>
         {
             self._mappedEvent.InvokeInGameIfApplicable(new PlayMovieRequestEvent(
                 sequenceId: data0.SequenceId,
@@ -769,7 +764,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnSetTarget(SetTargetData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.CharacterNetId, out var character))
             {
@@ -804,7 +799,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnCastImmobilize(NetworkId caster)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, caster0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, caster0) =>
         {
             // NOTE(api): This extra check emulates sending event to master only
             if (!self._areaState.IsMasterClient)
@@ -823,7 +818,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnTriggerImmobilize(TriggerImmobilizeData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var caster))
             {
@@ -848,7 +843,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnRelieveImmobilize(NetworkId affected)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, affected0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, affected0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(affected0, out var affectedEntity))
             {
@@ -863,7 +858,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnPhantomRush(NetworkId netId, ESkillDirection direction)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, netId0, direction0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, netId0, direction0) =>
         {
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
                 return;
@@ -876,7 +871,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnRequestTeleport(RequestTeleportData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data.NetId, out var entity))
             {
@@ -896,7 +891,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnRebirthPlayer(NetworkId netId, bool isTeleport)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, netId0, isTeleport0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, netId0, isTeleport0) =>
         {
             self._logger.LogDebug("RebirthPlayer for main character {NetId} called", netId0);
 
@@ -913,7 +908,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnDamageNum(DamageNumParam damageNum, NetworkId netId)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, damageNum0, netId0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, damageNum0, netId0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(netId0, out var entity))
             {
@@ -937,7 +932,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnTeleportFinish(NetworkId netId)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, netId0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, netId0) =>
         {
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
             {
@@ -952,7 +947,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     public void OnMontageCallback(MontageCallbackData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
             {
@@ -975,7 +970,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnUnitDead(UnitDeadData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
             {
@@ -997,7 +992,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.GlobalOthers)]
     private void OnWaitingForSequence(SequenceWaitingData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             self._mappedEvent.InvokeInGameIfApplicable(new WaitingForSequenceEvent(
                 sequenceId: data0.SequenceID,
@@ -1009,7 +1004,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnIronBodyStart(NetworkId netId)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, netId0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, netId0) =>
         {
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
             {
@@ -1026,7 +1021,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnUnitSpawned(PlayerId __sender, NetworkId netId)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, sender, netId0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, sender, netId0) =>
         {
             self._logger.LogDebug("OnUnitSpawned called for player {PlayerId} with entity: {NetId}", sender, netId0);
 
@@ -1043,7 +1038,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.EntityOwner)]
     private void OnUnitDespawned(PlayerId __sender, NetworkId netId)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, sender, netId0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, sender, netId0) =>
         {
             // NOTE: There's an extra check so that we don't send this to ourselves
             if (sender == self._playerState.LocalPlayerId)
@@ -1064,7 +1059,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnTamerSkillInteract(TamerSkillInteractData interactData)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, interactData0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, interactData0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(interactData0.NetId, out var entity))
                 return;
@@ -1079,7 +1074,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnTriggerMagicallyChange(MagicallyChangeData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (self._playerState.GetMainCharacterById(data0.NetId) is not { } mainEntity)
             {
@@ -1102,7 +1097,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnResetMagicallyChange(NetworkId netId, EResetReason_MagicallyChange reason)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, netId0, reason0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, netId0, reason0) =>
         {
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
             {
@@ -1120,7 +1115,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnProjectileTarget(ProjectileTargetData targetData)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, targetData0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, targetData0) =>
         {
             if (self._playerState.GetMainCharacterById(targetData0.CharacterNetId) is not { } mainEntity)
             {
@@ -1146,7 +1141,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnProjectileSwitch(ProjectileSwitchData switchData)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, switchData0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, switchData0) =>
         {
             if (self._playerState.GetMainCharacterById(switchData0.NetId) is not { } mainEntity)
             {
@@ -1166,7 +1161,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnProjectileDead(ProjectileDeadData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (self._playerState.GetMainCharacterById(data0.NetId) is not { } mainEntity)
             {
@@ -1185,7 +1180,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnMagicFieldDead(string magicFieldClassName, EBGUBulletDestroyReason reason)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, magicFieldClassName0, reason0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, magicFieldClassName0, reason0) =>
         {
             self._mappedEvent.InvokeInGameIfApplicable(new MagicFieldDeadEvent(
                 className: magicFieldClassName0,
@@ -1197,7 +1192,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     void OnProjectileMoveMode(ProjectileMoveModeData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (self._playerState.GetMainCharacterById(data0.NetId) is not { } mainEntity)
             {
@@ -1217,7 +1212,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnPartyRespawn(int birthPointId, NetworkId netId)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, shrineId, netId0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, shrineId, netId0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(netId0, out var entity))
             {
@@ -1235,7 +1230,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnAfterRebirth(NetworkId netId)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, netId0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, netId0) =>
         {
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
                 return;
@@ -1247,7 +1242,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnRestAtShrine(int birthPointId, NetworkId netId)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, shrineId, netId0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, shrineId, netId0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(netId0, out var entity))
             {
@@ -1266,7 +1261,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnPartySoftlock(int birthPointId, NetworkId netId)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, shrineId, netId0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, shrineId, netId0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(netId0, out var entity))
             {
@@ -1284,7 +1279,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnStartJump(StartJumpData jumpData)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, jumpData0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, jumpData0) =>
         {
             if (self._playerState.GetMainCharacterById(jumpData0.NetId) is not { } mainEntity)
             {
@@ -1303,7 +1298,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnStopJump(NetworkId netId)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, netId0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, netId0) =>
         {
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
             {
@@ -1318,7 +1313,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnMonsterWakeUp(NetworkId netId)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, netId0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, netId0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(netId0, out var entity))
             {
@@ -1333,7 +1328,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnPlayBaneEffect(PlayBaneEffectData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
             {
@@ -1352,7 +1347,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnStopBaneEffect(StopBaneEffectData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(data0.NetId, out var entity))
             {
@@ -1370,7 +1365,7 @@ internal partial class WukongClientRpcCallbacks(
     [RpcEvent(RelayMode.AreaOfInterestOthers)]
     private void OnCastSkill(NetworkId casterNetId, int skillId, ECastSkillSourceType skillType)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, casterNetId0, skillId0, skillType0) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self, casterNetId0, skillId0, skillType0) =>
         {
             if (!self._netEntity.TryGetEntityByNetworkId(casterNetId0, out var casterEntity))
             {

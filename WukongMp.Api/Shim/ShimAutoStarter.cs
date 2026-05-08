@@ -4,18 +4,18 @@ using Friflo.Engine.ECS;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.Shim;
 using ReadyM.Relay.Client.State;
-using WukongMp.Api.Https;
 
 namespace WukongMp.Api.Shim;
 
 internal class ShimAutoStarter : IDisposable
 {
-    private readonly IClientEcsUpdateLoop _ecsLoop;
-    private readonly IClientEcsUpdateLoop _shimEcsLoop;
+    private readonly ClientEcsUpdateLoop _ecsLoop;
+    private readonly ClientEcsUpdateLoop _shimEcsLoop;
 
     private readonly ClientState _clientState;
     private readonly WukongEventBus _eventBus;
@@ -38,8 +38,8 @@ internal class ShimAutoStarter : IDisposable
     public ShimAutoStarter(
         ClientState clientState,
         WukongEventBus eventBus,
-        IClientEcsUpdateLoop ecsLoop,
-        IClientEcsUpdateLoop shimEcsLoop,
+        ClientEcsUpdateLoop ecsLoop,
+        ClientEcsUpdateLoop shimEcsLoop,
         ShimPlaybackRelayClient playbackClient,
         ShimRelayRecorder recorder,
         // IBlobClient recorderRelayBlobClient,
@@ -67,7 +67,7 @@ internal class ShimAutoStarter : IDisposable
 
         _ecsLoop.OnStarted += OnEcsStartedHandler;
         _ecsLoop.OnStopped += OnEcsStoppedHandler;
-        _ecsLoop.OnUpdateLoop += OnEcsUpdateLoopHandler;
+        // _schedulerSystem.OnUpdateLoop += OnEcsUpdateLoopHandler;
 
         _recorder.OnRecordingStarted += OnRecordingStartedHandler;
         _recorder.OnRecordingStopped += OnRecordingStoppedHandler;
@@ -85,7 +85,7 @@ internal class ShimAutoStarter : IDisposable
         _recorder.OnRecordingStopped -= OnRecordingStoppedHandler;
         _recorder.OnRecordingStarted -= OnRecordingStartedHandler;
 
-        _ecsLoop.OnUpdateLoop -= OnEcsUpdateLoopHandler;
+        // _ecsLoop.OnUpdateLoop -= OnEcsUpdateLoopHandler;
         _ecsLoop.OnStopped -= OnEcsStoppedHandler;
         _ecsLoop.OnStarted -= OnEcsStartedHandler;
 
