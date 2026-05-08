@@ -5,8 +5,6 @@ VisualStudioVersion = 17.12.35514.174
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.Api", "WukongMp.Api\WukongMp.Api.csproj", "{9168670A-C7BC-41DA-B4B4-3C2097F18A13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.PvP", "WukongMP.PvP\WukongMp.PvP.csproj", "{157986B4-C82E-407C-8C8B-83D0D4AA4C76}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Relay.Client", "readym-gameserver\src\ReadyM.Relay.Client\ReadyM.Relay.Client.csproj", "{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReadyM.Wukong.Common", "readym-gameserver\src\ReadyM.Wukong.Common\ReadyM.Wukong.Common.csproj", "{D08A4198-D19A-419C-A942-CA084974DC73}"
@@ -27,9 +25,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.Tests", "WukongMp.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.Sdk", "WukongMp.Sdk\WukongMp.Sdk.csproj", "{580B538E-C016-410A-ABB8-57F9C067C750}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.Coop", "WukongMp.Coop\WukongMp.Coop.csproj", "{9C061140-71BB-463F-8850-8864CC2B42D8}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.Swarm", "WukongMp.Swarm\WukongMp.Swarm.csproj", "{72E677BF-293C-411F-B226-BF06EDEAD8C3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.Coop", "WukongMP-co-op-mod\WukongMp.Coop\WukongMp.Coop.csproj", "{DCF495CA-76DA-47A6-AB42-9BB575747616}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.PvP", "WukongMP-PvP-mod\WukongMp.PvP\WukongMp.PvP.csproj", "{A1057C36-E528-46EF-88AE-53962039C1C6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,14 +47,6 @@ Global
 		{9168670A-C7BC-41DA-B4B4-3C2097F18A13}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9168670A-C7BC-41DA-B4B4-3C2097F18A13}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
 		{9168670A-C7BC-41DA-B4B4-3C2097F18A13}.Testing|Any CPU.Build.0 = Testing|Any CPU
-		{157986B4-C82E-407C-8C8B-83D0D4AA4C76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{157986B4-C82E-407C-8C8B-83D0D4AA4C76}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{157986B4-C82E-407C-8C8B-83D0D4AA4C76}.NoDisconnect|Any CPU.ActiveCfg = NoDisconnect|Any CPU
-		{157986B4-C82E-407C-8C8B-83D0D4AA4C76}.NoDisconnect|Any CPU.Build.0 = NoDisconnect|Any CPU
-		{157986B4-C82E-407C-8C8B-83D0D4AA4C76}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{157986B4-C82E-407C-8C8B-83D0D4AA4C76}.Release|Any CPU.Build.0 = Release|Any CPU
-		{157986B4-C82E-407C-8C8B-83D0D4AA4C76}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
-		{157986B4-C82E-407C-8C8B-83D0D4AA4C76}.Testing|Any CPU.Build.0 = Testing|Any CPU
 		{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D788D2FF-4DC8-4D31-BFF1-56B3E87DEC4E}.NoDisconnect|Any CPU.ActiveCfg = NoDisconnect|Any CPU
@@ -135,14 +127,6 @@ Global
 		{580B538E-C016-410A-ABB8-57F9C067C750}.Testing|Any CPU.Build.0 = Testing|Any CPU
 		{580B538E-C016-410A-ABB8-57F9C067C750}.NoDisconnect|Any CPU.ActiveCfg = NoDisconnect|Any CPU
 		{580B538E-C016-410A-ABB8-57F9C067C750}.NoDisconnect|Any CPU.Build.0 = NoDisconnect|Any CPU
-		{9C061140-71BB-463F-8850-8864CC2B42D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9C061140-71BB-463F-8850-8864CC2B42D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9C061140-71BB-463F-8850-8864CC2B42D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9C061140-71BB-463F-8850-8864CC2B42D8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9C061140-71BB-463F-8850-8864CC2B42D8}.Testing|Any CPU.ActiveCfg = Debug|Any CPU
-		{9C061140-71BB-463F-8850-8864CC2B42D8}.Testing|Any CPU.Build.0 = Debug|Any CPU
-		{9C061140-71BB-463F-8850-8864CC2B42D8}.NoDisconnect|Any CPU.ActiveCfg = NoDisconnect|Any CPU
-		{9C061140-71BB-463F-8850-8864CC2B42D8}.NoDisconnect|Any CPU.Build.0 = NoDisconnect|Any CPU
 		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -151,6 +135,22 @@ Global
 		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.Testing|Any CPU.Build.0 = Debug|Any CPU
 		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.NoDisconnect|Any CPU.ActiveCfg = NoDisconnect|Any CPU
 		{72E677BF-293C-411F-B226-BF06EDEAD8C3}.NoDisconnect|Any CPU.Build.0 = NoDisconnect|Any CPU
+		{DCF495CA-76DA-47A6-AB42-9BB575747616}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCF495CA-76DA-47A6-AB42-9BB575747616}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DCF495CA-76DA-47A6-AB42-9BB575747616}.NoDisconnect|Any CPU.ActiveCfg = NoDisconnect|Any CPU
+		{DCF495CA-76DA-47A6-AB42-9BB575747616}.NoDisconnect|Any CPU.Build.0 = NoDisconnect|Any CPU
+		{DCF495CA-76DA-47A6-AB42-9BB575747616}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DCF495CA-76DA-47A6-AB42-9BB575747616}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DCF495CA-76DA-47A6-AB42-9BB575747616}.Testing|Any CPU.ActiveCfg = Debug|Any CPU
+		{DCF495CA-76DA-47A6-AB42-9BB575747616}.Testing|Any CPU.Build.0 = Debug|Any CPU
+		{A1057C36-E528-46EF-88AE-53962039C1C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1057C36-E528-46EF-88AE-53962039C1C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1057C36-E528-46EF-88AE-53962039C1C6}.NoDisconnect|Any CPU.ActiveCfg = NoDisconnect|Any CPU
+		{A1057C36-E528-46EF-88AE-53962039C1C6}.NoDisconnect|Any CPU.Build.0 = NoDisconnect|Any CPU
+		{A1057C36-E528-46EF-88AE-53962039C1C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1057C36-E528-46EF-88AE-53962039C1C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1057C36-E528-46EF-88AE-53962039C1C6}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
+		{A1057C36-E528-46EF-88AE-53962039C1C6}.Testing|Any CPU.Build.0 = Testing|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

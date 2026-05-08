@@ -27,16 +27,27 @@ foreach ($p in $Mods)
 }
 
 # Append non-SDK mod files
+
 $allDevFiles += @(
-    @(@("manifest.json"), "WukongMp.Coop", "Mods/WukongMp.Coop"),
-    @(@("WukongMp.Coop.dll"), "WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
-    @(@("WukongMp.Coop.pdb"), "WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
-    @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Coop")
-#    @(@("manifest.json"), "WukongMp.Pvp", "Mods/WukongMp.Pvp"),
-#    @(@("WukongMp.Pvp.dll"), "WukongMp.Pvp/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
-#    @(@("ArchiveSaveFile.0.sav"), "Deployment", "Mods/WukongMp.Pvp"),
-#    @(@("ArchiveSaveFile.1.sav"), "Deployment", "Mods/WukongMp.Pvp")
+    @(@("WukongMp.Coop.dll"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
+    @(@("manifest.json"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop"),
+    @(@("ArchiveSaveFile.1.sav"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop"),
+
+#    @(@("WukongMp.Pvp.dll"), "WukongMP-PvP-mod/WukongMp.PvP/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
+#    @(@("manifest.json"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp"),
+#    @(@("ArchiveSaveFile.0.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp"),
+#    @(@("ArchiveSaveFile.1.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp")
 )
+
+if ($Configuration -eq "Debug")
+{
+    $allDevFiles += @(
+        @(@("WukongMp.Api.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "Mods/WukongMp.Sdk"),
+        @(@("WukongMp.Sdk.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "Mods/WukongMp.Sdk"),
+        @(@("WukongMp.Coop.pdb"), "WukongMP-co-op-mod/WukongMp.Coop/bin/Debug/netstandard2.0", "Mods/WukongMp.Coop"),
+        @(@("WukongMp.Pvp.pdb"), "WukongMP-PvP-mod/WukongMp.Pvp/bin/Debug/netstandard2.0", "Mods/WukongMp.Pvp")
+    )
+}
 
 # (Optional) de-dup identical triplets if desired
 # $allDevFiles = $allDevFiles | Sort-Object { "$($_[1])|$($_[2])|$($_[0] -join ',')" } -Unique
