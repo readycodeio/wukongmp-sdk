@@ -194,7 +194,7 @@ internal sealed class DI : IDependencyContainer
         Container.Register<JobRegistry>();
         Container.Register<ClientState>();
         Container.Register<WukongPlayerState>();
-        Container.Register<IClientEntityManager, ClientNetworkedEntityManager>();
+        Container.Register<IClientEntityManager, ClientNetworkedEntityState>();
 
         Container.Register<FreeCameraManager>();
         Container.Register<WukongWidgetManager>();
