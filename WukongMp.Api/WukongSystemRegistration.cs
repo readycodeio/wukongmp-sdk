@@ -29,7 +29,7 @@ internal sealed class WukongSystemRegistration(
     WukongPlayerPawnState playerPawnState,
     WukongPlayerModeManager modeManager,
     ClientOwnershipManager clientOwnership,
-    IClientEcsUpdateLoop ecsLoop,
+    ClientEcsUpdateLoop ecsLoop,
     IMappedEventManager mappedEvent,
     WukongEventBus eventBus,
     WukongWidgetManager widgetManager,

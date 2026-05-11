@@ -14,6 +14,7 @@ using PreludeLib.Compat;
 using ReadyM.Api;
 using ReadyM.Api.DI;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Relay.Client;
 using UnrealEngine.Engine;
@@ -116,13 +117,16 @@ internal class Mod : ModBase
             return;
         }
 
-        AddModSystemsToEcs();
-        SetUpRpcOffsets();
-        DebugUtils.LogUe4SsPresence();
-        DetectSdkVersion();
-        RegisterKeybinds(DI.Instance);
-        DI.Instance.StartHostedServices();
-        StartRelayClient();
+        Utils.TryRunOnGameThread(() =>
+        {
+            AddModSystemsToEcs();
+            SetUpRpcOffsets();
+            DebugUtils.LogUe4SsPresence();
+            DetectSdkVersion();
+            RegisterKeybinds(DI.Instance);
+            DI.Instance.StartHostedServices();
+            StartRelayClient();
+        });
     }
 
     private void DetectSdkVersion()
@@ -182,7 +186,7 @@ internal class Mod : ModBase
             DI.Instance.World.SystemRoot.Add(systemGroup);
         }
     }
-    
+
     private void SetUpRpcOffsets()
     {
         var rpcClasses = DI.Instance.Container.GetServiceRegistrations()
@@ -190,16 +194,16 @@ internal class Mod : ModBase
             .Where(r => r.Factory.Reuse is null or SingletonReuse)
             .OrderBy(t => t.FactoryRegistrationOrder) // ensure deterministic order
             .ToList();
-        
+
         Logger.LogDebug("Found {RpcCount} RPC classes", rpcClasses.Count);
         var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>();
-        var ecsLoop = DI.Instance.Container.Resolve<IClientEcsUpdateLoop>();
-        
+        var schedulerSystem = DI.Instance.Container.Resolve<ReceiveSchedulerSystem>();
+
         foreach (var rpcClassRegistration in rpcClasses)
         {
             var rpcObject = (RpcClassBase)DI.Instance.Container.Resolve(rpcClassRegistration.ServiceType, rpcClassRegistration.OptionalServiceKey);
             var offsetBefore = offsetProvider.CurrentOffset;
-            rpcObject.Initialize(offsetProvider, ecsLoop.Scheduler);
+            rpcObject.Initialize(offsetProvider, schedulerSystem.Scheduler);
             Logger.LogDebug("Registered RPC class {RpcClass} with codes {BeforeOffset}..{AfterOffset}", rpcClassRegistration.ServiceType.FullName, offsetBefore, offsetProvider.CurrentOffset - 1);
         }
     }

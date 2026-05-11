@@ -21,6 +21,7 @@ using ReadyM.Api.Multiplayer.ECS.Archetypes;
 using ReadyM.Api.Multiplayer.ECS.Jobs;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
+using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Api.Multiplayer.Mapping;
 using ReadyM.Api.Multiplayer.Mapping.Data;
 using ReadyM.Api.Multiplayer.Mapping.Events;
@@ -45,7 +46,6 @@ using WukongMp.Api.Command;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.FreeCamera;
-using WukongMp.Api.Helpers;
 using WukongMp.Api.Input;
 using WukongMp.Api.Mapping;
 using WukongMp.Api.Mapping.Policies.Event;
@@ -87,7 +87,8 @@ internal sealed class DI : IDependencyContainer
     public NetworkSessionStats NetworkSessionStats => Container.Resolve<NetworkSessionStats>();
 
     public Store World => Container.Resolve<Store>();
-    public IClientEcsUpdateLoop EcsLoop => Container.Resolve<IClientEcsUpdateLoop>();
+    public ReceiveSchedulerSystem Scheduler => Container.Resolve<ReceiveSchedulerSystem>();
+    public ClientEcsUpdateLoop EcsLoop => Container.Resolve<ClientEcsUpdateLoop>();
 
     public WukongMappingPolicyDirectory MappingPolicyDir => Container.Resolve<WukongMappingPolicyDirectory>();
     public IMappedEntityManager<AActor> MappedEntity => Container.Resolve<IMappedEntityManager<AActor>>();
@@ -157,8 +158,8 @@ internal sealed class DI : IDependencyContainer
 
         // TODO: the ArchetypeId on client and server are only in sync because the order of registration is the same
         // This is fragile and should be fixed
-        Container.Register<IArchetypeRegistration, DefaultAreaArchetypeRegistration>();
-        Container.Register<IArchetypeRegistration, DefaultPlayerArchetypeRegistration>();
+        Container.RegisterMany<DefaultAreaArchetypeRegistration>(nonPublicServiceTypes: true);
+        Container.RegisterMany<DefaultPlayerArchetypeRegistration>(nonPublicServiceTypes: true);
         Container.RegisterMany<ClientWukongArchetypeRegistration>(nonPublicServiceTypes: true);
 
         Container.Register<INetworkedComponentRegistration, DefaultNetworkedComponentRegistration>();
@@ -188,11 +189,12 @@ internal sealed class DI : IDependencyContainer
         Container.Register<ITextRelaySerializerRegistration, ClientShimTextSerializerRegistration>();
         Container.Register<TextRelaySerializer>();
 
-        Container.Register<IClientEcsUpdateLoop, ClientEcsUpdateLoop>();
+        Container.Register<ReceiveSchedulerSystem>();
+        Container.Register<ClientEcsUpdateLoop>();
         Container.Register<JobRegistry>();
         Container.Register<ClientState>();
         Container.Register<WukongPlayerState>();
-        Container.Register<IClientEntityManager, ClientNetworkedEntityManager>();
+        Container.Register<IClientEntityManager, ClientNetworkedEntityState>();
 
         Container.Register<FreeCameraManager>();
         Container.Register<WukongWidgetManager>();

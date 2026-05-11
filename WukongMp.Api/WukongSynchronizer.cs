@@ -6,6 +6,7 @@ using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.ECS.Jobs;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
+using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using WukongMp.Api.ECS.Archetypes;
@@ -21,10 +22,11 @@ internal sealed class WukongSynchronizer(
     JobRegistry jobRegistry,
     INetworkedComponentRegistry netComponentRegistry,
     IRelayClient relayClient,
-    IClientEcsUpdateLoop ecsLoop,
+    ReceiveSchedulerSystem schedulerSystem,
+    ClientEcsUpdateLoop ecsLoop,
     ILogger logger
 )
-    : ClientNetworkedStateSynchronizer(netManager, state, jobRegistry, netComponentRegistry, relayClient, ecsLoop, clientOwnership, logger)
+    : ClientNetworkedStateSynchronizer(netManager, state, jobRegistry, netComponentRegistry, relayClient, schedulerSystem, ecsLoop, clientOwnership, logger)
 {
     protected override void OnOwnershipChanged(Entity entity)
     {

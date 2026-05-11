@@ -4,11 +4,13 @@ using ReadyM.Api.DI;
 using ReadyM.Api.Helpers;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Api.Multiplayer.Generators;
 using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Api.Multiplayer.Serialization;
 using ReadyM.Relay.Client;
+using ReadyM.Relay.Client.State;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Resources;
@@ -20,7 +22,7 @@ namespace WukongMp.Api.Chat;
 internal partial class WukongChatter(
     WukongPlayerState playerState,
     WukongWidgetManager widgetManager,
-    IClientEcsUpdateLoop ecsLoop,
+    ReceiveSchedulerSystem scheduleSystem,
     ILogger logger,
     IRpcClient rpcClient,
     IRelaySerializer serializer
@@ -31,7 +33,7 @@ internal partial class WukongChatter(
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnChatMessage(ChatMessage message)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, message0) => { self.OnGetMessage(message0); }, this, message);
+        scheduleSystem.Scheduler.Schedule(static (_, self, message0) => { self.OnGetMessage(message0); }, this, message);
     }
 
     public void ProcessMessage(string message)

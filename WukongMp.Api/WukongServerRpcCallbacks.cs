@@ -6,6 +6,7 @@ using ReadyM.Api.Helpers;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Relay.Client;
@@ -20,7 +21,7 @@ using WukongMp.Api.UI;
 namespace WukongMp.Api;
 
 internal partial class WukongServerRpcCallbacks(
-    IClientEcsUpdateLoop ecsLoop,
+    ReceiveSchedulerSystem schedulerSystem,
     IMappedEventManager mappedEvent,
     IRelayClient relayClient,
     NetworkSessionStats sessionStats,
@@ -55,7 +56,7 @@ internal partial class WukongServerRpcCallbacks(
     [ServerRpcEvent("SkipMovie")]
     private void OnSkipMovie(SkipMovieData data)
     {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        schedulerSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
             self.MappedEvent.InvokeInGameIfApplicable(
                 new SkipMovieEvent(
@@ -85,7 +86,7 @@ internal partial class WukongServerRpcCallbacks(
     private void OnBeguilingChant(byte stateRaw)
     {
         var state = (BeguilingChantState)stateRaw;
-        ecsLoop.Scheduler.Schedule(static (_, self, state0) =>
+        schedulerSystem.Scheduler.Schedule(static (_, self, state0) =>
         {
             self.MappedEvent.InvokeInGameIfApplicable(new BeguilingChantEvent(
                 state: state0
