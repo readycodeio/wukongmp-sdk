@@ -67,10 +67,10 @@ public sealed class SpawnEnemySwarmSystem : ModSystemBase
 
     private static Vector3 GetNthPointOnCircle(Vector3 center, int i, int n)
     {
-        var angle = (float)i / n * 2 * MathF.PI;
+        var angle = (double)i / n * 2 * Math.PI;
         return new Vector3(
-            center.X + MathF.Cos(angle) * SpawnRadius,
-            center.Y + MathF.Sin(angle) * SpawnRadius,
+            center.X + (float)Math.Cos(angle) * SpawnRadius,
+            center.Y + (float)Math.Sin(angle) * SpawnRadius,
             center.Z
         );
     }
