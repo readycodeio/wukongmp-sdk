@@ -17,7 +17,7 @@ public static class USharpExtensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool Equals(this float a, float b, float tolerance)
     {
-        return MathF.Abs(a - b) < tolerance;
+        return Math.Abs(a - b) < tolerance;
     }
 
     public static bool IsNullOrDestroyed([NotNullWhen(false)] this UObject? obj)
