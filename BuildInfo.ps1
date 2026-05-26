@@ -57,6 +57,8 @@ $overridesFilesDebug = @(
 
 $binaryFiles = @(
     "cacert.pem"
+    "CoreMp.pak"
+    "WukongMp.pak"
 )
 
 # Culture folders (satellite assemblies)
