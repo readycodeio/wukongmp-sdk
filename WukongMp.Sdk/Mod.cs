@@ -197,7 +197,7 @@ internal class Mod : ModBase
 
         Logger.LogDebug("Found {RpcCount} RPC classes", rpcClasses.Count);
         var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>();
-        var schedulerSystem = DI.Instance.Container.Resolve<ReceiveSchedulerSystem>();
+        var schedulerSystem = DI.Instance.Container.Resolve<ReceiveSystem>();
 
         foreach (var rpcClassRegistration in rpcClasses)
         {

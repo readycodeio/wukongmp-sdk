@@ -16,18 +16,18 @@ using ReadyM.Api.DI;
 using ReadyM.Api.ECS.Registry;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Helpers;
+using ReadyM.Api.Mapping;
+using ReadyM.Api.Mapping.Data;
+using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Mapping.Policies.Data;
+using ReadyM.Api.Mapping.Policies.Event;
+using ReadyM.Api.Mapping.Policies.Event.Common;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Archetypes;
 using ReadyM.Api.Multiplayer.ECS.Jobs;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
 using ReadyM.Api.Multiplayer.ECS.Systems;
-using ReadyM.Api.Multiplayer.Mapping;
-using ReadyM.Api.Multiplayer.Mapping.Data;
-using ReadyM.Api.Multiplayer.Mapping.Events;
-using ReadyM.Api.Multiplayer.Mapping.Policies.Data;
-using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
-using ReadyM.Api.Multiplayer.Mapping.Policies.Event.Common;
 using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Api.Multiplayer.Serialization;
 using ReadyM.Api.State;
@@ -87,7 +87,7 @@ internal sealed class DI : IDependencyContainer
     public NetworkSessionStats NetworkSessionStats => Container.Resolve<NetworkSessionStats>();
 
     public Store World => Container.Resolve<Store>();
-    public ReceiveSchedulerSystem Scheduler => Container.Resolve<ReceiveSchedulerSystem>();
+    public ReceiveSystem Scheduler => Container.Resolve<ReceiveSystem>();
     public ClientEcsUpdateLoop EcsLoop => Container.Resolve<ClientEcsUpdateLoop>();
 
     public WukongMappingPolicyDirectory MappingPolicyDir => Container.Resolve<WukongMappingPolicyDirectory>();
@@ -189,7 +189,7 @@ internal sealed class DI : IDependencyContainer
         Container.Register<ITextRelaySerializerRegistration, ClientShimTextSerializerRegistration>();
         Container.Register<TextRelaySerializer>();
 
-        Container.Register<ReceiveSchedulerSystem>();
+        Container.Register<ReceiveSystem>();
         Container.Register<ClientEcsUpdateLoop>();
         Container.Register<JobRegistry>();
         Container.Register<ClientState>();

@@ -2,12 +2,12 @@
 using b1;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Values;
 using ReadyM.Api.Multiplayer.Generators;
-using ReadyM.Api.Multiplayer.Mapping.Events;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Api.Multiplayer.Serialization;
@@ -25,7 +25,7 @@ using INetworkedEntityManager = ReadyM.Api.Multiplayer.ECS.Managers.INetworkedEn
 namespace WukongMp.Api;
 
 internal partial class WukongClientRpcCallbacks(
-    ReceiveSchedulerSystem scheduleSystem,
+    ReceiveSystem scheduleSystem,
     WukongPlayerState playerState,
     WukongAreaState areaState,
     IMappedEventManager mappedEvent,

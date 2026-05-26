@@ -1,15 +1,12 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.DI;
-using ReadyM.Api.Helpers;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Systems;
-using ReadyM.Api.Multiplayer.Mapping.Events;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
-using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.Utilities;
 using ReadyM.Wukong.Common.DTO;
 using ReadyM.Wukong.Common.ECS.Values;
@@ -21,7 +18,7 @@ using WukongMp.Api.UI;
 namespace WukongMp.Api;
 
 internal partial class WukongServerRpcCallbacks(
-    ReceiveSchedulerSystem schedulerSystem,
+    ReceiveSystem schedulerSystem,
     IMappedEventManager mappedEvent,
     IRelayClient relayClient,
     NetworkSessionStats sessionStats,

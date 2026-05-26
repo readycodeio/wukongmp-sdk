@@ -6,33 +6,36 @@ $zipName = "WukongMp"
 
 # Shared (variant-agnostic) file name lists
 $modFilesCore = @(
-    "manifest.json",
-    "WukongMp.Api.dll",
-    "WukongMp.Sdk.dll",
-    "ReadyM.Api.dll",
-    "ReadyM.Api.Multiplayer.dll",
-    "ReadyM.Relay.Client.dll",
-    "ReadyM.Wukong.Common.dll",
-    "Friflo.Engine.ECS.dll",
-    "Friflo.Engine.ECS.Boost.dll",
-    "Friflo.Json.Burst.dll",
-    "Friflo.Json.Fliox.dll",
-    "Friflo.Json.Fliox.Annotation.dll",
-    "JetBrains.Annotations.dll",
-    "Microsoft.Bcl.Memory.dll",
-    "Microsoft.Bcl.Numerics.dll",
-    "System.Reflection.Emit.dll",
-    "System.ComponentModel.Annotations.dll",
-    "Nito.AsyncEx.Context.dll",
-    "Nito.AsyncEx.Tasks.dll",
-    "Nito.Disposables.dll",
-    "Superpower.dll",
-    "DryIoc.dll",
-    "System.Reflection.Emit.dll",
-    "System.Reflection.Emit.ILGeneration.dll",
-    "BouncyCastle.Cryptography.dll",
-    "HttpMachine.dll",
+    "manifest.json"
+    "BouncyCastle.Cryptography.dll"
+    "DryIoc.dll"
+    "Friflo.Engine.ECS.Boost.dll"
+    "Friflo.Engine.ECS.dll"
+    "Friflo.Json.Burst.dll"
+    "Friflo.Json.Fliox.Annotation.dll"
+    "Friflo.Json.Fliox.dll"
+    "HttpMachine.dll"
     "IHttpMachine.dll"
+    "JetBrains.Annotations.dll"
+    "Microsoft.Bcl.Memory.dll"
+    "Microsoft.Bcl.Numerics.dll"
+    "Nito.AsyncEx.Context.dll"
+    "Nito.AsyncEx.Tasks.dll"
+    "Nito.Disposables.dll"
+    "ReadyM.Api.Multiplayer.dll"
+    "ReadyM.Api.dll"
+    "ReadyM.Relay.Client.dll"
+    "ReadyM.Wukong.Common.dll"
+    "Superpower.dll"
+    "System.ComponentModel.Annotations.dll"
+    "System.Reflection.Emit.ILGeneration.dll"
+    "System.Reflection.Emit.dll"
+    "System.Reflection.Emit.dll"
+    "WukongMp.Api.dll"
+    "WukongMp.Sdk.dll"
+    "Yooni.Native.Container.dll"
+    "Yooni.Native.LowLevel.dll"
+    "Yooni.Native.Serialization.dll"
 )
 
 $modFilesDebugCore = @(

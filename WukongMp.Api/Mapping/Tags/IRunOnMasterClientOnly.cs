@@ -1,6 +1,5 @@
 using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.Mapping;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 
 namespace WukongMp.Api.Mapping.Tags;
 

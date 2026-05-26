@@ -2,7 +2,6 @@ using b1;
 using BtlShare;
 using ReadyM.Api.Command;
 using ReadyM.Api.Multiplayer.ECS.Systems;
-using ReadyM.Relay.Client;
 using WukongMp.Api.Chat;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
@@ -10,7 +9,7 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.Command;
 
 internal class GiveUpCommandRegistration(
-    ReceiveSchedulerSystem scheduleSystem,
+    ReceiveSystem scheduleSystem,
     WukongPlayerState playerState,
     WukongChatter chatter) : IConsoleCommandRegistration
 {

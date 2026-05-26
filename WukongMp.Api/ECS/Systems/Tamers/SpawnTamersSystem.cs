@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using b1;
-using BtlShare;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Client.State;

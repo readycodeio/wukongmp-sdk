@@ -1,7 +1,5 @@
 ﻿using b1;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.DI;
-using ReadyM.Api.Helpers;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Systems;
@@ -9,8 +7,6 @@ using ReadyM.Api.Multiplayer.Generators;
 using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Api.Multiplayer.Serialization;
-using ReadyM.Relay.Client;
-using ReadyM.Relay.Client.State;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Resources;
@@ -22,7 +18,7 @@ namespace WukongMp.Api.Chat;
 internal partial class WukongChatter(
     WukongPlayerState playerState,
     WukongWidgetManager widgetManager,
-    ReceiveSchedulerSystem scheduleSystem,
+    ReceiveSystem scheduleSystem,
     ILogger logger,
     IRpcClient rpcClient,
     IRelaySerializer serializer

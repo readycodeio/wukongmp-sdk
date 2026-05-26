@@ -31,6 +31,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.Coop", "WukongMP-c
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WukongMp.PvP", "WukongMP-PvP-mod\WukongMp.PvP\WukongMp.PvP.csproj", "{A1057C36-E528-46EF-88AE-53962039C1C6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yooni.Native.Container", "readym-gameserver\src\YooniCSharp\Native\Container\Yooni.Native.Container.csproj", "{FACCD226-970E-4B4B-90AD-CF327B9195A4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yooni.Native.Serialization", "readym-gameserver\src\YooniCSharp\Native\Serialization\Yooni.Native.Serialization.csproj", "{CF881B67-1841-4027-A66D-063B81F6931F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yooni.Native.LowLevel", "readym-gameserver\src\YooniCSharp\Native\LowLevel\Yooni.Native.LowLevel.csproj", "{99F8772A-41E7-442D-BE19-7626915209E6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -151,6 +157,30 @@ Global
 		{A1057C36-E528-46EF-88AE-53962039C1C6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A1057C36-E528-46EF-88AE-53962039C1C6}.Testing|Any CPU.ActiveCfg = Testing|Any CPU
 		{A1057C36-E528-46EF-88AE-53962039C1C6}.Testing|Any CPU.Build.0 = Testing|Any CPU
+		{FACCD226-970E-4B4B-90AD-CF327B9195A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FACCD226-970E-4B4B-90AD-CF327B9195A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FACCD226-970E-4B4B-90AD-CF327B9195A4}.NoDisconnect|Any CPU.ActiveCfg = Debug|Any CPU
+		{FACCD226-970E-4B4B-90AD-CF327B9195A4}.NoDisconnect|Any CPU.Build.0 = Debug|Any CPU
+		{FACCD226-970E-4B4B-90AD-CF327B9195A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FACCD226-970E-4B4B-90AD-CF327B9195A4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FACCD226-970E-4B4B-90AD-CF327B9195A4}.Testing|Any CPU.ActiveCfg = Debug|Any CPU
+		{FACCD226-970E-4B4B-90AD-CF327B9195A4}.Testing|Any CPU.Build.0 = Debug|Any CPU
+		{CF881B67-1841-4027-A66D-063B81F6931F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF881B67-1841-4027-A66D-063B81F6931F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF881B67-1841-4027-A66D-063B81F6931F}.NoDisconnect|Any CPU.ActiveCfg = NoDisconnect|Any CPU
+		{CF881B67-1841-4027-A66D-063B81F6931F}.NoDisconnect|Any CPU.Build.0 = NoDisconnect|Any CPU
+		{CF881B67-1841-4027-A66D-063B81F6931F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF881B67-1841-4027-A66D-063B81F6931F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF881B67-1841-4027-A66D-063B81F6931F}.Testing|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF881B67-1841-4027-A66D-063B81F6931F}.Testing|Any CPU.Build.0 = Debug|Any CPU
+		{99F8772A-41E7-442D-BE19-7626915209E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99F8772A-41E7-442D-BE19-7626915209E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99F8772A-41E7-442D-BE19-7626915209E6}.NoDisconnect|Any CPU.ActiveCfg = Debug|Any CPU
+		{99F8772A-41E7-442D-BE19-7626915209E6}.NoDisconnect|Any CPU.Build.0 = Debug|Any CPU
+		{99F8772A-41E7-442D-BE19-7626915209E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99F8772A-41E7-442D-BE19-7626915209E6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99F8772A-41E7-442D-BE19-7626915209E6}.Testing|Any CPU.ActiveCfg = Debug|Any CPU
+		{99F8772A-41E7-442D-BE19-7626915209E6}.Testing|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

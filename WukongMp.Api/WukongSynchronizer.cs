@@ -22,7 +22,7 @@ internal sealed class WukongSynchronizer(
     JobRegistry jobRegistry,
     INetworkedComponentRegistry netComponentRegistry,
     IRelayClient relayClient,
-    ReceiveSchedulerSystem schedulerSystem,
+    ReceiveSystem schedulerSystem,
     ClientEcsUpdateLoop ecsLoop,
     ILogger logger
 )

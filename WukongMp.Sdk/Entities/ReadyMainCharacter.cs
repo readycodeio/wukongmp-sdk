@@ -2,7 +2,7 @@ using System;
 using System.Numerics;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api;
 using WukongMp.Api.ECS.Entities;

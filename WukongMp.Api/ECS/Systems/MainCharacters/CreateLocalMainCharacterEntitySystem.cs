@@ -1,11 +1,10 @@
 ﻿using b1;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.Multiplayer.Mapping.Data;
+using ReadyM.Api.Mapping.Data;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 

@@ -10,7 +10,7 @@ namespace WukongMp.Sdk.Api.Implementation;
 internal sealed class WukongLocalApi(
     WukongEventBus eventBus,
     WukongWidgetManager widgetManager,
-    ReceiveSchedulerSystem schedulerSystem,
+    ReceiveSystem schedulerSystem,
     ClientEcsUpdateLoop ecsLoop
 ) : IWukongLocalApi
 {

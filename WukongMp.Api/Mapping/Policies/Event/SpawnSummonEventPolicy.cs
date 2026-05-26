@@ -2,7 +2,7 @@
 using Friflo.Engine.ECS;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Helpers;
-using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
+using ReadyM.Api.Mapping.Policies.Event;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Runtime;

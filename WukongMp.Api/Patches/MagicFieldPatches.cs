@@ -3,7 +3,7 @@ using b1;
 using BtlB1;
 using HarmonyLib;
 using PreludeLib.Attributes;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.GameEvents;
