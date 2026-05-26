@@ -4,8 +4,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Friflo.Json.Fliox;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Generators;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
