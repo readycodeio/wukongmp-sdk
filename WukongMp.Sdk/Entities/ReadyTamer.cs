@@ -4,7 +4,6 @@ using BtlShare;
 using Friflo.Engine.ECS;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Sdk.Api;
-using WukongMp.Sdk.Api.Implementation;
 
 namespace WukongMp.Sdk.Entities;
 

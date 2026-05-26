@@ -42,5 +42,4 @@ internal static class ClientUtils
         _setter.Invoke(actor, newTeamId);
         actor.SetTeamIDInCS(newTeamId);
     }
-
 }
