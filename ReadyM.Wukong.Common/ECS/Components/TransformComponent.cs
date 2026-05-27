@@ -7,7 +7,7 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
-public partial struct TransformComponent : IReadyComponent, IOwnershipManaged
+public partial struct TransformComponent : IReadyComponent, IOwnershipBased
 {
     private Vector3 _position;
     private Vector3 _rotation;
