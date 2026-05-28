@@ -11,7 +11,7 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
-public partial struct TamerComponent : IOwnershipManaged
+public partial struct TamerComponent : IOwnershipBased
 {
     private string? _guid;
     private string? _unitPath;
