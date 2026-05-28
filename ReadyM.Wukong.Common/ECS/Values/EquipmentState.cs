@@ -20,11 +20,11 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
             => TextSerialize(writer, value, options);
     }
 
-    private int[] _equipments;
+    private int[]? _equipments;
 
     public EquipmentState()
     {
-        _equipments = [0, 0, 0, 0, 0, 0, 0, 0];
+        _equipments = new int[(int)EquipPosition.EnumMax];
     }
 
     private EquipmentState(int[] eq)
@@ -34,7 +34,8 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
 
     public EquipmentState(IEnumerable<(EquipPosition, int)> equipments)
     {
-        _equipments = [0, 0, 0, 0, 0, 0, 0, 0];
+        _equipments = new int[(int)EquipPosition.EnumMax];
+
         foreach (var (position, id) in equipments)
         {
             _equipments[(int)position] = id;
@@ -42,17 +43,21 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
     }
 
     [Pure]
-    public EquipmentState WithSetItem(EquipPosition position, int eqId) => new((int[])_equipments.Clone())
+    public EquipmentState WithSetItem(EquipPosition position, int eqId)
     {
-        _equipments =
-        {
-            [(int)position] = eqId
-        }
-    };
+        _equipments ??= new int[(int)EquipPosition.EnumMax];
+
+        var equipments = (int[])_equipments.Clone();
+        var item = new EquipmentState(equipments);
+        item._equipments![(int)position] = eqId;
+        return item;
+    }
 
     [Pure]
     public IEnumerable<(EquipPosition, int)> GetItems()
     {
+        _equipments ??= new int[(int)EquipPosition.EnumMax];
+
         for (var i = 0; i < (int)EquipPosition.EnumMax; i++)
         {
             var id = _equipments[i];
@@ -65,6 +70,8 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
 
     public void Serialize(NetDataWriter writer)
     {
+        _equipments ??= new int[(int)EquipPosition.EnumMax];
+
         for (var i = 0; i < (int)EquipPosition.EnumMax; i++)
         {
             var item = _equipments[i];
@@ -74,8 +81,7 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
 
     public void Deserialize(NetDataReader reader)
     {
-        if (_equipments == null)
-            _equipments = new int[(int)EquipPosition.EnumMax];
+        _equipments ??= new int[(int)EquipPosition.EnumMax];
 
         for (var i = 0; i < (int)EquipPosition.EnumMax; i++)
         {
@@ -119,6 +125,9 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
 
     public bool DeltaEquals(EquipmentState other, float delta)
     {
+        if (_equipments is null || other._equipments is null)
+            return false;
+
         if (_equipments.Length != other._equipments.Length)
             return false;
 
@@ -133,8 +142,12 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
 
     public bool Equals(EquipmentState other)
     {
+        if (_equipments is null || other._equipments is null)
+            return false;
+
         if (_equipments.Length != other._equipments.Length)
             return false;
+
         for (var i = 0; i < _equipments.Length; i++)
         {
             if (_equipments[i] != other._equipments[i])
@@ -151,12 +164,14 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
 
     public override int GetHashCode()
     {
+        _equipments ??= new int[(int)EquipPosition.EnumMax];
+
         unchecked
         {
             var hashCode = _equipments.Length;
-            for (var i = 0; i < _equipments.Length; i++)
+            foreach (var equipment in _equipments)
             {
-                hashCode = (hashCode * 397) ^ _equipments[i];
+                hashCode = (hashCode * 397) ^ equipment;
             }
 
             return hashCode;
@@ -165,6 +180,6 @@ public struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>
 
     public int GetItem(EquipPosition pos)
     {
-        return _equipments[(int)pos];
+        return _equipments == null ? 0 : _equipments[(int)pos];
     }
 }

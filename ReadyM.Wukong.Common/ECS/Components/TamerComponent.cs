@@ -24,7 +24,7 @@ public partial struct TamerComponent : IOwnershipBased
         get
         {
             var str = HoldingPlayersEncoded;
-            return str == null ? [] : str.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(s => new PlayerId(ushort.Parse(s))).ToImmutableHashSet();
+            return string.IsNullOrEmpty(str) ? [] : str.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(s => new PlayerId(ushort.Parse(s))).ToImmutableHashSet();
         }
 
         set => HoldingPlayersEncoded = string.Join(";", value.Select(s => s.RawValue.ToString()));
