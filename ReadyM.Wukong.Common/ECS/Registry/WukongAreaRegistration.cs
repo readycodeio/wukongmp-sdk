@@ -20,6 +20,6 @@ internal class WukongAreaRegistration : IAreaComponentRegistration
             LevelId = 0,
             TournamentRounds = 3
         });
-        registry.RegisterComponent(new MovieComponent());
+        registry.RegisterComponent<MovieComponent>();
     }
 }
