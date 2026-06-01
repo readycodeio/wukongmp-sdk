@@ -21,7 +21,7 @@ public partial struct PvpStateComponent
         get
         {
             var str = RoundWinnersEncoded;
-            return str == null ? [] : str.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(int.Parse);
+            return str == null ? [] : Enumerable.Select<string, int>(str.Split([';'], StringSplitOptions.RemoveEmptyEntries), int.Parse);
         }
         set => RoundWinnersEncoded = string.Join(";", value);
     }
