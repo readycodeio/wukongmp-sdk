@@ -20,7 +20,7 @@ internal class WukongNetworkedComponentRegistration : INetworkedComponentRegistr
 
         // Main character
         registry.RegisterComponent<MainCharacterComponent>();
-        // registry.RegisterComponent<PvPComponent>(DeliveryMethod.ReliableOrdered);
+        registry.RegisterComponent<PvPComponent>(DeliveryMethod.ReliableOrdered);
 
         // Room
         registry.RegisterComponent<RoomComponent>(DeliveryMethod.ReliableOrdered);
