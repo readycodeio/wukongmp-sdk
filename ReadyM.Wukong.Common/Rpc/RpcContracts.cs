@@ -1,6 +1,5 @@
 ﻿using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer;
-using ReadyM.Wukong.Common.DTO;
 
 namespace ReadyM.Wukong.Common.Rpc;
 
@@ -11,5 +10,4 @@ public static partial class RpcContracts
     public static partial void SkipMovie(SkipMovieData data);
     public static partial void MovieStarted(int sequenceId, AreaId areaId);
     public static partial void MovieFinished(int sequenceId, AreaId areaId);
-    public static partial void BeguilingChant(byte state);
 }
