@@ -16,11 +16,9 @@ internal class WukongNetworkedComponentRegistration : INetworkedComponentRegistr
         registry.RegisterComponent<NicknameComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<TeamComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<TransformComponent>();
-        // FIXME: EquipmentComponent
 
         // Main character
         registry.RegisterComponent<MainCharacterComponent>();
-        registry.RegisterComponent<PvPComponent>(DeliveryMethod.ReliableOrdered);
 
         // Room
         registry.RegisterComponent<RoomComponent>(DeliveryMethod.ReliableOrdered);
@@ -28,8 +26,5 @@ internal class WukongNetworkedComponentRegistration : INetworkedComponentRegistr
 
         // Player
         registry.RegisterComponent<PlayerComponent>(DeliveryMethod.ReliableOrdered);
-
-        // PvP state
-        registry.RegisterComponent<PvpStateComponent>(DeliveryMethod.ReliableOrdered);
     }
 }

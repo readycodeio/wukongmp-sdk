@@ -23,6 +23,9 @@ public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IR
     private int _waitingSequenceId;
 
     private bool _isTransformed;
+    
+    private SpectatorReason _spectatorReason;
+    private bool _isSpectator;
 
     // NOTE: This describes the nick displayed over the Wukong character
     private string _characterNickname = "";
