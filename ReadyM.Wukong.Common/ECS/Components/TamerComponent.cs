@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Runtime.InteropServices;
-using Friflo.Json.Fliox;
+﻿using System.Runtime.InteropServices;
+using ReadyM.Api.Attributes;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Generators;
+using Yooni.Native.Container;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
@@ -13,22 +11,10 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 [StructLayout(LayoutKind.Auto)]
 public partial struct TamerComponent : IOwnershipBased
 {
-    private string? _guid;
-    private string? _unitPath;
-    private string? _holdingPlayersEncoded;
+    private string? _guid; // TODO: Unmanaged
+    private string? _unitPath; // TODO: Unmanaged
+    private NativeList<PlayerId> _holdingPlayers;
     private bool _hasFsmPaused;
-
-    [Ignore]
-    public ImmutableHashSet<PlayerId> HoldingPlayers
-    {
-        get
-        {
-            var str = HoldingPlayersEncoded;
-            return string.IsNullOrEmpty(str) ? [] : str.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(s => new PlayerId(ushort.Parse(s))).ToImmutableHashSet();
-        }
-
-        set => HoldingPlayersEncoded = string.Join(";", value.Select(s => s.RawValue.ToString()));
-    }
-
-    public bool ForceKeepSpawned => HoldingPlayers.Count > 0;
+    
+    public bool ForceKeepSpawned => _holdingPlayers.Count > 0;
 }

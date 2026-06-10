@@ -28,7 +28,7 @@ public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IR
     private bool _isSpectator;
 
     // NOTE: This describes the nick displayed over the Wukong character
-    private string _characterNickname = "";
+    private string _characterNickname = ""; // TODO: Unmanaged
 
     private bool _beguilingChantEligible;
 

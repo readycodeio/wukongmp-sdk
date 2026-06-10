@@ -7,10 +7,7 @@ namespace ReadyM.Wukong.Common.ECS.Registry;
 internal static class WukongComponentUtils
 {
     public static void SetupServerMonsterArchetype(EntityBuilderBase b)
-        => b.Add(new TamerComponent
-            {
-                HoldingPlayers = []
-            })
+        => b.Add<TamerComponent>()
             .Add<AnimationComponent>()
             .Add(new HpComponent
             {
