@@ -8,7 +8,7 @@ using ReadyM.Wukong.Common.Rpc;
 
 namespace WukongMp.Sdk.Serverside;
 
-public partial class RpcHandlers(EcsApi ecs, RpcApi rpc, IRelaySerializer serializer, ILogger logger) : ServerRpcHandlersBase(rpc, serializer)
+public partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandlersBase
 {
     partial void OnPing(RpcContext context, long timestamp)
     {
