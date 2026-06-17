@@ -1,7 +1,7 @@
 ﻿using LiteNetLib.Utils;
 using ReadyM.Api.Multiplayer.Generators;
 
-namespace ReadyM.Wukong.Common.DTO;
+namespace ReadyM.Wukong.Common.Rpc;
 
 [DeriveINetSerializable]
 public partial struct SkipMovieData(

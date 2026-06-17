@@ -9,17 +9,8 @@ internal class WukongAreaRegistration : IAreaComponentRegistration
     {
         registry.RegisterComponent(new RoomComponent
         {
-            ConsumablesAllowed = true,
-            ImmobilizeAllowed = true,
-            GourdAllowed = true,
-            PhantomRushAllowed = true,
-            CheatsAllowed = false,
-            AntiStallEnabled = true,
             ChatEnabled = true,
-            EnemiesNgPlusLevel = 0,
-            LevelId = 0,
-            TournamentRounds = 3
         });
-        registry.RegisterComponent(new MovieComponent());
+        registry.RegisterComponent<MovieComponent>();
     }
 }

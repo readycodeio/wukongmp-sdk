@@ -9,6 +9,5 @@ public enum EquipPosition : byte
     Hulu,
     Weapon,
     Fabao,
-    Accessory,
-    EnumMax,
+    Accessory
 }
