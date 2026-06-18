@@ -256,8 +256,8 @@
     <value>Espera a otros jugadores</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="MissingPak" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
+  <data name="MissingPak" xml:space="preserve">
+    <value>Falta WukongMP.pak</value>
   </data>
   <data name="WaitForOtherPlayersCount" xml:space="preserve">
     <value>Espera a otros jugadores ({0}/{1})</value>
@@ -282,5 +282,89 @@
   </data>
   <data name="ConnectionRejectedByServer" xml:space="preserve">
     <value>Conexión rechazada por el servidor</value>
+  </data>
+  <data name="CheatsEnabled" xml:space="preserve">
+    <value>Trucos activados</value>
+  </data>
+  <data name="CheatsDisabled" xml:space="preserve">
+    <value>Trucos desactivados</value>
+  </data>
+  <data name="CheatsAreDisabled" xml:space="preserve">
+    <value>Los trucos están desactivados</value>
+  </data>
+  <data name="PlayerCooldown" xml:space="preserve">
+    <value>{0} estableció el multiplicador de reutilización en {1}</value>
+  </data>
+  <data name="InfVesselEnabled" xml:space="preserve">
+    <value>{0} activó la energía de recipiente infinita</value>
+  </data>
+  <data name="InfVesselDisabled" xml:space="preserve">
+    <value>{0} desactivó la energía de recipiente infinita</value>
+  </data>
+  <data name="InfSpiritEnabled" xml:space="preserve">
+    <value>{0} activó la energía de espíritu infinita</value>
+  </data>
+  <data name="InfSpiritDisabled" xml:space="preserve">
+    <value>{0} desactivó la energía de espíritu infinita</value>
+  </data>
+  <data name="InfManaDisabled" xml:space="preserve">
+    <value>{0} desactivó el maná infinito</value>
+  </data>
+  <data name="InfManaEnabled" xml:space="preserve">
+    <value>{0} activó el maná infinito</value>
+  </data>
+  <data name="InstantCooldownEnabled" xml:space="preserve">
+    <value>{0} activó la reutilización instantánea de habilidades</value>
+  </data>
+  <data name="InstantCooldownDisabled" xml:space="preserve">
+    <value>{0} desactivó la reutilización instantánea de habilidades</value>
+  </data>
+  <data name="InvalidCooldown" xml:space="preserve">
+    <value>Valor de reutilización no válido</value>
+  </data>
+  <data name="CustomSpiritCooldown" xml:space="preserve">
+    <value>{0} estableció el tiempo de reutilización de espíritu en {1} s</value>
+  </data>
+  <data name="InfTransformDisabled" xml:space="preserve">
+    <value>{0} desactivó la energía de transformación infinita</value>
+  </data>
+  <data name="InfTransformEnabled" xml:space="preserve">
+    <value>{0} activó la energía de transformación infinita</value>
+  </data>
+  <data name="Disconnected" xml:space="preserve">
+    <value>Desconectado</value>
+  </data>
+  <data name="SeverePacketLossDetected" xml:space="preserve">
+    <value>¡Pérdida grave de paquetes detectada!</value>
+  </data>
+  <data name="SoftlockDetected" xml:space="preserve">
+    <value>Bloqueo. Usa el comando /softlock para reaparecer</value>
+  </data>
+  <data name="JoinOtherPlayersToProceed" xml:space="preserve">
+    <value>Únete a otros jugadores para continuar</value>
+  </data>
+  <data name="ExecutionError" xml:space="preserve">
+    <value>Error de ejecución: {0}</value>
+  </data>
+  <data name="InvalidCommandFormat" xml:space="preserve">
+    <value>Formato de comando no válido: {0}</value>
+  </data>
+  <data name="InvalidArgumentFormat" xml:space="preserve">
+    <value>Formato de argumento no válido: {0}</value>
+  </data>
+  <data name="UnrecognizedCommand" xml:space="preserve">
+    <value>Comando no reconocido: {0}</value>
+  </data>
+  <data name="TooFewArguments" xml:space="preserve">
+    <value>Muy pocos argumentos: mín {0}, real {1}</value>
+  </data>
+  <data name="TooManyArguments" xml:space="preserve">
+    <value>Demasiados argumentos: máx {0}, real {1}</value>
+  </data>
+  <data name="InvalidArgumentType" xml:space="preserve">
+    <value>Argumento no válido en la posición {0}. Se esperaba {1}, se obtuvo {2}</value>
+  </data>
+  <data name="HelpCommandHeader" xml:space="preserve">
+    <value>Comandos disponibles: {0}</value>
   </data>
 </root>
