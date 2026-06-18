@@ -276,7 +276,7 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Available commands: {0}\n{1}.
+        ///   Looks up a localized string similar to Available commands: {0}.
         /// </summary>
         public static string HelpCommandHeader {
             get {

@@ -364,6 +364,6 @@
     <value>Master client: {0}</value>
   </data>
   <data name="HelpCommandHeader" xml:space="preserve">
-    <value>Available commands: {0}\n{1}</value>
+    <value>Available commands: {0}</value>
   </data>
 </root>

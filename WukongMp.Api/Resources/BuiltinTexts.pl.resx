@@ -341,6 +341,6 @@
     <value>Przeciąganie walki – utrata HP</value>
   </data>
   <data name="HelpCommandHeader" xml:space="preserve">
-    <value>Dostępne komendy: {0}\n{1}</value>
+    <value>Dostępne komendy: {0}</value>
   </data>
 </root>
