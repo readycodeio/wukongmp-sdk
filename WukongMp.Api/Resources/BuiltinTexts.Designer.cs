@@ -276,6 +276,15 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Available commands: {0}\n{1}.
+        /// </summary>
+        public static string HelpCommandHeader {
+            get {
+                return ResourceManager.GetString("HelpCommandHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Press F1 to use commands.
         /// </summary>
         public static string HintCommandsUse {

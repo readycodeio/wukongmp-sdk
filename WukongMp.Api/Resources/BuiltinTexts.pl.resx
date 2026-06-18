@@ -340,4 +340,7 @@
   <data name="StallingMessage" xml:space="preserve">
     <value>Przeciąganie walki – utrata HP</value>
   </data>
+  <data name="HelpCommandHeader" xml:space="preserve">
+    <value>Dostępne komendy: {0}\n{1}</value>
+  </data>
 </root>

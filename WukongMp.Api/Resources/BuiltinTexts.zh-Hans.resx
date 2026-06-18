@@ -339,4 +339,7 @@
   <data name="StallingMessage" xml:space="preserve">
     <value>消极战斗——HP 减少</value>
   </data>
+  <data name="HelpCommandHeader" xml:space="preserve">
+    <value>可用命令：{0}\n{1}</value>
+  </data>
 </root>

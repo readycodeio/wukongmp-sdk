@@ -363,4 +363,7 @@
   <data name="MasterClient" xml:space="preserve">
     <value>Master client: {0}</value>
   </data>
+  <data name="HelpCommandHeader" xml:space="preserve">
+    <value>Available commands: {0}\n{1}</value>
+  </data>
 </root>
