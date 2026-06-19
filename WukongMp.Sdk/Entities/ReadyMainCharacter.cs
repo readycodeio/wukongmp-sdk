@@ -89,6 +89,7 @@ public readonly struct ReadyMainCharacter
 
     // ---
 
+    [Obsolete("Set '.Location' and '.Rotation' instead. Will be remove in future versions of the SDK.")]
     public void Teleport(Vector3 location, Vector3 rotation)
     {
         DI.Instance.MappedEvent.InvokeInGameAndNotifyEcs(new RequestTeleportEvent(
