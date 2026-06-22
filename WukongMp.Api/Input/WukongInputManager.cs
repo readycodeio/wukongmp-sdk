@@ -38,6 +38,6 @@ internal sealed class WukongInputManager(
 
     public bool CanApplyInput()
     {
-        return !widgetManager.ChatHasFocus && !widgetManager.CommandHasFocus();
+        return !widgetManager.ChatHasFocus && !widgetManager.IsCommandVisible() && !widgetManager.CommandHasFocus();
     }
 }
