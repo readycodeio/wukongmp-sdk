@@ -597,7 +597,7 @@ internal class PatchPatrolTick
 
 [HarmonyPatch]
 [HarmonyPatchCategory(PatchCategory.Connected)]
-public class TamerTeamResetPatch
+internal class TamerTeamResetPatch
 {
     [HarmonyTargetMethodHint("b1.BUS_TeamIDManageComp", "SetDefaultTeamIDInternal")]
     private static MethodBase TargetMethod()

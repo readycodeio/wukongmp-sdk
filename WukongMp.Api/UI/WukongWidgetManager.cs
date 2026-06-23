@@ -176,6 +176,7 @@ internal sealed class WukongWidgetManager(
         _lastDisconnectText = reason switch
         {
             DisconnectedReason.Unknown => BuiltinTexts.Disconnected,
+            DisconnectedReason.Timeout => BuiltinTexts.Disconnected,
             DisconnectedReason.IncompatibleVersion => BuiltinTexts.IncompatibleVersion,
             DisconnectedReason.ExpiredTicket => BuiltinTexts.ConnectionRejectedByServer,
             DisconnectedReason.AlreadyConnected => BuiltinTexts.AlreadyConnected,
