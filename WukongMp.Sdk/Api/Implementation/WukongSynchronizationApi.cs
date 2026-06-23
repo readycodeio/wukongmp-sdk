@@ -10,6 +10,7 @@ using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.Mapping.Events;
+using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using ReadyM.Wukong.Common.ECS.Values;
@@ -22,6 +23,7 @@ using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk.Entities;
+using Constants = WukongMp.Api.Configuration.Constants;
 
 namespace WukongMp.Sdk.Api.Implementation;
 
@@ -39,9 +41,12 @@ internal sealed class WukongSynchronizationApi(
 {
     // ---
 
-    public void GetDisconnectReasonAndInvoke(Action<DisconnectReason> callback)
+    public void GetDisconnectReasonAndInvoke(Action<DisconnectedReason> callback)
     {
-        relayClient.Scheduler.Schedule((ctx, call) => { call(ctx.LastDisconnectReason); }, callback);
+        relayClient.Scheduler.Schedule((ctx, call) =>
+        {
+            call(ctx.LastDisconnectedReason);
+        }, callback);
     }
 
     public bool InArea

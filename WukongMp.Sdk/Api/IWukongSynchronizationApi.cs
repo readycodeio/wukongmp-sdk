@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using b1;
-using LiteNetLib;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Sdk.Entities;
+using Constants = WukongMp.Api.Configuration.Constants;
 
 namespace WukongMp.Sdk.Api;
 
@@ -21,7 +22,7 @@ public interface IWukongSynchronizationApi
     /// Retrieves the disconnect reason and invokes the provided callback with it.
     /// </summary>
     /// <param name="callback">The callback to invoke with the disconnect reason.</param>
-    void GetDisconnectReasonAndInvoke(Action<DisconnectReason> callback);
+    void GetDisconnectReasonAndInvoke(Action<DisconnectedReason> callback);
 
     /// <summary>
     /// Gets a value indicating whether the player is in an area.

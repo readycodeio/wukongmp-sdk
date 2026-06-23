@@ -367,4 +367,19 @@
   <data name="HelpCommandHeader" xml:space="preserve">
     <value>Dostępne komendy: {0}</value>
   </data>
+  <data name="AlreadyConnected" xml:space="preserve">
+    <value>Już połączono z serwerem w innym miejscu.</value>
+  </data>
+  <data name="Banned" xml:space="preserve">
+    <value>Zbanowano Cię na serwerze.</value>
+  </data>
+  <data name="IncompatibleVersion" xml:space="preserve">
+    <value>Nie udało się połączyć. Niezgodna wersja SDK.</value>
+  </data>
+  <data name="Kicked" xml:space="preserve">
+    <value>Wykopano Cię z serwera.</value>
+  </data>
+  <data name="ServerFull" xml:space="preserve">
+    <value>Serwer jest pełny, spróbuj ponownie później.</value>
+  </data>
 </root>

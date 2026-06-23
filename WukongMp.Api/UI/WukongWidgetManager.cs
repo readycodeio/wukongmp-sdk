@@ -6,6 +6,7 @@ using ReadyM.Api.Helpers;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.Common;
+using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using UnrealEngine.Runtime;
@@ -152,9 +153,7 @@ internal sealed class WukongWidgetManager(
         {
             relayClient.Scheduler.Schedule(static (ctx, self) =>
             {
-                self._infoMessageWidget.Value.SetVisibility(true);
-                self._lastDisconnectText = ctx.LastDisconnectReason == DisconnectReason.ConnectionRejected ? BuiltinTexts.ConnectionRejectedByServer : BuiltinTexts.Disconnected;
-                self._infoMessageWidget.Value.SetText(self._lastDisconnectText);
+                self.OnDisconnected(default, null, ctx.LastDisconnectedReason);
             }, this);
         }
     }
@@ -171,10 +170,21 @@ internal sealed class WukongWidgetManager(
         DeinitializeWidgets();
     }
 
-    private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectReason reason)
+    private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectedReason reason)
     {
         _infoMessageWidget.Value.SetVisibility(true);
-        _lastDisconnectText = reason == DisconnectReason.ConnectionRejected ? BuiltinTexts.ConnectionRejectedByServer : BuiltinTexts.Disconnected;
+        _lastDisconnectText = reason switch
+        {
+            DisconnectedReason.Unknown => BuiltinTexts.Disconnected,
+            DisconnectedReason.IncompatibleVersion => BuiltinTexts.IncompatibleVersion,
+            DisconnectedReason.ExpiredTicket => BuiltinTexts.ConnectionRejectedByServer,
+            DisconnectedReason.AlreadyConnected => BuiltinTexts.AlreadyConnected,
+            DisconnectedReason.ClientDisconnected => BuiltinTexts.Disconnected,
+            DisconnectedReason.ServerFull => BuiltinTexts.ServerFull,
+            DisconnectedReason.Kicked => BuiltinTexts.Kicked,
+            DisconnectedReason.Banned => BuiltinTexts.Banned,
+            _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, null)
+        };
         _infoMessageWidget.Value.SetText(_lastDisconnectText);
     }
 

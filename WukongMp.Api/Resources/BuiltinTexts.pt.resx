@@ -367,4 +367,19 @@
   <data name="HelpCommandHeader" xml:space="preserve">
     <value>Comandos disponíveis: {0}</value>
   </data>
+  <data name="AlreadyConnected" xml:space="preserve">
+    <value>Já estás ligado ao servidor noutro local.</value>
+  </data>
+  <data name="Banned" xml:space="preserve">
+    <value>Foste banido do servidor.</value>
+  </data>
+  <data name="IncompatibleVersion" xml:space="preserve">
+    <value>Não foi possível ligar. Versão do SDK incompatível.</value>
+  </data>
+  <data name="Kicked" xml:space="preserve">
+    <value>Foste expulso do servidor.</value>
+  </data>
+  <data name="ServerFull" xml:space="preserve">
+    <value>O servidor está cheio, tenta novamente mais tarde.</value>
+  </data>
 </root>

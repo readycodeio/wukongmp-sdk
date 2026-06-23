@@ -366,4 +366,19 @@
   <data name="HelpCommandHeader" xml:space="preserve">
     <value>可用命令：{0}</value>
   </data>
+  <data name="AlreadyConnected" xml:space="preserve">
+    <value>您已在别处连接到此服务器。</value>
+  </data>
+  <data name="Banned" xml:space="preserve">
+    <value>您已被该服务器封禁。</value>
+  </data>
+  <data name="IncompatibleVersion" xml:space="preserve">
+    <value>无法连接。SDK 版本不兼容。</value>
+  </data>
+  <data name="Kicked" xml:space="preserve">
+    <value>您已被踢出该服务器。</value>
+  </data>
+  <data name="ServerFull" xml:space="preserve">
+    <value>服务器已满，请稍后再试。</value>
+  </data>
 </root>

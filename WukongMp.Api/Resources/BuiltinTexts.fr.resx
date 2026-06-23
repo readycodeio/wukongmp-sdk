@@ -367,4 +367,19 @@
   <data name="HelpCommandHeader" xml:space="preserve">
     <value>Commandes disponibles : {0}</value>
   </data>
+  <data name="AlreadyConnected" xml:space="preserve">
+    <value>Vous êtes déjà connecté au serveur ailleurs.</value>
+  </data>
+  <data name="Banned" xml:space="preserve">
+    <value>Vous avez été banni du serveur.</value>
+  </data>
+  <data name="IncompatibleVersion" xml:space="preserve">
+    <value>Connexion impossible. Version du SDK incompatible.</value>
+  </data>
+  <data name="Kicked" xml:space="preserve">
+    <value>Vous avez été expulsé du serveur.</value>
+  </data>
+  <data name="ServerFull" xml:space="preserve">
+    <value>Le serveur est plein, réessayez plus tard.</value>
+  </data>
 </root>

@@ -60,11 +60,29 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Already connected to the server elsewhere..
+        /// </summary>
+        public static string AlreadyConnected {
+            get {
+                return ResourceManager.GetString("AlreadyConnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Engage!.
         /// </summary>
         public static string AntiStallWarning {
             get {
                 return ResourceManager.GetString("AntiStallWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You were banned from the server..
+        /// </summary>
+        public static string Banned {
+            get {
+                return ResourceManager.GetString("Banned", resourceCulture);
             }
         }
         
@@ -294,6 +312,15 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unable to connect. Incompatible SDK version..
+        /// </summary>
+        public static string IncompatibleVersion {
+            get {
+                return ResourceManager.GetString("IncompatibleVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} disabled infinite mana.
         /// </summary>
         public static string InfManaDisabled {
@@ -461,6 +488,15 @@ namespace WukongMp.Api.Resources {
         public static string JoinOtherPlayersToProceed {
             get {
                 return ResourceManager.GetString("JoinOtherPlayersToProceed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You were kicked from the server..
+        /// </summary>
+        public static string Kicked {
+            get {
+                return ResourceManager.GetString("Kicked", resourceCulture);
             }
         }
         
@@ -677,6 +713,15 @@ namespace WukongMp.Api.Resources {
         public static string RoundEndedWinner {
             get {
                 return ResourceManager.GetString("RoundEndedWinner", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server is full, try again later..
+        /// </summary>
+        public static string ServerFull {
+            get {
+                return ResourceManager.GetString("ServerFull", resourceCulture);
             }
         }
         
