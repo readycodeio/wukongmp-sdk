@@ -7,21 +7,20 @@ namespace WukongMp.Api.Input;
 internal sealed class WukongInputManager(
     WukongCommandConsole commandConsole,
     WukongChatter chatter,
-    WukongWidgetManager widgetManager)
+    WukongWidgetManager widgetManager
+)
 {
     public void HandleEnterPressed()
     {
         if (widgetManager.IsCommandVisible())
         {
-            if (!widgetManager.CommandHasFocus())
-            {
-                widgetManager.SetCommandInputFocus();
-            }
-            else
+            if (widgetManager.CommandHasFocus())
             {
                 var command = widgetManager.CommitCommand();
                 commandConsole.ProcessCommand(command);
             }
+
+            widgetManager.SetCommandInputFocus();
         }
         else
         {
@@ -39,6 +38,6 @@ internal sealed class WukongInputManager(
 
     public bool CanApplyInput()
     {
-        return !widgetManager.ChatHasFocus && !widgetManager.CommandHasFocus();
+        return !widgetManager.ChatHasFocus && (!widgetManager.IsCommandVisible() || !widgetManager.CommandHasFocus());
     }
 }

@@ -2,6 +2,7 @@
 using System.Globalization;
 using LiteNetLib;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Multiplayer.Protocol;
 using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Sdk.Api;
@@ -88,8 +89,8 @@ public interface IWukongEventApi
     /// <summary>
     /// Fired when any player disconnects from the server, either voluntarily or involuntarily.
     /// </summary>
-    event Action<PlayerId, DisconnectReason>? OnDisconnected;
-
+    event Action<PlayerId, DisconnectedReason>? OnDisconnected;
+    
     /// <summary>
     /// Fired when any player dies.
     /// The first parameter is the player character that died, and the second parameter is the entity that killed them (if applicable).

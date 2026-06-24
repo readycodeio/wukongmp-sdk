@@ -8,7 +8,7 @@ namespace WukongMp.Api.Configuration;
 /// <param name="name">Must be a valid monster name.</param>
 public readonly struct TamerKind(string name) : IEquatable<TamerKind>
 {
-    public readonly string Name = name;
+    public readonly string? Name = name;
 
     public bool Equals(TamerKind other)
         => Name == other.Name;

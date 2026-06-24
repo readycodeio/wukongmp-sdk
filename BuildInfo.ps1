@@ -79,7 +79,7 @@ function Get-ModFiles
     $modDestDir = "Mods/WukongMp.$Mod"
     $reflectionOnlyDestDir = "Mods/ReflectionOnly"
     $overridesDestDir = "Mods/Overrides"
-    
+
     # Compose the triplets: @( <files>, <sourceDir>, <destDir> )
     $modFiles = @(
         @($modFilesCore, $modSourceDir, $modDestDir),

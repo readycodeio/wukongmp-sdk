@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ReadyM.Api.Command;
 
 namespace WukongMp.Sdk.Api;
@@ -9,13 +10,29 @@ namespace WukongMp.Sdk.Api;
 public interface IWukongConsoleApi
 {
     /// <summary>
-    /// Registers a command to the in-game console.
-    /// The command will be available to all players in the session.
+    /// Registers a console command that all players in the session can run.
     /// </summary>
-    /// <param name="commandName">The name of the command that has to be typed in the console to execute the command.</param>
-    /// <param name="command">Command handler</param>
-    /// <param name="availableFirstParams">If specified, the console will show these as suggestions for the first parameter of the command. This is useful for commands that take a fixed set of parameters, such as "spawn wolf_sentinel".</param>
+    /// <param name="commandName">Text the player types to invoke the command (e.g. "spawn").</param>
+    /// <param name="command">Handler that runs when the command is executed.</param>
+    /// <param name="availableFirstParams">
+    /// Optional fixed list of autocomplete suggestions for the command's first parameter.
+    /// The list is captured once at registration, so use this overload when the
+    /// suggestions never change, e.g. a known set of spawnables: "spawn wolf_sentinel".
+    /// </param>
     void AddCommand(string commandName, ConsoleCommand command, IEnumerable<string>? availableFirstParams = null);
+
+    /// <summary>
+    /// Registers a console command that all players in the session can run.
+    /// </summary>
+    /// <param name="commandName">Text the player types to invoke the command (e.g. "kick").</param>
+    /// <param name="command">Handler that runs when the command is executed.</param>
+    /// <param name="availableFirstParams">
+    /// A factory that produces autocomplete suggestions for the command's first
+    /// parameter. It is invoked each time the console requests suggestions, so use this
+    /// overload when the values depend on live state, e.g. currently connected players
+    /// or spawned entities.
+    /// </param>
+    void AddCommand(string commandName, ConsoleCommand command, Func<IEnumerable<string>> availableFirstParams);
 
     /// <summary>
     /// Checks if a command with the given name is already registered in the console.

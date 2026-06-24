@@ -227,7 +227,7 @@ internal sealed class DI : IDependencyContainer
 
             mapping.RegisterDefaultCreateDelete<AActor>(
                 _ => area.IsMasterClient,
-                entity => ownership.OwnsEntity(entity));
+                ownership.OwnsEntity);
 
             foreach (var factory in s.ResolveMany<IMappingDataPolicyFactory>())
             {
@@ -257,6 +257,7 @@ internal sealed class DI : IDependencyContainer
         Container.Register<IConsoleCommandRegistration, ConnectionCommandRegistration>();
         Container.Register<IConsoleCommandRegistration, ExecuteWukongCommandRegistration>();
         Container.Register<IConsoleCommandRegistration, GiveUpCommandRegistration>();
+        Container.Register<IConsoleCommandRegistration, HelpCommandRegistration>();
         Container.Register<IConsoleCommandRegistration, ObstacleCommandRegistration>();
         Container.Register<IConsoleCommandRegistration, RebirthCommandRegistration>();
         Container.Register<IConsoleCommandRegistration, WorkaroundCommandRegistration>();

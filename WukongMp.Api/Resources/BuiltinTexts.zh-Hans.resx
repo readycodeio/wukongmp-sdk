@@ -339,4 +339,46 @@
   <data name="StallingMessage" xml:space="preserve">
     <value>消极战斗——HP 减少</value>
   </data>
+  <data name="MasterClient" xml:space="preserve">
+    <value>主客户端：{0}</value>
+  </data>
+  <data name="ExecutionError" xml:space="preserve">
+    <value>执行错误：{0}</value>
+  </data>
+  <data name="InvalidCommandFormat" xml:space="preserve">
+    <value>无效命令格式：{0}</value>
+  </data>
+  <data name="InvalidArgumentFormat" xml:space="preserve">
+    <value>无效参数格式：{0}</value>
+  </data>
+  <data name="UnrecognizedCommand" xml:space="preserve">
+    <value>无法识别的命令：{0}</value>
+  </data>
+  <data name="TooFewArguments" xml:space="preserve">
+    <value>参数过少：最少 {0}，实际 {1}</value>
+  </data>
+  <data name="TooManyArguments" xml:space="preserve">
+    <value>参数过多：最多 {0}，实际 {1}</value>
+  </data>
+  <data name="InvalidArgumentType" xml:space="preserve">
+    <value>索引 {0} 处的参数无效。应为 {1}，实际为 {2}</value>
+  </data>
+  <data name="HelpCommandHeader" xml:space="preserve">
+    <value>可用命令：{0}</value>
+  </data>
+  <data name="AlreadyConnected" xml:space="preserve">
+    <value>您已在别处连接到此服务器。</value>
+  </data>
+  <data name="Banned" xml:space="preserve">
+    <value>您已被该服务器封禁。</value>
+  </data>
+  <data name="IncompatibleVersion" xml:space="preserve">
+    <value>无法连接。SDK 版本不兼容。</value>
+  </data>
+  <data name="Kicked" xml:space="preserve">
+    <value>您已被踢出该服务器。</value>
+  </data>
+  <data name="ServerFull" xml:space="preserve">
+    <value>服务器已满，请稍后再试。</value>
+  </data>
 </root>

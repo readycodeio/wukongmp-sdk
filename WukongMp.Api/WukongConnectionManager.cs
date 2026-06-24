@@ -7,11 +7,12 @@ using ReadyM.Api.DI;
 using ReadyM.Api.Helpers;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
-using WukongMp.Api.Configuration;
+using Constants = WukongMp.Api.Configuration.Constants;
 
 namespace WukongMp.Api;
 
@@ -117,10 +118,10 @@ internal class WukongConnectionManager(
         }, this);
     }
 
-    public void OnDisconnectedHandler(PlayerId playerId, Entity? entity, DisconnectReason disconnectReason)
+    public void OnDisconnectedHandler(PlayerId playerId, Entity? entity, DisconnectedReason disconnectReason)
     {
         Logging.LogInformation("Disconnected");
-        if (disconnectReason == DisconnectReason.DisconnectPeerCalled)
+        if (disconnectReason == DisconnectedReason.ClientDisconnected)
         {
             Logging.LogInformation("Disconnected: {Cause}", disconnectReason);
         }

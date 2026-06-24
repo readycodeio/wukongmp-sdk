@@ -594,3 +594,34 @@ internal class PatchPatrolTick
         return true;
     }
 }
+
+[HarmonyPatch]
+[HarmonyPatchCategory(PatchCategory.Connected)]
+internal class TamerTeamResetPatch
+{
+    [HarmonyTargetMethodHint("b1.BUS_TeamIDManageComp", "SetDefaultTeamIDInternal")]
+    private static MethodBase TargetMethod()
+    {
+        return AccessTools.Method("b1.BUS_TeamIDManageComp:SetDefaultTeamIDInternal");
+    }
+
+    public static bool Prefix(BGUCharacterCS ___OwnerAsCharacterCS)
+    {
+        if (!DI.Instance.AreaState.InRoom)
+            return true;
+
+        var tamer = DI.Instance.PawnState.GetEntityByTamerMonster(___OwnerAsCharacterCS);
+
+        if (tamer != null)
+        {
+            var team = tamer.Value.GetTeam().TeamId;
+            if (tamer.Value.Pawn == ___OwnerAsCharacterCS && team != 0)
+            {
+                Logging.LogDebug("Prevented team ID reset for {Guid} with team ID {TeamId}", tamer.Value.GetTamer().Guid, team);
+                return false;
+            }
+        }
+
+        return true;
+    }
+}

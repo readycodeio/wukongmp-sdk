@@ -256,8 +256,8 @@
     <value>Aguarde pelos outros jogadores</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="MissingPak" type="System.Resources.ResXNullRef, System.Windows.Forms">
-    <value />
+  <data name="MissingPak" xml:space="preserve">
+    <value>WukongMP.pak está em falta</value>
   </data>
   <data name="WaitForOtherPlayersCount" xml:space="preserve">
     <value>Aguarde pelos outros jogadores ({0}/{1})</value>
@@ -282,5 +282,104 @@
   </data>
   <data name="ConnectionRejectedByServer" xml:space="preserve">
     <value>Ligação rejeitada pelo servidor</value>
+  </data>
+  <data name="CheatsEnabled" xml:space="preserve">
+    <value>Batota ativada</value>
+  </data>
+  <data name="CheatsDisabled" xml:space="preserve">
+    <value>Batota desativada</value>
+  </data>
+  <data name="CheatsAreDisabled" xml:space="preserve">
+    <value>A batota está desativada</value>
+  </data>
+  <data name="PlayerCooldown" xml:space="preserve">
+    <value>{0} definiu o multiplicador de recarga para {1}</value>
+  </data>
+  <data name="InfVesselEnabled" xml:space="preserve">
+    <value>{0} ativou a energia de recipiente infinita</value>
+  </data>
+  <data name="InfVesselDisabled" xml:space="preserve">
+    <value>{0} desativou a energia de recipiente infinita</value>
+  </data>
+  <data name="InfSpiritEnabled" xml:space="preserve">
+    <value>{0} ativou a energia de espírito infinita</value>
+  </data>
+  <data name="InfSpiritDisabled" xml:space="preserve">
+    <value>{0} desativou a energia de espírito infinita</value>
+  </data>
+  <data name="InfManaDisabled" xml:space="preserve">
+    <value>{0} desativou a mana infinita</value>
+  </data>
+  <data name="InfManaEnabled" xml:space="preserve">
+    <value>{0} ativou a mana infinita</value>
+  </data>
+  <data name="InstantCooldownEnabled" xml:space="preserve">
+    <value>{0} ativou a recarga instantânea de habilidades</value>
+  </data>
+  <data name="InstantCooldownDisabled" xml:space="preserve">
+    <value>{0} desativou a recarga instantânea de habilidades</value>
+  </data>
+  <data name="InvalidCooldown" xml:space="preserve">
+    <value>Valor de recarga inválido</value>
+  </data>
+  <data name="CustomSpiritCooldown" xml:space="preserve">
+    <value>{0} definiu o tempo de recarga do espírito para {1} s</value>
+  </data>
+  <data name="InfTransformDisabled" xml:space="preserve">
+    <value>{0} desativou a energia de transformação infinita</value>
+  </data>
+  <data name="InfTransformEnabled" xml:space="preserve">
+    <value>{0} ativou a energia de transformação infinita</value>
+  </data>
+  <data name="Disconnected" xml:space="preserve">
+    <value>Desligado</value>
+  </data>
+  <data name="SeverePacketLossDetected" xml:space="preserve">
+    <value>Perda grave de pacotes detetada!</value>
+  </data>
+  <data name="SoftlockDetected" xml:space="preserve">
+    <value>Bloqueio. Use o comando /softlock para reaparecer</value>
+  </data>
+  <data name="JoinOtherPlayersToProceed" xml:space="preserve">
+    <value>Junte-se a outros jogadores para continuar</value>
+  </data>
+  <data name="ExecutionError" xml:space="preserve">
+    <value>Erro de execução: {0}</value>
+  </data>
+  <data name="InvalidCommandFormat" xml:space="preserve">
+    <value>Formato de comando inválido: {0}</value>
+  </data>
+  <data name="InvalidArgumentFormat" xml:space="preserve">
+    <value>Formato de argumento inválido: {0}</value>
+  </data>
+  <data name="UnrecognizedCommand" xml:space="preserve">
+    <value>Comando não reconhecido: {0}</value>
+  </data>
+  <data name="TooFewArguments" xml:space="preserve">
+    <value>Poucos argumentos: mín {0}, real {1}</value>
+  </data>
+  <data name="TooManyArguments" xml:space="preserve">
+    <value>Demasiados argumentos: máx {0}, real {1}</value>
+  </data>
+  <data name="InvalidArgumentType" xml:space="preserve">
+    <value>Argumento inválido no índice {0}. Esperado {1}, obtido {2}</value>
+  </data>
+  <data name="HelpCommandHeader" xml:space="preserve">
+    <value>Comandos disponíveis: {0}</value>
+  </data>
+  <data name="AlreadyConnected" xml:space="preserve">
+    <value>Já estás ligado ao servidor noutro local.</value>
+  </data>
+  <data name="Banned" xml:space="preserve">
+    <value>Foste banido do servidor.</value>
+  </data>
+  <data name="IncompatibleVersion" xml:space="preserve">
+    <value>Não foi possível ligar. Versão do SDK incompatível.</value>
+  </data>
+  <data name="Kicked" xml:space="preserve">
+    <value>Foste expulso do servidor.</value>
+  </data>
+  <data name="ServerFull" xml:space="preserve">
+    <value>O servidor está cheio, tenta novamente mais tarde.</value>
   </data>
 </root>

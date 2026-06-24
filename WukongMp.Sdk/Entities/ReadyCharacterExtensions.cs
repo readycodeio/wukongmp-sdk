@@ -1,5 +1,4 @@
 using System;
-using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api;
 using WukongMp.Api.WukongUtils;
@@ -16,7 +15,9 @@ public static class ReadyCharacterExtensions
             get
             {
                 obj.Deconstruct(out _, out var entity);
-                return entity.TryGetComponent(out HpComponent hpComp) ? hpComp.Hp : throw new InvalidOperationException();
+                return entity.TryGetComponent(out HpComponent hpComp) 
+                    ? hpComp.Hp 
+                    : throw new InvalidOperationException($"{nameof(HpComponent)} not present on entity");
             }
             set
             {
@@ -28,7 +29,7 @@ public static class ReadyCharacterExtensions
                 }
                 else
                 {
-                    throw new InvalidOperationException();
+                    Logging.LogError("Not allowed to set another player's HP");
                 }
             }
         }
@@ -38,7 +39,9 @@ public static class ReadyCharacterExtensions
             get
             {
                 obj.Deconstruct(out _, out var entity);
-                return entity.TryGetComponent(out HpComponent hpComp) ? hpComp.HpMaxBase : throw new InvalidOperationException();
+                return entity.TryGetComponent(out HpComponent hpComp) 
+                    ? hpComp.HpMaxBase 
+                    : throw new InvalidOperationException($"{nameof(HpComponent)} not present on entity");
             }
             set
             {
@@ -50,7 +53,7 @@ public static class ReadyCharacterExtensions
                 }
                 else
                 {
-                    throw new InvalidOperationException();
+                    Logging.LogError("Not allowed to set another player's max HP");
                 }
             }
         }
@@ -60,9 +63,9 @@ public static class ReadyCharacterExtensions
             get
             {
                 obj.Deconstruct(out _, out var entity);
-                if (!entity.TryGetComponent<TeamComponent>(out var teamComp))
-                    throw new InvalidOperationException($"Entity does not have TeamComponent: {entity.GetNetId()}");
-                return teamComp.TeamId;
+                return entity.TryGetComponent(out TeamComponent teamComp) 
+                    ? teamComp.TeamId 
+                    : throw new InvalidOperationException($"{nameof(TeamComponent)} not present on entity");
             }
             set
             {
@@ -79,7 +82,7 @@ public static class ReadyCharacterExtensions
                 }
                 else
                 {
-                    throw new InvalidOperationException();
+                    Logging.LogError("Not allowed to set another player's team ID");
                 }
             }
         }
@@ -89,7 +92,9 @@ public static class ReadyCharacterExtensions
             get
             {
                 obj.Deconstruct(out _, out var entity);
-                return entity.TryGetComponent(out HpComponent hpComp) ? hpComp.IsDead : throw new InvalidOperationException();
+                return entity.TryGetComponent(out HpComponent hpComp) 
+                    ? hpComp.IsDead 
+                    : throw new InvalidOperationException($"{nameof(HpComponent)} not present on entity");
             }
         }
 
