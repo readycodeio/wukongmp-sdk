@@ -227,7 +227,7 @@ internal sealed class DI : IDependencyContainer
 
             mapping.RegisterDefaultCreateDelete<AActor>(
                 _ => area.IsMasterClient,
-                entity => ownership.OwnsEntity(entity));
+                ownership.OwnsEntity);
 
             foreach (var factory in s.ResolveMany<IMappingDataPolicyFactory>())
             {
