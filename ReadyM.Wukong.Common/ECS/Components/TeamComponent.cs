@@ -6,7 +6,7 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
-public partial struct TeamComponent : IOwnershipManaged
+public partial struct TeamComponent : IReadyComponent, IOwnershipManaged
 {
     private int _teamId;
 }
