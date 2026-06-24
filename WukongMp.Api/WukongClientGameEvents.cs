@@ -5,6 +5,7 @@ using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.DI;
 using ReadyM.Api.Helpers;
+using ReadyM.Api.Multiplayer.Mapping.Data;
 using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
@@ -29,6 +30,7 @@ internal class WukongClientGameEvents(
     WukongPawnState pawnState,
     WukongPlayerState playerState,
     WukongWidgetManager widgetManager,
+    IComponentFieldMappingRegistry fieldMapping,
     GameplayEventRouter eventRouter,
     ILogger logger
 ) : IHostedService
@@ -45,6 +47,7 @@ internal class WukongClientGameEvents(
     private readonly WukongPlayerState _playerState = playerState;
     private readonly WukongWidgetManager _widgetManager = widgetManager;
     private readonly GameplayEventRouter _eventRouter = eventRouter;
+    private readonly IComponentFieldMappingRegistry _fieldMapping = fieldMapping;
 
     private readonly ILogger _logger = logger;
 
@@ -235,7 +238,20 @@ internal class WukongClientGameEvents(
             if (ev.Entity.HasComponent<MainCharacterComponent>())
             {
                 var mainEntity = new MainCharacterEntity(ev.Entity);
-                PlayerUtils.TeleportLocalPlayer(mainEntity, ev.Location, ev.Rotation, true);
+
+                if (mainEntity.Pawn == null)
+                {
+                    self._logger.LogWarning("Received RequestTeleportEvent for main character {Entity} but pawn is null", ev.Entity.GetNetId());
+                    return;
+                }
+
+                var correctedLocation = SpawningUtils.GetCorrectedSpawnLocation(mainEntity.Pawn, ev.Location);
+
+                if (self._fieldMapping.CanSetFromApi<TransformComponent>(ev.Entity, out var set))
+                {
+                    set.SetFromApi(TransformComponent.Fields.Position, correctedLocation.ToVector3());
+                    set.SetFromApi(TransformComponent.Fields.Rotation, ev.Rotation.ToVector3());
+                }
             }
             else if (ev.Entity.HasComponent<TamerComponent>())
             {
