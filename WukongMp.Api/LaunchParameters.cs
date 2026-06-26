@@ -60,7 +60,7 @@ internal sealed class LaunchParameters
     private LaunchParameters()
     {
         var ipc = new IpcHelper(DI.Instance.Logger);
-        var data = _allParameters = ipc.ReadAndDeleteIpcHandshakeFile();
+        var data = _allParameters = ipc.ReadAndDeleteIpcHandshakeFile("wukong_handshake.env");
 
         // CO-OP: API base URL
         ApiBaseUrl = data.GetValueOrDefault("API_BASE_URL");
