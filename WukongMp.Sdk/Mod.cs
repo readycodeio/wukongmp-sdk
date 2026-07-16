@@ -385,11 +385,6 @@ internal class Mod : ModBase
     {
         Logger.LogInformation("DeInit");
 
-        if (!LaunchParameters.Instance.ValidForCoOp)
-        {
-            return;
-        }
-
         if (_apiPatcher.IsPatched)
             _apiPatcher.Unpatch();
 
