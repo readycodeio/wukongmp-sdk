@@ -57,7 +57,7 @@ internal sealed class LaunchParameters
         var data = _allParameters = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
 
         // Hosted: Game mode
-        GameMode = data.GetValueOrDefault("GAME_MODE").ToLowerInvariant();
+        GameMode = data.GetValueOrDefault("GAME_MODE")?.ToLowerInvariant();
 
         // CO-OP: API base URL
         ApiBaseUrl = data.GetValueOrDefault("API_BASE_URL");
@@ -79,7 +79,7 @@ internal sealed class LaunchParameters
         }
         
         // BOTH: single use connection ticket
-        var ticketString = data.GetValueOrDefault("TICKET");
+        var ticketString = data.GetValueOrDefault("TICKET") ?? UserGuid.ToString();
 
         if (ConnectionTicket.TryParse(ticketString, out var ticket))
         {
@@ -108,7 +108,7 @@ internal sealed class LaunchParameters
         }
 
         // BOTH: user nickname
-        Nickname = data.GetValueOrDefault("NICKNAME");
+        Nickname = data.GetValueOrDefault("NICKNAME")!;
 
         // BOTH: server region
         var region = data.GetValueOrDefault("REGION", "");

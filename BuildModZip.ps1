@@ -74,16 +74,17 @@ foreach ($p in $Mods)
 if ($Mode -eq 'coop')
 {
     $allFiles += @(
-        @(@("manifest.json"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
+        @(@("manifest.json"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop"),
         @(@("WukongMp.Coop.dll"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
         @(@("ArchiveSaveFile.1.sav"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop")
     )
 } else {
     $allFiles += @(
-        @(@("manifest.json"), "WukongMP-PvP-mod/WukongMp.PvP/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
+        @(@("manifest.json"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp"),
         @(@("WukongMp.PvP.dll"), "WukongMP-PvP-mod/WukongMp.Pvp/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
         @(@("ArchiveSaveFile.0.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp"),
-        @(@("ArchiveSaveFile.1.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp")
+        @(@("ArchiveSaveFile.1.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp"),
+        @(@("ArchiveSaveFile.2.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp")
     )
 }
 
