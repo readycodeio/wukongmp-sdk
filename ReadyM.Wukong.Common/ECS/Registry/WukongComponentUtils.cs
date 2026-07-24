@@ -26,5 +26,5 @@ internal static class WukongComponentUtils
             })
             .Add<TransformComponent>()
             .Add<TeamComponent>()
-            .AddTag<DisallowOwnershipTransferTag>();
+            .AddTag<DisallowOwnershipTransferOnScopeLeaveTag>();
 }
