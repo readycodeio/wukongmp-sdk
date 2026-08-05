@@ -54,6 +54,10 @@ internal sealed class LaunchParameters
 
     private LaunchParameters()
     {
+        // Marks the constructor as entered, before any work. IpcHelpers only logs once it has already resolved
+        // the AppData path and confirmed the file exists, so without this line that whole span is invisible.
+        Logging.LogInformation("LaunchParameters ctor entered");
+
         var data = _allParameters = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
 
         // Hosted: Game mode

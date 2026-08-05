@@ -57,14 +57,33 @@ internal class Mod : ModBase
         Trace.Listeners.Add(new LoggingListener(Logger));
 #endif
 
-        if (!LaunchParameters.Instance.Valid)
+        // NOTE: LogInformation so these survive a release build's minimum level, and the mod loader
+        // force-flushes for the whole Init window so the last line written is the step that crashed.
+        //
+        // This first line is load bearing: if it appears, Initialize was compiled and entered successfully, so
+        // a crash is in the body. If it never appears, the fault is in Mono compiling or type-loading this
+        // method, before any of it runs.
+        Logger.LogInformation("Initialize entered");
+
+        // Split from the Valid check because constructing LaunchParameters reads and deletes the handshake
+        // file, which is real work, while Valid is just field comparisons.
+        Logger.LogInformation("Initialize step begin: LaunchParameters.Instance");
+        var launchParameters = LaunchParameters.Instance;
+        Logger.LogInformation("Initialize step end: LaunchParameters.Instance");
+
+        if (!launchParameters.Valid)
         {
             Logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
             return;
         }
 
+        Logger.LogInformation("Initialize step begin: DI.Init");
         DI.Instance.Init();
+        Logger.LogInformation("Initialize step end: DI.Init");
+
+        Logger.LogInformation("Initialize step begin: RegisterApis");
         WukongApi.RegisterApis();
+        Logger.LogInformation("Initialize step end: RegisterApis");
 
         // Start the relay client
 //         if (LaunchParameters.Instance.PlayShimOnStart)
@@ -86,6 +105,7 @@ internal class Mod : ModBase
 //                 LaunchParameters.Instance.RecordShimFile!
 //             );
 //         else
+        Logger.LogInformation("Initialize step begin: InitRelay");
         ShimUtils.InitRelay(
             DI.Instance,
             LaunchParameters.Instance.ServerIp!,
@@ -97,18 +117,29 @@ internal class Mod : ModBase
             false
 #endif
         );
+        Logger.LogInformation("Initialize step end: InitRelay");
 
+        Logger.LogInformation("Initialize step begin: WukongPatcher ctor");
         _apiPatcher = new WukongPatcher(typeof(ExceptionPatches).Assembly, "WukongMp.Api", DI.Instance.Prelude);
+        Logger.LogInformation("Initialize step end: WukongPatcher ctor");
 
         DI.Instance.Logger.LogInformation("Initialized {PluginName}", Name);
     }
 
     public override void LateInit()
     {
+        // Same reasoning as Initialize: the loader force-flushes through late init, so the last "step begin"
+        // without a matching "step end" names whatever took the process down.
+        Logger.LogInformation("LateInit step begin: base.LateInit");
         base.LateInit();
+        Logger.LogInformation("LateInit step end: base.LateInit");
 
         if (!_apiPatcher.IsPatched)
+        {
+            Logger.LogInformation("LateInit step begin: apiPatcher.Patch");
             _apiPatcher.Patch();
+            Logger.LogInformation("LateInit step end: apiPatcher.Patch");
+        }
 
         if (!LaunchParameters.Instance.Valid)
         {
@@ -116,13 +147,28 @@ internal class Mod : ModBase
             return;
         }
 
+        Logger.LogInformation("LateInit step begin: AddModSystemsToEcs");
         AddModSystemsToEcs();
+        Logger.LogInformation("LateInit step end: AddModSystemsToEcs");
+
+        Logger.LogInformation("LateInit step begin: SetUpRpcOffsets");
         SetUpRpcOffsets();
+        Logger.LogInformation("LateInit step end: SetUpRpcOffsets");
+
         DebugUtils.LogUe4SsPresence();
         DetectSdkVersion();
+
+        Logger.LogInformation("LateInit step begin: RegisterKeybinds");
         RegisterKeybinds(DI.Instance);
+        Logger.LogInformation("LateInit step end: RegisterKeybinds");
+
+        Logger.LogInformation("LateInit step begin: StartHostedServices");
         DI.Instance.StartHostedServices();
+        Logger.LogInformation("LateInit step end: StartHostedServices");
+
+        Logger.LogInformation("LateInit step begin: StartRelayClient");
         StartRelayClient();
+        Logger.LogInformation("LateInit step end: StartRelayClient");
     }
 
     private void DetectSdkVersion()

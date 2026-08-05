@@ -44,6 +44,7 @@ internal static class IpcHelpers
 
     public static Dictionary<string, string> ReadAndDeleteIpcHandshakeFile()
     {
+        Logging.LogInformation("Resolving the handshake file path");
         var tempDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ReadyM.Launcher");
         var filePath = Path.Combine(tempDir, "wukong_handshake.env");
 

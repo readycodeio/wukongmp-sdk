@@ -1,4 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using CSharpModBase;
 using DryIoc;
 using Microsoft.Extensions.Logging;
@@ -39,8 +42,41 @@ public abstract class ModBase : ICSharpModExV2
     /// </summary>
     public void Init()
     {
+        // NOTE: LogInformation, not LogDebug, because a release build sets the minimum level to Information and
+        // would drop these. The mod loader force-flushes every line for the duration of Init, so a step that
+        // takes the process down is the last line in the log.
+        Logger.LogInformation("Init step begin: ScanForAndRegisterSystems");
         ScanForAndRegisterSystems();
+        Logger.LogInformation("Init step end: ScanForAndRegisterSystems");
+
+        // Compiling Initialize is separated from running it on purpose. JIT-ing it makes Mono resolve every
+        // type its body mentions, which reaches into the game assemblies we rewrote in memory, and a fault in
+        // there happens before any statement in the method runs. Without this probe a crash during compilation
+        // and a crash on the first line look identical from the log.
+        Logger.LogInformation("Init step begin: JIT Initialize");
+        try
+        {
+            var initializeMethod = GetType().GetMethod(
+                nameof(Initialize),
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public
+            );
+
+            if (initializeMethod != null)
+                RuntimeHelpers.PrepareMethod(initializeMethod.MethodHandle);
+            else
+                Logger.LogWarning("Could not reflect Initialize, skipping the JIT probe");
+        }
+        catch (Exception ex)
+        {
+            // Not fatal: the probe is diagnostic only, and Initialize is compiled on call anyway.
+            Logger.LogError(ex, "JIT probe for Initialize failed");
+        }
+
+        Logger.LogInformation("Init step end: JIT Initialize");
+
+        Logger.LogInformation("Init step begin: Initialize");
         Initialize(WukongApi.Services);
+        Logger.LogInformation("Init step end: Initialize");
     }
 
     private void ScanForAndRegisterSystems()
