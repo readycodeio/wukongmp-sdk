@@ -14,6 +14,11 @@ internal static class ShimUtils
 {
     private static RelayClient CreateRelayNetworked(IDependencyContainer container, string host, int port, ConnectionTicket ticket, bool noDisconnect, string? shimDbPath = null)
     {
+        // NOTE: LogInformation throughout so these survive a release build's minimum level. The mod loader
+        // force-flushes for the whole init window, so the last "step begin" without a matching "step end"
+        // names whatever took the process down.
+        var logger = container.Resolve<ILogger>();
+
         var options = new RelayConnectionOptions
         {
             Ticket = ticket,
@@ -22,7 +27,7 @@ internal static class ShimUtils
         if (shimDbPath != null)
         {
             var shimSerializer = new ShimSerializer(container.Resolve<TextRelaySerializer>());
-            container.Resolve<ILogger>().LogInformation("Loading shim database from: {Path}", shimDbPath);
+            logger.LogInformation("Loading shim database from: {Path}", shimDbPath);
             var shimDb = shimSerializer.LoadDatabaseMetadata(shimDbPath);
 
             if (shimDb != null && shimDb.MaxPlayerId != PlayerId.Invalid)
@@ -32,7 +37,22 @@ internal static class ShimUtils
             }
         }
 
-        return new RelayClient(host, port, options, container.Resolve<NetworkSessionStats>(), container.Resolve<ILoggerFactory>().CreateLogger("Relay Client"), noDisconnect);
+        logger.LogInformation("CreateRelayNetworked step begin: Resolve NetworkSessionStats");
+        var sessionStats = container.Resolve<NetworkSessionStats>();
+        logger.LogInformation("CreateRelayNetworked step end: Resolve NetworkSessionStats");
+
+        logger.LogInformation("CreateRelayNetworked step begin: Resolve ILoggerFactory and create logger");
+        var relayLogger = container.Resolve<ILoggerFactory>().CreateLogger("Relay Client");
+        logger.LogInformation("CreateRelayNetworked step end: Resolve ILoggerFactory and create logger");
+
+        // NOTE: this is the first thing in the whole startup path that touches LiteNetLib, which is one of the
+        // bundled assemblies the native loader replaces with a newer build than the game ships. If a crash
+        // lands between this pair, that replacement is the thing to look at.
+        logger.LogInformation("CreateRelayNetworked step begin: new RelayClient (first touch of LiteNetLib)");
+        var relayClient = new RelayClient(host, port, options, sessionStats, relayLogger, noDisconnect);
+        logger.LogInformation("CreateRelayNetworked step end: new RelayClient");
+
+        return relayClient;
     }
 
     internal static void InitRelayPlayShim(IDependencyContainer container, string shimPath)
@@ -84,8 +104,14 @@ internal static class ShimUtils
 
     internal static void InitRelay(DI container, string host, int port, ConnectionTicket ticket, bool noDisconnect)
     {
-        var relayClient = CreateRelayNetworked(container, host, port, ticket, noDisconnect);
+        var logger = container.Resolve<ILogger>();
 
+        logger.LogInformation("InitRelay step begin: CreateRelayNetworked");
+        var relayClient = CreateRelayNetworked(container, host, port, ticket, noDisconnect);
+        logger.LogInformation("InitRelay step end: CreateRelayNetworked");
+
+        logger.LogInformation("InitRelay step begin: RelayClient.Attach");
         container.RelayClient.Attach(relayClient);
+        logger.LogInformation("InitRelay step end: RelayClient.Attach");
     }
 }

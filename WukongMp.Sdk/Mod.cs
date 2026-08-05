@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -13,7 +12,6 @@ using Microsoft.Extensions.Logging;
 using PreludeLib.Compat;
 using ReadyM.Api;
 using ReadyM.Api.DI;
-using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Relay.Client;
 using UnrealEngine.Engine;
@@ -52,11 +50,6 @@ internal class Mod : ModBase
 
     protected override void Initialize(IDependencyContainer services)
     {
-#if DEBUG
-        Trace.Listeners.Clear();
-        Trace.Listeners.Add(new LoggingListener(Logger));
-#endif
-
         // NOTE: LogInformation so these survive a release build's minimum level, and the mod loader
         // force-flushes for the whole Init window so the last line written is the step that crashed.
         //
@@ -64,6 +57,23 @@ internal class Mod : ModBase
         // a crash is in the body. If it never appears, the fault is in Mono compiling or type-loading this
         // method, before any of it runs.
         Logger.LogInformation("Initialize entered");
+
+// #if DEBUG
+//         // NOTE: Trace.Listeners is not a cheap property access. The first touch initialises the diagnostics
+//         // config, which on Mono goes through ConfigurationManager and pulls System.Configuration and
+//         // System.Xml out of the game's bundled assemblies for the first time.
+//         //
+//         // Bracketed separately because a crash report put the fault between "Initialize entered" and the next
+//         // line, and in a Debug build these two statements are the only code in between. Note the whole block is
+//         // DEBUG only, so a Release build of the mod does not execute any of it.
+//         Logger.LogInformation("Initialize step begin: Trace.Listeners.Clear");
+//         Trace.Listeners.Clear();
+//         Logger.LogInformation("Initialize step end: Trace.Listeners.Clear");
+//
+//         Logger.LogInformation("Initialize step begin: Trace.Listeners.Add");
+//         Trace.Listeners.Add(new LoggingListener(Logger));
+//         Logger.LogInformation("Initialize step end: Trace.Listeners.Add");
+// #endif
 
         // Split from the Valid check because constructing LaunchParameters reads and deletes the handshake
         // file, which is real work, while Valid is just field comparisons.
