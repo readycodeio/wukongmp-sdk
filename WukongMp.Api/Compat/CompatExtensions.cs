@@ -8,7 +8,7 @@ internal static class CompatExtensions
 {
     public static bool TryDequeue<T>(this Queue<T> queue, out T item)
     {
-        if (queue == null) 
+        if (queue == null)
             throw new ArgumentNullException(nameof(queue));
 
         if (queue.Count > 0)
@@ -16,10 +16,11 @@ internal static class CompatExtensions
             item = queue.Dequeue();
             return true;
         }
+
         item = default!;
         return false;
     }
-    
+
     private static readonly ThreadLocal<char[]> _splitBuffer = new(() => new char[1]);
 
     public static string[] Split(this string str, char separator, StringSplitOptions options = StringSplitOptions.None)
@@ -28,24 +29,25 @@ internal static class CompatExtensions
         buffer[0] = separator;
         return str.Split(buffer, options);
     }
-    
-    public static V GetValueOrDefault<K, V>(this Dictionary<K, V> dict, K key)
+
+    public static TV? GetValueOrDefault<TK, TV>(this Dictionary<TK, TV> dict, TK key)
+        where TV : class
     {
-        if (dict == null) 
+        if (dict == null)
             throw new ArgumentNullException(nameof(dict));
-        if (key == null) 
+        if (key == null)
             throw new ArgumentNullException(nameof(key));
 
         return dict.TryGetValue(key, out var value)
             ? value
-            : default(V)!;
+            : null;
     }
 
     public static V GetValueOrDefault<K, V>(this Dictionary<K, V> dict, K key, V defaultValue)
     {
-        if (dict == null) 
+        if (dict == null)
             throw new ArgumentNullException(nameof(dict));
-        if (key == null) 
+        if (key == null)
             throw new ArgumentNullException(nameof(key));
 
         return dict.TryGetValue(key, out var value)

@@ -335,18 +335,6 @@ internal class Mod : ModBase
             Logger.LogDebug("Alt + K");
             DebugUtils.ResetPlayersAnimation(di.State, di.PlayerState);
         });
-
-        WukongApi.Input.RegisterKeyBind(Key.J, () =>
-        {
-            Logger.LogDebug("J");
-            if (di.WukongInputManager.CanApplyInput())
-            {
-                if (di.PlayerState.LocalMainCharacter is not { } mainEntity)
-                    return;
-
-                CutsceneUtils.TeleportLocalPlayerToCutsceneLocation(mainEntity);
-            }
-        });
 #endif
         WukongApi.Input.RegisterKeyBind(Key.K, () =>
         {
@@ -355,7 +343,10 @@ internal class Mod : ModBase
                 di.WidgetManager.ToggleChatVisibility();
         });
 
-        WukongApi.Input.RegisterKeyBind(Key.F1, () => { di.WidgetManager.ToggleCommandVisibility(); });
+        WukongApi.Input.RegisterKeyBind(Key.F1, () =>
+        {
+            di.WidgetManager.ToggleCommandVisibility();
+        });
 
         WukongApi.Input.RegisterKeyBind(Key.UP, () =>
         {
@@ -397,11 +388,6 @@ internal class Mod : ModBase
     public override void DeInit()
     {
         Logger.LogInformation("DeInit");
-
-        if (!LaunchParameters.Instance.ValidForCoOp)
-        {
-            return;
-        }
 
         if (_apiPatcher.IsPatched)
             _apiPatcher.Unpatch();

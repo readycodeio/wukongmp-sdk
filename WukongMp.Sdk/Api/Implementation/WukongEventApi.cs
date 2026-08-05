@@ -6,6 +6,7 @@ using LiteNetLib;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Common;
 using ReadyM.Api.Multiplayer.ECS.Managers;
+using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Relay.Client.State;
 using WukongMp.Api;
 using WukongMp.Api.ECS.Archetypes;
@@ -103,7 +104,7 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
     public event Action<PlayerId, AreaId>? OnOtherPlayerInsideArea;
     public event Action<PlayerId, AreaId>? OnOtherPlayerOutsideArea;
     public event Action<PlayerId>? OnConnected;
-    public event Action<PlayerId, DisconnectReason>? OnDisconnected;
+    public event Action<PlayerId, DisconnectedReason>? OnDisconnected;
     public event Action<ReadyMainCharacter, ReadyCharacter?>? OnPlayerDead;
     public event Action<ReadyTamer, ReadyCharacter?>? OnMonsterDead;
     public event Action<ReadyTamer>? OnMonsterDestroyed;
