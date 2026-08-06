@@ -27,4 +27,7 @@ internal static class WukongComponentUtils
             .Add<TransformComponent>()
             .Add<TeamComponent>()
             .AddTag<DisallowOwnershipTransferOnScopeLeaveTag>();
+
+    public static void SetupServerPvpStateArchetype(EntityBuilderBase b)
+        => b.Add(new PvpStateComponent());
 }
