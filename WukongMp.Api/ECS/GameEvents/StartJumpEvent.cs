@@ -9,7 +9,7 @@ namespace WukongMp.Api.ECS.GameEvents;
 internal readonly struct StartJumpEvent(
     Entity entity,
     ESkillDirection startJumpDir,
-    FVector2D inputVector) : IEquatable<StartJumpEvent>, IOwnershipManaged
+    FVector2D inputVector) : IEquatable<StartJumpEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly ESkillDirection StartJumpDir = startJumpDir;

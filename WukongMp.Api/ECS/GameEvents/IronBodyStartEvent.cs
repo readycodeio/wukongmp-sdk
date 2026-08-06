@@ -4,7 +4,7 @@ using ReadyM.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct IronBodyStartEvent(Entity entity) : IEquatable<IronBodyStartEvent>, IOwnershipManaged
+internal readonly struct IronBodyStartEvent(Entity entity) : IEquatable<IronBodyStartEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
 

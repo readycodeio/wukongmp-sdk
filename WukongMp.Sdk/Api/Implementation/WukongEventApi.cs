@@ -121,7 +121,7 @@ internal sealed class WukongEventApi : IDisposable, IWukongEventApi
     private void InvokeOnConnected(PlayerId playerId, Entity _)
         => OnConnected?.Invoke(playerId);
 
-    private void InvokeOnDisconnected(PlayerId playerId, Entity _, DisconnectReason reason)
+    private void InvokeOnDisconnected(PlayerId playerId, Entity? _, DisconnectedReason reason)
         => OnDisconnected?.Invoke(playerId, reason);
 
     private void InvokeOnOtherPlayerInsideArea(PlayerId playerId, AreaId areaId, OtherPlayerInsideAreaReason _)

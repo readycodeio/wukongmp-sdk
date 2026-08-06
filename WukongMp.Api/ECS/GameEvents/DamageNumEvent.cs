@@ -13,7 +13,7 @@ internal readonly struct DamageNumEvent(
     float amplitude,
     FVector realHitLocation,
     FVector realHitDir,
-    EDmgNumUITeamType attackerTeamType) : IEquatable<DamageNumEvent>, IOwnershipManaged
+    EDmgNumUITeamType attackerTeamType) : IEquatable<DamageNumEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly EDamageNumberType DamageType = damageType;

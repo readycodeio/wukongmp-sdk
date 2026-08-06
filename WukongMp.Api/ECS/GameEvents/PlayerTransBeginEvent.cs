@@ -10,7 +10,7 @@ internal readonly struct PlayerTransBeginEvent(
     int unitResId,
     int unitBornSkillId,
     bool enableBlendViewTarget,
-    EPlayerTransBeginType transBeginType) : IEquatable<PlayerTransBeginEvent>, IOwnershipManaged
+    EPlayerTransBeginType transBeginType) : IEquatable<PlayerTransBeginEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly int UnitResId = unitResId;

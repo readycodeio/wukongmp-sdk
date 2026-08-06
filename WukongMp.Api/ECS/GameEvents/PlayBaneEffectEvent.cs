@@ -8,7 +8,7 @@ namespace WukongMp.Api.ECS.GameEvents;
 internal readonly struct PlayBaneEffectEvent(
     Entity entity,
     EAbnormalStateType stateType,
-    EAbnromalDispActionType actionType) : IEquatable<PlayBaneEffectEvent>, IOwnershipManaged
+    EAbnromalDispActionType actionType) : IEquatable<PlayBaneEffectEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly EAbnormalStateType StateType = stateType;

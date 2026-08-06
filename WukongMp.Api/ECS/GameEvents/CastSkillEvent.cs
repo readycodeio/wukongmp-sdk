@@ -8,7 +8,7 @@ namespace WukongMp.Api.ECS.GameEvents;
 internal readonly struct CastSkillEvent(
     Entity entity,
     int skillId,
-    ECastSkillSourceType skillType) : IEquatable<CastSkillEvent>, IOwnershipManaged
+    ECastSkillSourceType skillType) : IEquatable<CastSkillEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly int SkillId = skillId;

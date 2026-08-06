@@ -6,7 +6,7 @@ using ReadyM.Api.Mapping.Tags;
 namespace WukongMp.Api.ECS.GameEvents;
 
 internal readonly struct StopBaneEffectEvent(Entity entity, EAbnormalStateType stateType)
-    : IEquatable<StopBaneEffectEvent>, IOwnershipManaged
+    : IEquatable<StopBaneEffectEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly EAbnormalStateType StateType = stateType;

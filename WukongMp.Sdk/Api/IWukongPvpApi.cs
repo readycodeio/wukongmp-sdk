@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Sdk.Entities;
 
 namespace WukongMp.Sdk.Api;
@@ -25,5 +24,6 @@ public interface IWukongPvpApi
     IEnumerable<int> RoundWinners { get; set; }
     void InitializeAreaPvpState();
     void SetLastRoundWinnerTeam(int winner);
-    ref PvPComponent PvpData(ReadyMainCharacter mainCharacter);
+    void SetIsReadyForPvp(ReadyMainCharacter mainCharacter, bool ready);
+    bool IsReadyForPvP(ReadyMainCharacter mainCharacter);
 }

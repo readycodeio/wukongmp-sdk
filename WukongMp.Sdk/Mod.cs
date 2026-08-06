@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using b1;
 using b1.BGW;
 using CSharpModBase;
@@ -12,6 +13,7 @@ using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Compat;
 using ReadyM.Api;
+using ReadyM.Api.Command;
 using ReadyM.Api.DI;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Systems;
@@ -120,7 +122,8 @@ internal class Mod : ModBase
         Utils.TryRunOnGameThread(() =>
         {
             AddModSystemsToEcs();
-            SetUpRpcOffsets();
+            SetUpClientRpcOffsets();
+            SetUpServerRpcOffsets();
             DebugUtils.LogUe4SsPresence();
             DetectSdkVersion();
             RegisterKeybinds(DI.Instance);
@@ -147,6 +150,7 @@ internal class Mod : ModBase
         {
             if (!DI.Instance.Connection.IsRunning)
             {
+                DI.Instance.World.SetThread(Thread.CurrentThread);
                 DI.Instance.EcsLoop.Start();
                 DI.Instance.Connection.Start();
             }
@@ -187,24 +191,53 @@ internal class Mod : ModBase
         }
     }
 
-    private void SetUpRpcOffsets()
+    private void SetUpClientRpcOffsets()
     {
         var rpcClasses = DI.Instance.Container.GetServiceRegistrations()
-            .Where(r => typeof(RpcClassBase).IsAssignableFrom(r.Factory.ImplementationType ?? r.ServiceType))
+            .Where(r => typeof(ClientRpcHandler).IsAssignableFrom(r.Factory.ImplementationType ?? r.ServiceType))
             .Where(r => r.Factory.Reuse is null or SingletonReuse)
             .OrderBy(t => t.FactoryRegistrationOrder) // ensure deterministic order
             .ToList();
 
         Logger.LogDebug("Found {RpcCount} RPC classes", rpcClasses.Count);
-        var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>();
-        var schedulerSystem = DI.Instance.Container.Resolve<ReceiveSystem>();
+        var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Client);
 
         foreach (var rpcClassRegistration in rpcClasses)
         {
-            var rpcObject = (RpcClassBase)DI.Instance.Container.Resolve(rpcClassRegistration.ServiceType, rpcClassRegistration.OptionalServiceKey);
+            var rpcObject = (ClientRpcHandler)DI.Instance.Container.Resolve(rpcClassRegistration.ServiceType, rpcClassRegistration.OptionalServiceKey);
             var offsetBefore = offsetProvider.CurrentOffset;
-            rpcObject.Initialize(offsetProvider, schedulerSystem.Scheduler);
+            rpcObject.Initialize(offsetProvider);
             Logger.LogDebug("Registered RPC class {RpcClass} with codes {BeforeOffset}..{AfterOffset}", rpcClassRegistration.ServiceType.FullName, offsetBefore, offsetProvider.CurrentOffset - 1);
+        }
+    }
+
+    private void SetUpServerRpcOffsets()
+    {
+        var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Server);
+
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(x => x.FullName))
+        {
+            var manifest = assembly
+                .GetTypes()
+                .FirstOrDefault(t => t is { Name: "ServerRpcManifest", IsAbstract: true, IsSealed: true });
+
+            if (manifest is null)
+                continue;
+
+            var totalCountField = manifest.GetField("TotalEventCount", BindingFlags.Public | BindingFlags.Static);
+            var offsetProperty = manifest.GetProperty("Offset", BindingFlags.Public | BindingFlags.Static);
+
+            if (totalCountField is null || offsetProperty is null)
+            {
+                Logger.LogError("Assembly {Assembly} has ServerRpcManifest but is missing expected members - possible generator version mismatch.", assembly.GetName().Name);
+                continue;
+            }
+
+            var totalCount = (byte)totalCountField.GetValue(null)!;
+            var offset = offsetProvider.GetNextOffset(totalCount);
+            offsetProperty.SetValue(null, offset);
+
+            Logger.LogDebug("Assigned server RPC offset {Offset} ({Count} events) from {Assembly}", offset, totalCount, assembly.GetName().Name);
         }
     }
 
@@ -343,10 +376,7 @@ internal class Mod : ModBase
                 di.WidgetManager.ToggleChatVisibility();
         });
 
-        WukongApi.Input.RegisterKeyBind(Key.F1, () =>
-        {
-            di.WidgetManager.ToggleCommandVisibility();
-        });
+        WukongApi.Input.RegisterKeyBind(Key.F1, () => { di.WidgetManager.ToggleCommandVisibility(); });
 
         WukongApi.Input.RegisterKeyBind(Key.UP, () =>
         {

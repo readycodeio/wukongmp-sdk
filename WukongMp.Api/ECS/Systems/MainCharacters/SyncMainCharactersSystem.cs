@@ -54,7 +54,7 @@ internal class SyncMainCharactersSystem(
         ref var playerComp = ref playerEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
 
-        var isSpectator = mainEntity.GetPvP().IsSpectator;
+        var isSpectator = mainEntity.GetState().IsSpectator;
 
         if (isSpectator != localMainComp.IsSpectatorLocally)
         {

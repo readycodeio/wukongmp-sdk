@@ -6,7 +6,7 @@ using ReadyM.Api.Mapping.Tags;
 namespace WukongMp.Api.ECS.GameEvents;
 
 internal readonly struct MotionMatchingStateEvent(Entity entity, EState_MM state)
-    : IEquatable<MotionMatchingStateEvent>, IOwnershipManaged
+    : IEquatable<MotionMatchingStateEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly EState_MM State = state;

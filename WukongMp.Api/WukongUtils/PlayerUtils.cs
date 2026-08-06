@@ -227,15 +227,15 @@ namespace WukongMp.Api.WukongUtils
         public static void EnableSpectator(MainCharacterEntity mainEntity, SpectatorReason reason)
         {
             Logging.LogDebug("Enabling spectator mode for player {PlayerId} with reason {Reason}", mainEntity.GetState().CharacterNickname, reason);
-            ref var pvp = ref mainEntity.GetPvP();
-            pvp.IsSpectator = true;
-            pvp.SpectatorReason = reason;
+            ref var state = ref mainEntity.GetState();
+            state.IsSpectator = true;
+            state.SpectatorReason = reason;
         }
 
         public static void DisableSpectator(MainCharacterEntity mainEntity)
         {
             Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetState().CharacterNickname);
-            mainEntity.GetPvP().IsSpectator = false;
+            mainEntity.GetState().IsSpectator = false;
             mainEntity.GetLocalState().IsDuringDeathAnim = false;
         }
     }

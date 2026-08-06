@@ -364,8 +364,7 @@ internal sealed class FreeCameraManager(WukongPlayerState playerState)
     /// </summary>
     private void UpdatePawnPositionToCamera()
     {
-        // TODO: Decouple this when PvP component is declared in PvP mod
-        if (playerState.LocalMainCharacter is { } main && main.GetPvP().IsSpectator)
+        if (playerState.LocalMainCharacter is { } main && main.GetState().IsSpectator)
         {
             return;
         }

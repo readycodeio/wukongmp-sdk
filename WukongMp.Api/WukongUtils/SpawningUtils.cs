@@ -141,7 +141,7 @@ internal static class SpawningUtils
 
         // NOTE: Player properties already set in ECS. Therefore the following can be removed
         Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", pvpComp.IsReadyForPvP);
-        Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
+        Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", mainComp.IsSpectator);
 
         // FIXME: (refactor) Equipment should be synced on the actor here
 

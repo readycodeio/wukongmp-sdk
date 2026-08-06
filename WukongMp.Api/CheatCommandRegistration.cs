@@ -2,7 +2,7 @@
 using WukongMp.Api.Chat;
 using WukongMp.Api.State;
 
-namespace WukongMp.Api.Command;
+namespace WukongMp.Api;
 
 internal class CheatCommandRegistration(
     WukongAreaState areaState,

@@ -6,7 +6,7 @@ namespace WukongMp.Api.ECS.GameEvents;
 
 internal readonly struct TriggerFsmStateEvent(
     Entity entity,
-    string fsmStateName) : IEquatable<TriggerFsmStateEvent>, IOwnershipManaged
+    string fsmStateName) : IEquatable<TriggerFsmStateEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly string FsmStateName = fsmStateName;

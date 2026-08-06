@@ -8,7 +8,7 @@ internal readonly struct ProjectileTargetEvent(
     Entity character,
     string projectileName,
     Entity target,
-    string socketName) : IEquatable<ProjectileTargetEvent>, IOwnershipManaged
+    string socketName) : IEquatable<ProjectileTargetEvent>, IOwnershipBased
 {
     public readonly Entity Character = character;
     public readonly string ProjectileName = projectileName;

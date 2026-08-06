@@ -633,7 +633,7 @@ internal static class PatchOnTriggerInputActionImpl
         if (!mainEntity.HasValue)
             return true;
 
-        return !(mainEntity.Value.Pawn == __instance.GetOwner() && mainEntity.Value.GetPvP().IsSpectator);
+        return !(mainEntity.Value.Pawn == __instance.GetOwner() && mainEntity.Value.GetState().IsSpectator);
     }
 }
 

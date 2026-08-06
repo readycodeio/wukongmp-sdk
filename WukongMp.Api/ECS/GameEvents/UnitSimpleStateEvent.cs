@@ -8,7 +8,7 @@ namespace WukongMp.Api.ECS.GameEvents;
 internal readonly struct UnitSimpleStateEvent(
     Entity entity,
     EBGUSimpleState simpleState,
-    bool isRemove) : IEquatable<UnitSimpleStateEvent>, IOwnershipManaged
+    bool isRemove) : IEquatable<UnitSimpleStateEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly EBGUSimpleState SimpleState = simpleState;

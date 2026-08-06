@@ -8,7 +8,7 @@ namespace WukongMp.Api.ECS.GameEvents;
 internal readonly struct ProjectileMoveModeEvent(
     Entity entity,
     string projectileClassName,
-    EBulletOrMagicFieldMoveModeType moveMode) : IEquatable<ProjectileMoveModeEvent>, IOwnershipManaged
+    EBulletOrMagicFieldMoveModeType moveMode) : IEquatable<ProjectileMoveModeEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly string ProjectileClassName = projectileClassName;

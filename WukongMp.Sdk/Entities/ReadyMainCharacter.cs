@@ -4,6 +4,7 @@ using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Mapping.Tags;
 using ReadyM.Wukong.Common.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Values;
 using WukongMp.Api;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
@@ -85,7 +86,8 @@ public readonly struct ReadyMainCharacter
         }
     }
 
-    public bool IsSpectator => Entity.GetPvP().IsSpectator;
+    public bool IsObserver => Entity.GetState().IsSpectator && Entity.GetState().SpectatorReason == SpectatorReason.Api;
+    public bool IsSpectator => Entity.GetState().IsSpectator;
 
     // ---
 

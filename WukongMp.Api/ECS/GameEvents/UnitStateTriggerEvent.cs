@@ -9,7 +9,7 @@ internal readonly struct UnitStateTriggerEvent(
     Entity entity,
     EBUStateTrigger trigger,
     float time,
-    bool needForceUpdate) : IEquatable<UnitStateTriggerEvent>, IOwnershipManaged
+    bool needForceUpdate) : IEquatable<UnitStateTriggerEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly EBUStateTrigger Trigger = trigger;

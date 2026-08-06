@@ -10,6 +10,7 @@ using ReadyM.Api.Idents;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using ReadyM.Wukong.Common.ECS.Values;

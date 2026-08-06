@@ -4,7 +4,7 @@ using ReadyM.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct MontageCancelEvent(Entity entity) : IEquatable<MontageCancelEvent>, IOwnershipManaged
+internal readonly struct MontageCancelEvent(Entity entity) : IEquatable<MontageCancelEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
 

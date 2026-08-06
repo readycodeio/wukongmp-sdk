@@ -12,7 +12,7 @@ internal readonly struct UnitDeadEvent(
     int dmgId,
     int stiffLevel,
     bool isDotDmg,
-    EAbnormalStateType abnormalType) : IEquatable<UnitDeadEvent>, IOwnershipManaged
+    EAbnormalStateType abnormalType) : IEquatable<UnitDeadEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly EDeadReason DeadReason = deadReason;

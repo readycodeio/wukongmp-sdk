@@ -10,7 +10,7 @@ using WukongMp.Sdk.Entities;
 namespace WukongMp.Sdk.Api.Implementation;
 
 [Obsolete("This API is temporary and will be removed in the future when custom data sync is implemented.")]
-internal sealed class WukongPvpApi(WukongAreaState areaState, IClientEntityManager clientNetEntity, ClientWukongArchetypeRegistration wukongArchetype, LaunchParameters launchParameters) 
+internal sealed class WukongPvpApi(WukongAreaState areaState, IClientEntityManager clientNetEntity, ClientWukongArchetypeRegistration wukongArchetype, LaunchParameters launchParameters)
     : IWukongPvpApi
 {
     public int LevelId { get; set; } = launchParameters.LevelId ?? 0;
@@ -48,6 +48,7 @@ internal sealed class WukongPvpApi(WukongAreaState areaState, IClientEntityManag
     }
 
     public bool OwnsPvpState => areaState.OwnsPvpState;
+
     // TODO: These should be settable when not set from Agones
     public bool ImmobilizeAllowed => areaState.CurrentArea?.Room.ImmobilizeAllowed ?? true;
     public bool GourdAllowed => areaState.CurrentArea?.Room.GourdAllowed ?? true;
@@ -74,9 +75,14 @@ internal sealed class WukongPvpApi(WukongAreaState areaState, IClientEntityManag
         }
     }
 
-    public ref PvPComponent PvpData(ReadyMainCharacter mainCharacter)
+    public void SetIsReadyForPvp(ReadyMainCharacter mainCharacter, bool ready)
     {
-        return ref mainCharacter.Entity.GetPvP();
+        mainCharacter.Entity.GetPvP().IsReadyForPvP = ready;
+    }
+
+    public bool IsReadyForPvP(ReadyMainCharacter mainCharacter)
+    {
+        return mainCharacter.Entity.GetPvP().IsReadyForPvP;
     }
 
     public IEnumerable<int> RoundWinners

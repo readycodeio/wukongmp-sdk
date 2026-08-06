@@ -4,6 +4,7 @@ using b1.BGW;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.DI;
+using ReadyM.Api.Mapping.Data;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;

@@ -29,12 +29,9 @@ internal partial class WukongClientRpcCallbacks(
     WukongPlayerState playerState,
     WukongAreaState areaState,
     IMappedEventManager mappedEvent,
-    IRelaySerializer serializer,
-    IRelayClient relayClient,
     INetworkedEntityManager netEntity,
     ILogger logger
-)
-    : RpcClassBase(relayClient, serializer)
+) : ClientRpcHandler
 {
     private readonly IMappedEventManager _mappedEvent = mappedEvent;
     private readonly WukongPlayerState _playerState = playerState;

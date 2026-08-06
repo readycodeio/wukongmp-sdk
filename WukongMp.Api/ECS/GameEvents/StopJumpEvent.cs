@@ -4,7 +4,7 @@ using ReadyM.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct StopJumpEvent(Entity entity) : IEquatable<StopJumpEvent>, IOwnershipManaged
+internal readonly struct StopJumpEvent(Entity entity) : IEquatable<StopJumpEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
 

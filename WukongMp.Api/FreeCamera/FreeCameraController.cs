@@ -58,7 +58,7 @@ namespace WukongMp.Api.FreeCamera
         }
 
         private IEnumerable<PlayerId> AllNotSpectatingPlayerIds
-            => _state.AreaPlayers.Where(p => _playerState.GetMainCharacterByPlayerId(p)?.GetPvP().IsSpectator == false);
+            => _state.AreaPlayers.Where(p => _playerState.GetMainCharacterByPlayerId(p)?.GetState().IsSpectator == false);
 
         private IEnumerable<(PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)> AllPvPPlayers
             => AllNotSpectatingPlayerIds.Select(GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();

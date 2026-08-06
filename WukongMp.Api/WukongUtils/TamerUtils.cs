@@ -103,7 +103,7 @@ namespace WukongMp.Api.WukongUtils
             ref var tamerComp = ref tamerEntity.GetTamer();
             var metaComp = tamerEntity.GetMeta();
             Logging.LogDebug("Adding spawned unit counter for tamer with guid: {Guid} (NetId {NetId}) for player {Player}", tamerComp.Guid, metaComp.NetId, playerId);
-            tamerComp.HoldingPlayers = tamerComp.HoldingPlayers.Add(playerId);
+            tamerComp.AddHoldingPlayers(playerId);
         }
 
         public static void SubtractSpawnedUnitRefCount(TamerEntity tamerEntity, PlayerId playerId)
@@ -116,7 +116,14 @@ namespace WukongMp.Api.WukongUtils
 
         public static void SubtractSpawnedUnitRefCount(ref TamerComponent tamerComp, PlayerId playerId)
         {
-            tamerComp.HoldingPlayers = tamerComp.HoldingPlayers.Remove(playerId);
+            for (var i = 0; i < tamerComp.HoldingPlayersCount; i++)
+            {
+                if (tamerComp.GetHoldingPlayers(i) == playerId)
+                {
+                    tamerComp.RemoveAtHoldingPlayers(i);
+                    return;
+                }
+            }
         }
 
         public static void ClearSpawnedUnitRefCount(TamerEntity tamerEntity)
@@ -124,7 +131,7 @@ namespace WukongMp.Api.WukongUtils
             ref var tamerComp = ref tamerEntity.GetTamer();
             var metaComp = tamerEntity.GetMeta();
             Logging.LogDebug("Clearing spawned unit counter for tamer with guid: {Guid} (NetId {NetId})", tamerComp.Guid, metaComp.NetId);
-            tamerComp.HoldingPlayers = tamerComp.HoldingPlayers.Clear();
+            tamerComp.ClearHoldingPlayers();
             ref var localTamer = ref tamerEntity.GetLocalTamer();
             localTamer.IsLocallySpawned = false;
         }

@@ -8,7 +8,7 @@ namespace WukongMp.Api.ECS.GameEvents;
 internal readonly struct ProjectileDeadEvent(
     Entity entity,
     string projectileClassName,
-    EBGUBulletDestroyReason reason) : IEquatable<ProjectileDeadEvent>, IOwnershipManaged
+    EBGUBulletDestroyReason reason) : IEquatable<ProjectileDeadEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly string ProjectileClassName = projectileClassName;

@@ -5,6 +5,7 @@ using ReadyM.Api.DI;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.Common;
+using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Relay.Client.State;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
@@ -167,7 +168,7 @@ internal sealed class WukongWidgetManager(
         DeinitializeWidgets();
     }
 
-    private void OnDisconnected(PlayerId playerId, Entity entity, DisconnectReason reason)
+    private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectedReason reason)
     {
         _infoMessageWidget.Value.SetVisibility(true);
         _lastDisconnectText = reason switch

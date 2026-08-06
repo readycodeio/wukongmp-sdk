@@ -5,7 +5,7 @@ using ReadyM.Api.Mapping.Tags;
 namespace WukongMp.Api.ECS.GameEvents;
 
 internal readonly struct AddBuffEvent(Entity entity, int buffId, float duration)
-    : IEquatable<AddBuffEvent>, IOwnershipManaged
+    : IEquatable<AddBuffEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly int BuffId = buffId;

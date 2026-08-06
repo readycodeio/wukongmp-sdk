@@ -6,7 +6,7 @@ namespace WukongMp.Api.ECS.GameEvents;
 
 internal readonly struct RestAtShrineEvent(
     Entity entity,
-    int rebirthPointId) : IEquatable<RestAtShrineEvent>, IOwnershipManaged
+    int rebirthPointId) : IEquatable<RestAtShrineEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly int RebirthPointId = rebirthPointId;

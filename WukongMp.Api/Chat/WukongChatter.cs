@@ -19,10 +19,8 @@ internal partial class WukongChatter(
     WukongPlayerState playerState,
     WukongWidgetManager widgetManager,
     ReceiveSystem scheduleSystem,
-    ILogger logger,
-    IRpcClient rpcClient,
-    IRelaySerializer serializer
-) : RpcClassBase(rpcClient, serializer)
+    ILogger logger
+) : ClientRpcHandler
 {
     private string NickName => playerState.LocalPlayerEntity?.GetState().Nickname ?? "";
 

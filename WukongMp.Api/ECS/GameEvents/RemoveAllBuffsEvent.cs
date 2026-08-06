@@ -8,7 +8,7 @@ namespace WukongMp.Api.ECS.GameEvents;
 internal readonly struct RemoveAllBuffsEvent(
     Entity entity,
     EBuffEffectTriggerType triggerType,
-    bool withTriggerRemoveEffect) : IEquatable<RemoveAllBuffsEvent>, IOwnershipManaged
+    bool withTriggerRemoveEffect) : IEquatable<RemoveAllBuffsEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly EBuffEffectTriggerType TriggerType = triggerType;

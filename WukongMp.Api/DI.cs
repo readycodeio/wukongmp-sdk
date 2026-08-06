@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using b1;
 using BtlShare;
@@ -72,6 +73,7 @@ internal sealed class DI : IDependencyContainer
         => Container.RegisterInstance<TService>(instance);
 
     public T Resolve<T>() => Container.Resolve<T>();
+    public IEnumerable<T> ResolveAll<T>() => Container.ResolveMany<T>();
 
     public void RegisterSingleton<T>() => Container.Register<T>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
     public void RegisterSingleton<T>(T instance) => Container.RegisterInstance(instance, ifAlreadyRegistered: IfAlreadyRegistered.Replace);
@@ -144,7 +146,18 @@ internal sealed class DI : IDependencyContainer
         Logger.LogDebug("Initializing DI...");
         Container.RegisterInstance<IDependencyContainer>(Instance);
         
-        Container.Register<RpcOffsetProvider>();
+        Container.Register<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Client);
+        Container.Register<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Server);
+
+        Container.RegisterInitializer<object>((obj, s) =>
+        {
+            if (obj is RpcBase client)
+            {
+                client.RelayClient = s.Resolve<IRpcClient>();
+                client.Serializer = s.Resolve<IRelaySerializer>();
+                client.Scheduler = s.Resolve<ReceiveSystem>().Scheduler;
+            }
+        });
 
         Container.RegisterInstance(LaunchParameters.Instance);
         Container.RegisterInstance(new NetworkSessionStats(LaunchParameters.Instance.UserGuid.ToString(), LaunchParameters.Instance.Region));
@@ -160,6 +173,7 @@ internal sealed class DI : IDependencyContainer
         // This is fragile and should be fixed
         Container.RegisterMany<DefaultAreaArchetypeRegistration>(nonPublicServiceTypes: true);
         Container.RegisterMany<DefaultPlayerArchetypeRegistration>(nonPublicServiceTypes: true);
+        Container.RegisterMany<DefaultCellArchetypeRegistration>(nonPublicServiceTypes: true);
         Container.RegisterMany<ClientWukongArchetypeRegistration>(nonPublicServiceTypes: true);
 
         Container.Register<INetworkedComponentRegistration, DefaultNetworkedComponentRegistration>();
@@ -191,7 +205,7 @@ internal sealed class DI : IDependencyContainer
 
         Container.Register<ReceiveSystem>();
         Container.Register<ClientEcsUpdateLoop>();
-        Container.Register<JobRegistry>();
+        Container.Register<SerializationJobRegistry>();
         Container.Register<ClientState>();
         Container.Register<WukongPlayerState>();
         Container.Register<IClientEntityManager, ClientNetworkedEntityState>();

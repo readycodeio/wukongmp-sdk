@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using ReadyM.Api.DI;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
@@ -115,7 +116,7 @@ internal class WukongConnectionManager(
         }, this);
     }
 
-    private void OnDisconnectedHandler(PlayerId playerId, Entity entity, DisconnectReason disconnectReason)
+    private void OnDisconnectedHandler(PlayerId playerId, Entity? entity, DisconnectedReason disconnectReason)
     {
         Logging.LogInformation("Disconnected");
         if (disconnectReason == DisconnectedReason.ClientDisconnected)

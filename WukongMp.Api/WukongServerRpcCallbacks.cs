@@ -1,15 +1,11 @@
 ﻿using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.DI;
-using ReadyM.Api.Idents;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Mapping.Tags;
-using ReadyM.Api.Multiplayer;
-using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Systems;
+using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Relay.Client.Utilities;
-using ReadyM.Wukong.Common.DTO;
-using ReadyM.Wukong.Common.ECS.Values;
+using ReadyM.Wukong.Common.Rpc;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.UI;
 
@@ -20,18 +16,16 @@ namespace WukongMp.Api;
 internal partial class WukongServerRpcCallbacks(
     ReceiveSystem schedulerSystem,
     IMappedEventManager mappedEvent,
-    IRelayClient relayClient,
     NetworkSessionStats sessionStats,
     WukongWidgetManager widgetManager,
     ILogger logger
-) : IHostedService
+) : ServerRpcClient
 {
-    private IRelayClient RelayClient => relayClient;
     private IMappedEventManager MappedEvent => mappedEvent;
 
-    public void OnScopeStart()
+    public override void OnScopeStart()
     {
-        InitRpc();
+        base.OnScopeStart();
 
         MappedEvent.RegisterEcsEventHandler<SkipMovieEvent, WukongServerRpcCallbacks>(static (ev, self) =>
         {
@@ -45,13 +39,7 @@ internal partial class WukongServerRpcCallbacks(
         }, this);
     }
 
-    public void Dispose()
-    {
-        DeInitRpc();
-    }
-
-    [ServerRpcEvent("SkipMovie")]
-    private void OnSkipMovie(SkipMovieData data)
+    partial void OnSkipMovie(SkipMovieData data)
     {
         schedulerSystem.Scheduler.Schedule(static (_, self, data0) =>
         {
@@ -65,43 +53,10 @@ internal partial class WukongServerRpcCallbacks(
         }, this, data);
     }
 
-    // NOTE: This is declared here in order to generate send methods
-    [ServerRpcEvent("MovieStarted")]
-    private void OnMovieStarted(int sequenceId, AreaId areaId)
-    {
-        // Do nothing on response from server.
-    }
-
-    // NOTE: This is declared here in order to generate send methods
-    [ServerRpcEvent("MovieFinished")]
-    private void OnMovieFinished(int sequenceId, AreaId areaId)
-    {
-        // Do nothing on response from server.
-    }
-
-    [ServerRpcEvent("BeguilingChant")]
-    private void OnBeguilingChant(byte stateRaw)
-    {
-        var state = (BeguilingChantState)stateRaw;
-        schedulerSystem.Scheduler.Schedule(static (_, self, state0) =>
-        {
-            self.MappedEvent.InvokeInGameIfApplicable(new BeguilingChantEvent(
-                state: state0
-            ), default(EmptyContext));
-        }, this, state);
-    }
-
-    [ServerRpcEvent("EnableCheats")]
-    private void OnEnableCheats(AreaId areaId, bool enabled)
-    {
-        // Do nothing on response from server.
-    }
-
     private static readonly Stopwatch PingStopwatch = Stopwatch.StartNew();
     private static long _lastPingTimestamp;
 
-    [ServerRpcEvent("Ping")]
-    private void OnPing(long timestamp)
+    partial void OnPing(long timestamp)
     {
         if (timestamp != _lastPingTimestamp)
         {
