@@ -19,12 +19,16 @@ internal class WukongNetworkedComponentRegistration : INetworkedComponentRegistr
 
         // Main character
         registry.RegisterComponent<MainCharacterComponent>();
+        registry.RegisterComponent<PvPComponent>(DeliveryMethod.ReliableOrdered);
 
-        // Room
+        // Area
         registry.RegisterComponent<RoomComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<MovieComponent>(DeliveryMethod.ReliableOrdered);
 
         // Player
         registry.RegisterComponent<PlayerComponent>(DeliveryMethod.ReliableOrdered);
+        
+        // Global singleton
+        registry.RegisterComponent<PvpStateComponent>(DeliveryMethod.ReliableOrdered);
     }
 }

@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Idents;
-using ReadyM.Api.Multiplayer.Serialization;
 using ReadyM.Relay.Server.Sdk.Ecs;
 using ReadyM.Relay.Server.Sdk.Rpc;
 using ReadyM.Wukong.Common.ECS.Components;
@@ -14,7 +13,7 @@ public partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandlers
     {
         SendPing(context.Sender, timestamp);
     }
-    
+
     private readonly Dictionary<int, HashSet<PlayerId>> _skipMovieRequests = new();
 
     partial void OnSkipMovie(RpcContext context, SkipMovieData data)
@@ -31,10 +30,7 @@ public partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandlers
         }
 
         var connectedPlayers = 0;
-        ecs.Query<MainCharacterComponent>((ref _) =>
-        {
-            connectedPlayers++;
-        });
+        ecs.Query<MainCharacterComponent>((ref _) => { connectedPlayers++; });
 
         var response = new SkipMovieData
         {
@@ -55,25 +51,21 @@ public partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandlers
         }
     }
 
-    // partial void OnMovieStarted(RpcContext context, int sequenceId, AreaId areaId)
-    // {
-    //     if (serverState.AreaEntries.TryGetValue(areaId, out var areaEntry))
-    //     {
-    //         var areaEntity = areaEntry.AreaEntity;
-    //         ref var movieComp = ref areaEntity.GetComponent<MovieComponent>();
-    //         movieComp.StartedSequences = movieComp.StartedSequences.Add(sequenceId);
-    //         logger.LogDebug("Marked movie {Id} as started in area {AreaId}", sequenceId, areaId);
-    //     }
-    // }
-    //
-    // partial void OnMovieFinished(RpcContext context, int sequenceId, AreaId areaId)
-    // {
-    //     if (serverState.AreaEntries.TryGetValue(areaId, out var areaEntry))
-    //     {
-    //         var areaEntity = areaEntry.AreaEntity;
-    //         ref var movieComp = ref areaEntity.GetComponent<MovieComponent>();
-    //         movieComp.FinishedSequences = movieComp.FinishedSequences.Add(sequenceId);
-    //         logger.LogDebug("Marked movie {Id} as finished in area {AreaId}", sequenceId, areaId);
-    //     }
-    // }
+    partial void OnMovieStarted(RpcContext context, int sequenceId, AreaId areaId)
+    {
+        ecs.Query<MovieComponent>((ref movie) =>
+        {
+            movie.AddStartedSequences(sequenceId);
+            logger.LogDebug("Marked movie {Id} as started in area {AreaId}", sequenceId, areaId);
+        });
+    }
+
+    partial void OnMovieFinished(RpcContext context, int sequenceId, AreaId areaId)
+    {
+        ecs.Query<MovieComponent>((ref movie) =>
+        {
+            movie.AddFinishedSequences(sequenceId);
+            logger.LogDebug("Marked movie {Id} as finished in area {AreaId}", sequenceId, areaId);
+        });
+    }
 }
