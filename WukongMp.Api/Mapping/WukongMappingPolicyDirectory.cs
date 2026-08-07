@@ -121,7 +121,7 @@ internal class WukongMappingPolicyDirectory(
         return true;
     }
 
-    public bool IsTamerMapped([NotNullWhen(true)] BUTamerActor? tamer, [NotNullWhen(true)] out TamerEntity? tamerEntity)
+    public bool IsTamerMapped([NotNullWhen(true)] ABGUTamerBase? tamer, [NotNullWhen(true)] out TamerEntity? tamerEntity)
     {
         if (tamer.IsNullOrDestroyed())
         {
@@ -142,7 +142,7 @@ internal class WukongMappingPolicyDirectory(
             return false;
         }
 
-        tamerEntity = new(entity.Value);
+        tamerEntity = new TamerEntity(entity.Value);
 
         if (tamer != tamerEntity.Value.Tamer)
         {

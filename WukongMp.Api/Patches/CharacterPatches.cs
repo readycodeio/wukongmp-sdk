@@ -684,39 +684,6 @@ internal class PatchBeAttackedDeadEventSettlementProcess
     }
 }
 
-[HarmonyPatch(typeof(CharacterAttrDataInitTemplate), nameof(CharacterAttrDataInitTemplate.InitDataPreBeginPlay))]
-[HarmonyPatchCategory(PatchCategory.Connected)]
-internal static class PatchTamerStatResetOnBeginPlay
-{
-    public static void Postfix(AActor ___Owner)
-    {
-        if (___Owner is not BGU_CharacterAI ai)
-            return;
-
-        var tamer = ai.GetTamerOwner();
-
-        if (tamer.IsNullOrDestroyed())
-            return; // no tamer
-
-        var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(tamer);
-
-        if (!tamerEntity.HasValue)
-            return; // not found
-
-        if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
-            return; // not owned
-
-        ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-
-        if (!localTamer.IsTamerSynced)
-            return; // not synced
-
-        ref var hpComp = ref tamerEntity.Value.GetHp();
-
-        hpComp.HpMultiplier = 1; // Reset multiplier so that the HP scaling system will re-scale it again
-    }
-}
-
 [HarmonyPatch(typeof(BUC_BattleStateData), "IsUnitInBattle")]
 [HarmonyPatchCategory(PatchCategory.Connected)]
 internal class PatchIsUnitInBattle

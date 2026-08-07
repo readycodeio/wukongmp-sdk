@@ -2,11 +2,15 @@ using System;
 using b1;
 using BtlShare;
 using Friflo.Engine.ECS;
+using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Sdk.Api;
 
 namespace WukongMp.Sdk.Entities;
 
+/// <summary>
+/// Represents a tamer (monster) entity in the Wukong multiplayer SDK.
+/// </summary>
 public readonly struct ReadyTamer
     : IReadyEntity<ReadyTamer>,
         IReadyConvertable<ReadyTamer, ReadyCharacter>,
@@ -84,8 +88,22 @@ public readonly struct ReadyTamer
         get
         {
             var tamerEntity = new TamerEntity(Entity);
-            ref var tamerComp = ref tamerEntity.GetTamer();
-            return tamerComp.Guid;
+            return tamerEntity.GetTamer().Guid;
+        }
+    }
+    
+    public int HpScalingPercent
+    {
+        get
+        {
+            var tamerEntity = new TamerEntity(Entity);
+            return tamerEntity.GetHp().HpScalingPercent;
+        }
+        set
+        {
+            var tamerEntity = new TamerEntity(Entity);
+            ref var hpComp = ref tamerEntity.GetHp();
+            hpComp.HpScalingPercent = value;
         }
     }
 
@@ -94,8 +112,7 @@ public readonly struct ReadyTamer
         get
         {
             var tamerEntity = new TamerEntity(Entity);
-            ref var tamerComp = ref tamerEntity.GetTamer();
-            return tamerComp.IsBossOrElite;
+            return tamerEntity.GetTamer().IsBossOrElite;
         }
     }
 }

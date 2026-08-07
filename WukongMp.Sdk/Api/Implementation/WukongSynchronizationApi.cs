@@ -139,6 +139,16 @@ internal sealed class WukongSynchronizationApi(
         return null;
     }
 
+    public ReadyTamer? GetTamerEntityByActor(ABGUTamerBase? actor)
+    {
+        if (mappingDir.IsTamerMapped(actor, out var entity))
+        {
+            return new ReadyTamer(this, entity.Value.Entity);
+        }
+
+        return null;
+    }
+
     public ReadyMainCharacter? GetPlayerEntityByLastTransformation(BGUCharacterCS? targetCharacter)
     {
         var entity = pawnState.GetEntityByLastPlayerPawn(targetCharacter);

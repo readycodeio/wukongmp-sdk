@@ -13,6 +13,9 @@ using WukongMp.Sdk.Api;
 
 namespace WukongMp.Sdk.Entities;
 
+/// <summary>
+/// Represents the player character entity in the game.
+/// </summary>
 public readonly struct ReadyMainCharacter
     : IReadyEntity<ReadyMainCharacter>,
         IReadyConvertable<ReadyMainCharacter, ReadyCharacter>,
