@@ -46,7 +46,7 @@ internal sealed class WukongSystemRegistration(
         new SyncTamersSystem(mappedEvent),
         new UnloadTamersSystem(),
         new KillAlreadyDeadMonstersSystem(clientOwnership, playerState, eventBus),
-        new SyncMonsterTeamSystem(),
+        new SyncMonsterTeamSystem(configuration),
         new ChangeTamerTargetSystem(clientOwnership),
         new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, mappedField, logger),
         new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, clientOwnership, logger),

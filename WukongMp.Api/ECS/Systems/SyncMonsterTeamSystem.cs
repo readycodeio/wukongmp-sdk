@@ -1,15 +1,19 @@
 ﻿using Friflo.Engine.ECS.Systems;
 using ReadyM.Wukong.Common.ECS.Components;
+using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.ECS.Systems;
 
-internal class SyncMonsterTeamSystem : QuerySystem<TeamComponent, LocalTamerComponent>
+internal class SyncMonsterTeamSystem(GameplayConfiguration configuration) : QuerySystem<TeamComponent, LocalTamerComponent>
 {
     protected override void OnUpdate()
     {
+        if (configuration.SyncTamerTeamFromGameToEcs)
+            return;
+        
         Query.ForEachEntity((ref team, ref localTamer, entity) =>
         {
             var tamerEntity = new TamerEntity(entity);
