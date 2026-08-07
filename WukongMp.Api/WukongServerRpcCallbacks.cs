@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Mapping.Tags;
-using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Relay.Client.Utilities;
 using ReadyM.Wukong.Common.Rpc;
@@ -14,7 +13,6 @@ using WukongMp.Api.UI;
 namespace WukongMp.Api;
 
 internal partial class WukongServerRpcCallbacks(
-    ReceiveSystem schedulerSystem,
     IMappedEventManager mappedEvent,
     NetworkSessionStats sessionStats,
     WukongWidgetManager widgetManager,
@@ -29,28 +27,22 @@ internal partial class WukongServerRpcCallbacks(
 
         MappedEvent.RegisterEcsEventHandler<SkipMovieEvent, WukongServerRpcCallbacks>(static (ev, self) =>
         {
-            self.SendSkipMovie(
-                new SkipMovieData(
-                    sequenceId: ev.SequenceId,
-                    waitingPlayers: ev.WaitingPlayers,
-                    allPlayers: ev.AllPlayers
-                )
-            );
+            self.SendSkipMovie(ev.SequenceId);
         }, this);
     }
 
     partial void OnSkipMovie(SkipMovieData data)
     {
-        schedulerSystem.Scheduler.Schedule(static (_, self, data0) =>
+        RunOnGameThread(() =>
         {
-            self.MappedEvent.InvokeInGameIfApplicable(
+            MappedEvent.InvokeInGameIfApplicable(
                 new SkipMovieEvent(
-                    sequenceId: data0.SequenceId,
-                    waitingPlayers: data0.WaitingPlayers,
-                    allPlayers: data0.AllPlayers
+                    sequenceId: data.SequenceId,
+                    waitingPlayers: data.WaitingPlayers,
+                    allPlayers: data.AllPlayers
                 ), default(EmptyContext)
             );
-        }, this, data);
+        });
     }
 
     private static readonly Stopwatch PingStopwatch = Stopwatch.StartNew();
@@ -64,14 +56,15 @@ internal partial class WukongServerRpcCallbacks(
             var outdatedRtt = PingStopwatch.ElapsedMilliseconds - timestamp;
             logger.LogWarning("Received outdated ping response. Timestamp: {Timestamp}, now: {Now}, RTT: {Rtt}ms", timestamp, PingStopwatch.ElapsedMilliseconds, outdatedRtt);
 
-            widgetManager.SetPacketLossWarning();
+            RunOnGameThread(widgetManager.SetPacketLossWarning);
             return;
         }
 
         var now = PingStopwatch.ElapsedMilliseconds;
         var rtt = now - timestamp;
-        widgetManager.UpdatePingIndicator(rtt);
         sessionStats.AddPing(rtt);
+
+        RunOnGameThread(() => { widgetManager.UpdatePingIndicator(rtt); });
     }
 
     public void SendPing()

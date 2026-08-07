@@ -513,13 +513,18 @@ internal sealed class DI : IDependencyContainer
         fieldMappingRegistry.Register(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(),
             (ctx, value) =>
             {
-                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase),
-                        Constants.FloatComparisonTolerance))
+                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
                 {
+                    Logging.LogDebug("Setting HpMaxBase to {HpMaxBase}", value);
                     ctx.SetFloatValue(EBGUAttrFloat.HpMaxBase, value);
                 }
             },
-            ctx => ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase));
+            ctx =>
+            {
+                var value = ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase);
+                Logging.LogDebug("Loaded HpMaxBase as {HpMaxBase}", value);
+                return value;
+            });
 
         fieldMappingRegistry.Register(MainCharacterComponent.Fields.Equipment.In<BGUCharacterCS>(),
             EquipmentUtils.SetActorEquipment,

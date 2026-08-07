@@ -76,6 +76,7 @@ if ($Mode -eq 'coop')
     $allFiles += @(
         @(@("manifest.json"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop"),
         @(@("WukongMp.Coop.dll"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
+        @(@("WukongMp.Coop.Common.dll"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
         @(@("ArchiveSaveFile.1.sav"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop")
     )
 } else {

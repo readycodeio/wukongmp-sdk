@@ -109,12 +109,9 @@ public readonly struct ReadyTamer
     {
         get
         {
-            if (this.Pawn == null)
-                return false;
-
-            var info = BGW_GameDB.GetUnitBattleInfoExtendDesc(this.Pawn.GetFinalBattleInfoExtendID());
-            var healthBarType = info?.BloodBarType;
-            return healthBarType is EBGUBloodBarType.BossBar or EBGUBloodBarType.EliteBar;
+            var tamerEntity = new TamerEntity(Entity);
+            ref var tamerComp = ref tamerEntity.GetTamer();
+            return tamerComp.IsBossOrElite;
         }
     }
 }

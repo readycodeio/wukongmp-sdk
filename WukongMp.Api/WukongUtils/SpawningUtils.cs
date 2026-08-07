@@ -283,12 +283,17 @@ internal static class SpawningUtils
     {
         Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
 
+        var info = BGW_GameDB.GetUnitBattleInfoExtendDesc(tamer.GetFinalBattleInfoExtendID());
+        var healthBarType = info?.BloodBarType;
+        var isBossOrElite = healthBarType is EBGUBloodBarType.BossBar or EBGUBloodBarType.EliteBar;
+        
         var entity = pawnState.CreateNetworkedTamer(
             new LocalTamerComponent(),
             new TamerComponent
             {
                 Guid = guid,
-                UnitPath = unitName
+                UnitPath = unitName,
+                IsBossOrElite = isBossOrElite
             },
             new TeamComponent
             {
