@@ -10,7 +10,7 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
-public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IReadyComponent, IOwnershipBased
+public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IOwnershipBased
 {
     private PlayerId _playerId;
     

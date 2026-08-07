@@ -7,7 +7,7 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
-public partial struct AnimationComponent : IReadyComponent, IOwnershipBased
+public partial struct AnimationComponent : IOwnershipBased
 {
     private Vector3 _velocity;
     private Vector3 _moveAcceleration;

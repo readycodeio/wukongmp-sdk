@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Server.Sdk.Ecs;
 using ReadyM.Relay.Server.Sdk.Rpc;
 using ReadyM.Wukong.Common.ECS.Components;
@@ -53,19 +54,25 @@ public partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandlers
 
     partial void OnMovieStarted(RpcContext context, int sequenceId, AreaId areaId)
     {
-        ecs.Query<MovieComponent>((ref movie) =>
+        ecs.Query<MovieComponent, AreaScopeComponent>((ref movie, ref area) =>
         {
-            movie.AddStartedSequences(sequenceId);
-            logger.LogDebug("Marked movie {Id} as started in area {AreaId}", sequenceId, areaId);
+            if (areaId == area.AreaId)
+            {
+                movie.AddStartedSequences(sequenceId);
+                logger.LogDebug("Marked movie {Id} as started in area {AreaId}", sequenceId, areaId);
+            }
         });
     }
 
     partial void OnMovieFinished(RpcContext context, int sequenceId, AreaId areaId)
     {
-        ecs.Query<MovieComponent>((ref movie) =>
+        ecs.Query<MovieComponent, AreaScopeComponent>((ref movie, ref area) =>
         {
-            movie.AddFinishedSequences(sequenceId);
-            logger.LogDebug("Marked movie {Id} as finished in area {AreaId}", sequenceId, areaId);
+            if (areaId == area.AreaId)
+            {
+                movie.AddFinishedSequences(sequenceId);
+                logger.LogDebug("Marked movie {Id} as finished in area {AreaId}", sequenceId, areaId);
+            }
         });
     }
 }

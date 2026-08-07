@@ -6,7 +6,7 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
-public partial struct HpComponent : IReadyComponent, IOwnershipBased
+public partial struct HpComponent : IOwnershipBased
 {
     private float _hp;
     private float _hpMaxBase;
