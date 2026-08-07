@@ -11,5 +11,5 @@ public partial struct HpComponent : IOwnershipBased
     private float _hp;
     private float _hpMaxBase;
     private bool _isDead;
-    private int _hpMultiplier;
+    private int _hpScalingPercent;
 }

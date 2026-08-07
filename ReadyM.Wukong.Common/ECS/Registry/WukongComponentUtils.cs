@@ -11,7 +11,7 @@ internal static class WukongComponentUtils
             .Add<AnimationComponent>()
             .Add(new HpComponent
             {
-                HpMultiplier = 100,
+                HpScalingPercent = 100,
             })
             .Add<MonsterAnimationComponent>()
             .Add<NicknameComponent>()
@@ -22,7 +22,7 @@ internal static class WukongComponentUtils
         => b.Add(new MainCharacterComponent())
             .Add(new HpComponent
             {
-                HpMultiplier = 100,
+                HpScalingPercent = 100,
             })
             .Add<TransformComponent>()
             .Add<TeamComponent>()
