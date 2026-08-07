@@ -10,6 +10,10 @@ internal class WukongAreaRegistration : IAreaComponentRegistration
         registry.RegisterComponent(new RoomComponent
         {
             ChatEnabled = true,
+            ConsumablesAllowed = true,
+            GourdAllowed = true,
+            ImmobilizeAllowed = true,
+            PhantomRushAllowed = true
         });
         registry.RegisterComponent<MovieComponent>();
     }

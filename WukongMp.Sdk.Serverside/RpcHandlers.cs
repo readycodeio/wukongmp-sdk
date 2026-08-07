@@ -17,13 +17,13 @@ public partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandlers
 
     private readonly Dictionary<int, HashSet<PlayerId>> _skipMovieRequests = new();
 
-    partial void OnSkipMovie(RpcContext context, SkipMovieData data)
+    partial void OnSkipMovie(RpcContext context, int sequenceId)
     {
-        logger.LogDebug("Received skip movie request from player {PlayerId}, movie id {Id}", context.Sender, data.SequenceId);
-        if (!_skipMovieRequests.TryGetValue(data.SequenceId, out var playerSet))
+        logger.LogDebug("Received skip movie request from player {PlayerId}, movie id {Id}", context.Sender, sequenceId);
+        if (!_skipMovieRequests.TryGetValue(sequenceId, out var playerSet))
         {
             playerSet = [context.Sender];
-            _skipMovieRequests[data.SequenceId] = playerSet;
+            _skipMovieRequests[sequenceId] = playerSet;
         }
         else
         {
@@ -35,15 +35,15 @@ public partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandlers
 
         var response = new SkipMovieData
         {
-            SequenceId = data.SequenceId,
+            SequenceId = sequenceId,
             WaitingPlayers = playerSet.Count,
             AllPlayers = connectedPlayers
         };
 
         if (response.WaitingPlayers == response.AllPlayers)
         {
-            logger.LogInformation("Skipping movie {Id} as all players requested it", data.SequenceId);
-            _skipMovieRequests.Remove(data.SequenceId);
+            logger.LogInformation("Skipping movie {Id} as all players requested it", sequenceId);
+            _skipMovieRequests.Remove(sequenceId);
         }
 
         foreach (var playerId in playerSet)
