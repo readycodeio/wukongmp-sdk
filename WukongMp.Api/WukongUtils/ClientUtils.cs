@@ -9,7 +9,7 @@ internal static class ClientUtils
 {
     private static Action<BGUCharacterCS, int>? _setter;
 
-    public static void RegisterAndSetPlayerTeam(BGUCharacterCS actor, int newTeamId)
+    public static void RegisterAndSetTeam(BGUCharacterCS actor, int newTeamId)
     {
         var teamRelationData = (BGC_TeamRelationData)BGU_DataUtil.GetGameStateReadonlyData<IBGC_TeamRelationData, BGC_TeamRelationData>(GameUtils.GetWorld());
 

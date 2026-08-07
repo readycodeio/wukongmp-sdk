@@ -134,7 +134,7 @@ internal static class SpawningUtils
         }
 
         Logging.LogDebug("Assigning team ID {TeamId} to player", teamId);
-        ClientUtils.RegisterAndSetPlayerTeam(newPawn, teamId);
+        ClientUtils.RegisterAndSetTeam(newPawn, teamId);
 
         // NOTE: Nickname already set in ECS. Therefore, the following can be removed
         Logging.LogDebug("Setting initial Nickname to {Nickname}", mainComp.CharacterNickname);

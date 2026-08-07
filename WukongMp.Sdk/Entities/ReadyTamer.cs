@@ -79,22 +79,6 @@ public readonly struct ReadyTamer
         }
     }
 
-    public float HpMultiplier
-    {
-        get
-        {
-            var tamerEntity = new TamerEntity(Entity);
-            ref var hpComp = ref tamerEntity.GetHp();
-            return hpComp.HpMultiplier;
-        }
-        set
-        {
-            var tamerEntity = new TamerEntity(Entity);
-            ref var hpComp = ref tamerEntity.GetHp();
-            hpComp.HpMultiplier = value;
-        }
-    }
-
     public string? Guid
     {
         get

@@ -19,7 +19,7 @@ internal class SyncMonsterTeamSystem : QuerySystem<TeamComponent, LocalTamerComp
 
             if (team.TeamId != tamerEntity.Pawn.GetTeamIDInCS())
             {
-                ClientUtils.RegisterAndSetPlayerTeam(tamerEntity.Pawn, team.TeamId);
+                ClientUtils.RegisterAndSetTeam(tamerEntity.Pawn, team.TeamId);
             }
         });
     }

@@ -71,7 +71,7 @@ internal class SyncMainCharactersSystem(
         if (pawnTeamId != teamComp.TeamId)
         {
             logger.LogInformation("Assigning team ID {TeamId} to player {Name}", teamComp.TeamId, playerComp.Nickname);
-            ClientUtils.RegisterAndSetPlayerTeam(mainEntity.Pawn, teamComp.TeamId);
+            ClientUtils.RegisterAndSetTeam(mainEntity.Pawn, teamComp.TeamId);
             eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
         }
     }
