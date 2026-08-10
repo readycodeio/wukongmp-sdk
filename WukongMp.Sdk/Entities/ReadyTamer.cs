@@ -97,13 +97,13 @@ public readonly struct ReadyTamer
         get
         {
             var tamerEntity = new TamerEntity(Entity);
-            return tamerEntity.GetHp().HpScalingPercent;
+            return tamerEntity.GetHp().HpMaxMulPercent;
         }
         set
         {
             var tamerEntity = new TamerEntity(Entity);
             ref var hpComp = ref tamerEntity.GetHp();
-            hpComp.HpScalingPercent = value;
+            hpComp.HpMaxMulPercent = value;
         }
     }
 

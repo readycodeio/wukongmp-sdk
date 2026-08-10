@@ -55,6 +55,7 @@ internal static class PatchAttrs
                     return;
                 }
 
+                sync.SyncToGame(HpComponent.Fields.HpMaxMulPercent.In<BUC_AttrContainer>(), __instance);
                 sync.SyncToGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), __instance);
                 sync.SyncToGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), __instance);
             }
@@ -208,6 +209,7 @@ internal static class PatchHp
                     if (!localTamer.IsTamerSynced)
                         return; // not synced
 
+                    loader.LoadFromGame(HpComponent.Fields.HpMaxMulPercent.In<BUC_AttrContainer>(), ___AttrContainer);
                     loader.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), ___AttrContainer);
                     loader.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), ___AttrContainer);
                 }

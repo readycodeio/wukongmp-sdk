@@ -525,6 +525,25 @@ internal sealed class DI : IDependencyContainer
                 Logging.LogDebug("Loaded HpMaxBase as {HpMaxBase}", value);
                 return value;
             });
+        
+        fieldMappingRegistry.Register(HpComponent.Fields.HpMaxMulPercent.In<BUC_AttrContainer>(),
+            (ctx, value) =>
+            {
+                var floatVal = value * 100f - 10_000f; // WUkong sets these as (10_000 + X)/10_000, so 0 is 100% and 10_000 is 200%
+                if (!floatVal.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxMul), Constants.FloatComparisonTolerance))
+                {
+                    Logging.LogDebug("Setting HpMaxMul to {HpMaxMulPercent}%", value);
+                    ctx.SetFloatValue(EBGUAttrFloat.HpMaxMul, floatVal);
+                }
+            },
+            ctx =>
+            {
+                var value = ctx.GetFloatValue(EBGUAttrFloat.HpMaxMul);
+                var mult = 1 + value / 10_000f;
+                var percent = (int)(mult * 100);
+                Logging.LogDebug("Loaded HpMaxMul as {HpMaxMulPercent}%", percent);
+                return percent;
+            });
 
         fieldMappingRegistry.Register(MainCharacterComponent.Fields.Equipment.In<BGUCharacterCS>(),
             EquipmentUtils.SetActorEquipment,

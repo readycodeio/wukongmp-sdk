@@ -61,6 +61,7 @@ internal class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wuk
 
         if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(mainEntity, out var loadHp))
         {
+            loadHp.LoadFromGame(HpComponent.Fields.HpMaxMulPercent.In<BUC_AttrContainer>(), attrContainer);
             loadHp.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), attrContainer);
             loadHp.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), attrContainer);
         }

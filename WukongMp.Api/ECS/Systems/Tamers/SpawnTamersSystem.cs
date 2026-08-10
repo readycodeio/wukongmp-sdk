@@ -77,6 +77,7 @@ internal sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter r
             {
                 if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(entity, out var loader))
                 {
+                    loader.LoadFromGame(HpComponent.Fields.HpMaxMulPercent.In<BUC_AttrContainer>(), attrs);
                     loader.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), attrs);
                     loader.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), attrs);
                 }
