@@ -10,6 +10,6 @@ public partial struct HpComponent : IOwnershipBased
 {
     private float _hp;
     private float _hpMaxBase;
+    private int _hpMaxMulPercent;
     private bool _isDead;
-    private int _hpScalingPercent;
 }
