@@ -13,7 +13,10 @@ internal class WukongAreaRegistration : IAreaComponentRegistration
             ConsumablesAllowed = true,
             GourdAllowed = true,
             ImmobilizeAllowed = true,
-            PhantomRushAllowed = true
+            PhantomRushAllowed = true,
+            TournamentRounds = 3,
+            AntiStallEnabled = true,
+            CheatsAllowed = true,
         });
         registry.RegisterComponent<MovieComponent>();
     }
