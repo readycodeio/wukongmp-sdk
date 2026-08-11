@@ -8,6 +8,9 @@ using ReadyM.Api.Serialization;
 
 namespace ReadyM.Wukong.Common.ECS.Values;
 
+/// <summary>
+/// Player character's equipment.
+/// </summary>
 public unsafe struct EquipmentState : INetSerializable, IDeltaEquatable<EquipmentState>, IEquatable<EquipmentState>
 {
     private const int Slots = 8;

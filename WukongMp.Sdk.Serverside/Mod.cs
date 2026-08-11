@@ -5,7 +5,7 @@ using ReadyM.Relay.Server.Sdk;
 namespace WukongMp.Sdk.Serverside;
 
 [UsedImplicitly]
-public class Mod : ServerModBase
+internal class Mod : ServerModBase
 {
     protected override void Init()
     {

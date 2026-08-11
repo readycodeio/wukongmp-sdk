@@ -3,6 +3,7 @@ using ReadyM.Api.Multiplayer;
 
 namespace ReadyM.Wukong.Common.Rpc;
 
+/// <exclude />
 [ServerRpcContracts]
 public static partial class RpcContracts
 {

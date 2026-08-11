@@ -16,7 +16,7 @@ internal class WukongAreaRegistration : IAreaComponentRegistration
             PhantomRushAllowed = true,
             TournamentRounds = 3,
             AntiStallEnabled = true,
-            CheatsAllowed = true,
+            CheatsAllowed = false,
         });
         registry.RegisterComponent<MovieComponent>();
     }

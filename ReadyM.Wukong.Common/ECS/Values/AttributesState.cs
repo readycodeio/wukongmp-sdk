@@ -6,6 +6,9 @@ using ReadyM.Api.Serialization;
 
 namespace ReadyM.Wukong.Common.ECS.Values;
 
+/// <summary>
+/// Entity attributes. Keys correspond to the EBGUAttrFloat enum in the game.
+/// </summary>
 public struct AttributesState() : INetSerializable, IDeltaEquatable<AttributesState>
 {
     private ReadOnlyDictionary<byte, float>? _data = null;
