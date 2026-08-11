@@ -226,7 +226,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void EnableSpectator(MainCharacterEntity mainEntity, SpectatorReason reason)
         {
-            Logging.LogDebug("Enabling spectator mode for player {PlayerId} with reason {Reason}", mainEntity.GetState().CharacterNickname, reason);
+            Logging.LogDebug("Enabling spectator mode for player {PlayerId} with reason {Reason}", mainEntity.GetNickname().Nickname, reason);
             ref var state = ref mainEntity.GetState();
             state.IsSpectator = true;
             state.SpectatorReason = reason;
@@ -234,7 +234,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void DisableSpectator(MainCharacterEntity mainEntity)
         {
-            Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetState().CharacterNickname);
+            Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetNickname().Nickname);
             mainEntity.GetState().IsSpectator = false;
             mainEntity.GetLocalState().IsDuringDeathAnim = false;
         }

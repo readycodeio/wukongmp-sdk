@@ -71,11 +71,11 @@ public readonly struct ReadyMainCharacter
 
     public string Nickname
     {
-        get => Entity.GetState().CharacterNickname;
+        get => Entity.GetNickname().Nickname;
         set
         {
-            if (DI.Instance.MappedField.CanSetFromApi<MainCharacterComponent>(Entity, out var set))
-                set.SetFromApi(MainCharacterComponent.Fields.CharacterNickname, value);
+            if (DI.Instance.MappedField.CanSetFromApi<NicknameComponent>(Entity, out var set))
+                set.SetFromApi(NicknameComponent.Fields.Nickname, value);
         }
     }
 

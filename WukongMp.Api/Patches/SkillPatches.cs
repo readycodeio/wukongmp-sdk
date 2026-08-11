@@ -494,7 +494,7 @@ internal static class PatchExitPhantomRush
 
         var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ExitPhantomRushEvent(mainEntity.Value), mainEntity.Value.Entity);
         if (sent)
-            Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", main.CharacterNickname);
+            Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", mainEntity.Value.GetNickname().Nickname);
 
         // show other players again
         var playerEntity = DI.Instance.PlayerState.GetPlayerById(main.PlayerId);
@@ -625,7 +625,7 @@ internal class PatchOnTransBeginSpawnNewOne
             var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayerTransBeginEvent(mainEntity.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType), mainEntity.Value.Entity);
             if (sent)
             {
-                Logging.LogDebug("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter?.GetState().CharacterNickname, ToReplaceUnitResID);
+                Logging.LogDebug("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter?.GetNickname().Nickname, ToReplaceUnitResID);
             }
             
             if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity.Value, out var loadState))
@@ -665,7 +665,7 @@ internal class PatchOnTransBackSpawnNewOne
         {
             var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayerTransEndEvent(mainEntity.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType), mainEntity.Value.Entity);
             if (sent)
-                Logging.LogDebug("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", mainEntity.Value.GetState().CharacterNickname, ToReplaceUnitResID);
+                Logging.LogDebug("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", mainEntity.Value.GetNickname().Nickname, ToReplaceUnitResID);
         }
 
         __state = mainEntity;

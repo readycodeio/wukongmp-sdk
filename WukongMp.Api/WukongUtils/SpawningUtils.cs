@@ -137,7 +137,7 @@ internal static class SpawningUtils
         ClientUtils.RegisterAndSetTeam(newPawn, teamId);
 
         // NOTE: Nickname already set in ECS. Therefore, the following can be removed
-        Logging.LogDebug("Setting initial Nickname to {Nickname}", mainComp.CharacterNickname);
+        Logging.LogDebug("Setting initial Nickname to {Nickname}", mainEntity.GetNickname().Nickname);
 
         // NOTE: Player properties already set in ECS. Therefore the following can be removed
         Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", pvpComp.IsReadyForPvP);

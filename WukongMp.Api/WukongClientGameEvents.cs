@@ -54,7 +54,7 @@ internal class WukongClientGameEvents(
         {
             var mainEntity = new MainCharacterEntity(ev.Entity);
             ref var mainComp = ref mainEntity.GetState();
-            self._logger.LogDebug("Received exit phantom rush for main character {Entity} and {Nickname}", mainEntity.GetNetId(), mainComp.CharacterNickname);
+            self._logger.LogDebug("Received exit phantom rush for main character {Entity} and {Nickname}", mainEntity.GetNetId(), mainEntity.GetNickname().Nickname);
             var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
             events?.Evt_RelievePhantomRush.Invoke();
         }, this);
@@ -205,7 +205,7 @@ internal class WukongClientGameEvents(
             }
 
             ref var mainComp = ref mainEntity.GetState();
-            self._logger.LogDebug("Received phantom rush for main character {Entity} and {Nickname} in direction {Direction}", ev.Entity.GetNetId(), mainComp.CharacterNickname, ev.Direction);
+            self._logger.LogDebug("Received phantom rush for main character {Entity} and {Nickname} in direction {Direction}", ev.Entity.GetNetId(), mainEntity.GetNickname().Nickname, ev.Direction);
             var events = BUS_EventCollectionCS.Get(mainEntity.Pawn);
             events?.Evt_TriggerPhantomRush.Invoke(ev.Direction);
 
@@ -478,7 +478,7 @@ internal class WukongClientGameEvents(
                 return;
             }
 
-            self._logger.LogDebug("Received trigger magically change for character {Nickname} with config {ConfigAssetPath}, skillID {SkillID}, recoverSkillID {RecoverSkillID}, curVigorSkillID {CurVigorSkillID}", mainComp.CharacterNickname, ev.ConfigPathName, ev.SkillId, ev.RecoverSkillId, ev.CurVigorSkillId);
+            self._logger.LogDebug("Received trigger magically change for character {Nickname} with config {ConfigAssetPath}, skillID {SkillID}, recoverSkillID {RecoverSkillID}, curVigorSkillID {CurVigorSkillID}", mainEntity.GetNickname().Nickname, ev.ConfigPathName, ev.SkillId, ev.RecoverSkillId, ev.CurVigorSkillId);
             MagicallyChangeUtils.TriggerMagicallyChange(mainEntity.Pawn, ev.ConfigPathName, ev.SkillId, ev.RecoverSkillId, ev.CurVigorSkillId, ev.CastReason);
         }, this);
 
@@ -493,7 +493,7 @@ internal class WukongClientGameEvents(
                 return;
             }
 
-            self._logger.LogDebug("Received reset magically change for character {Nickname} with reason {Reason}", mainComp.CharacterNickname, ev.Reason);
+            self._logger.LogDebug("Received reset magically change for character {Nickname} with reason {Reason}", mainEntity.GetNickname().Nickname, ev.Reason);
             MagicallyChangeUtils.ResetMagicallyChange(mainEntity.Pawn, ev.Reason);
         }, this);
 
