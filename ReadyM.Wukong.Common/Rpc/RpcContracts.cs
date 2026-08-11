@@ -5,7 +5,7 @@ namespace ReadyM.Wukong.Common.Rpc;
 
 /// <exclude />
 [ServerRpcContracts]
-public static partial class RpcContracts
+public static partial class SdkRpcContracts
 {
     [ClientToServer, ServerToClient] public static partial void Ping(long timestamp);
     [ClientToServer] public static partial void EnableCheats(AreaId area, bool enabled);
