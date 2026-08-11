@@ -4,6 +4,9 @@ using ReadyM.Api.Multiplayer.Generators;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
+/// <summary>
+/// Holds player PvP readiness flag.
+/// </summary>
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
 public partial struct PvPComponent : IOwnershipBased

@@ -4,6 +4,9 @@ using ReadyM.Api.Multiplayer.Generators;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
+/// <summary>
+/// Holds entity HP, max HP, scaling factor and death state.
+/// </summary>
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
 public partial struct HpComponent : IOwnershipBased

@@ -8,27 +8,29 @@ internal class WukongNetworkedComponentRegistration : INetworkedComponentRegistr
 {
     public void Register(INetworkedComponentRegistry registry)
     {
-        // Tamer
-        registry.RegisterComponent<TamerComponent>(DeliveryMethod.ReliableOrdered);
-        registry.RegisterComponent<AnimationComponent>();
+        // Shared
+        registry.RegisterComponent<TransformComponent>();
         registry.RegisterComponent<HpComponent>(DeliveryMethod.ReliableOrdered);
-        registry.RegisterComponent<MonsterAnimationComponent>();
         registry.RegisterComponent<NicknameComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<TeamComponent>(DeliveryMethod.ReliableOrdered);
-        registry.RegisterComponent<TransformComponent>();
+        
+        // Tamer (area-scoped)
+        registry.RegisterComponent<TamerComponent>(DeliveryMethod.ReliableOrdered);
+        registry.RegisterComponent<AnimationComponent>();
+        registry.RegisterComponent<MonsterAnimationComponent>();
 
-        // Main character
+        // Main character (area-scoped)
         registry.RegisterComponent<MainCharacterComponent>();
-        registry.RegisterComponent<PvPComponent>(DeliveryMethod.ReliableOrdered);
+        registry.RegisterComponent<PvPComponent>(DeliveryMethod.ReliableOrdered); // TODO: Move to PvP mod (server-side)
 
-        // Area
+        // Area (global, scope)
         registry.RegisterComponent<RoomComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<MovieComponent>(DeliveryMethod.ReliableOrdered);
 
-        // Player
+        // Player (global, scope)
         registry.RegisterComponent<PlayerComponent>(DeliveryMethod.ReliableOrdered);
         
-        // Global singleton
-        registry.RegisterComponent<PvpStateComponent>(DeliveryMethod.ReliableOrdered);
+        // PvP State (global)
+        registry.RegisterComponent<PvpStateComponent>(DeliveryMethod.ReliableOrdered); // TODO: Move to PvP mod (server-side)
     }
 }

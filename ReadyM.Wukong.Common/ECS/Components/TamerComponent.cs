@@ -6,6 +6,9 @@ using Yooni.Native.Container;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
+/// <summary>
+/// Holds the state of a tamer (monster) entity. 
+/// </summary>
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
 public partial struct TamerComponent : IOwnershipBased

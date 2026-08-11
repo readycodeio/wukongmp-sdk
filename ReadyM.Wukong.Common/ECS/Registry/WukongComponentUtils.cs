@@ -20,6 +20,7 @@ internal static class WukongComponentUtils
 
     public static void SetupServerMainCharacterArchetype(EntityBuilderBase b)
         => b.Add(new MainCharacterComponent())
+            .Add<NicknameComponent>()
             .Add(new HpComponent
             {
                 HpMaxMulPercent = 100,

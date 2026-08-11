@@ -8,6 +8,9 @@ using ReadyM.Wukong.Common.ECS.Values;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
+/// <summary>
+/// Holds the main character state.
+/// </summary>
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
 public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IOwnershipBased
@@ -26,9 +29,6 @@ public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IO
     
     private SpectatorReason _spectatorReason;
     private bool _isSpectator;
-
-    // NOTE: This describes the nick displayed over the Wukong character
-    private string _characterNickname = ""; // TODO: Unmanaged
 
     private bool _beguilingChantEligible;
 

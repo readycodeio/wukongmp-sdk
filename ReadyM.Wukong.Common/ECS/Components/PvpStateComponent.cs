@@ -7,6 +7,9 @@ using ReadyM.Api.Multiplayer.Generators;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
+/// <summary>
+/// Holds the state of the PvP mode, including settings and in-game state.
+/// </summary>
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
 public partial struct PvpStateComponent

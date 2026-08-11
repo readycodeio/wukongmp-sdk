@@ -3,6 +3,9 @@ using ReadyM.Api.Multiplayer.Generators;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
+/// <summary>
+/// Holds room configuration.
+/// </summary>
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
 public partial struct RoomComponent

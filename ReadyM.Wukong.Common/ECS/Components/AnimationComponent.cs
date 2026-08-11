@@ -5,6 +5,9 @@ using ReadyM.Api.Multiplayer.Generators;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
+/// <summary>
+/// Holds entity movement animation state.
+/// </summary>
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
 public partial struct AnimationComponent : IOwnershipBased
