@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Idents;
-using ReadyM.Api.Multiplayer.ECS.Components;
+using ReadyM.Api.Multiplayer;
+using ReadyM.Api.Multiplayer.Serialization;
 using ReadyM.Relay.Server.Sdk.Ecs;
 using ReadyM.Relay.Server.Sdk.Rpc;
 using ReadyM.Wukong.Common.ECS.Components;
@@ -8,6 +9,7 @@ using ReadyM.Wukong.Common.Rpc;
 
 namespace WukongMp.Sdk.Serverside;
 
+[ServerRpcFor(typeof(RpcContracts))]
 internal partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandlersBase
 {
     partial void OnPing(RpcContext context, long timestamp)
