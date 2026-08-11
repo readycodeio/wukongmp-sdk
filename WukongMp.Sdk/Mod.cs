@@ -215,6 +215,8 @@ internal class Mod : ModBase
     {
         var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Server);
 
+        var manifests = new List<(string Id, byte Count, PropertyInfo Offset)>();
+        
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(x => x.FullName))
         {
             var manifest = assembly
@@ -226,18 +228,25 @@ internal class Mod : ModBase
 
             var totalCountField = manifest.GetField("TotalEventCount", BindingFlags.Public | BindingFlags.Static);
             var offsetProperty = manifest.GetProperty("Offset", BindingFlags.Public | BindingFlags.Static);
+            var idField = manifest.GetField("Id", BindingFlags.Public | BindingFlags.Static);
 
-            if (totalCountField is null || offsetProperty is null)
+            if (totalCountField is null || offsetProperty is null || idField is null)
             {
                 Logger.LogError("Assembly {Assembly} has ServerRpcManifest but is missing expected members - possible generator version mismatch.", assembly.GetName().Name);
                 continue;
             }
-
-            var totalCount = (byte)totalCountField.GetValue(null)!;
-            var offset = offsetProvider.GetNextOffset(totalCount);
+            
+            manifests.Add(((string)idField.GetValue(null)!, (byte)totalCountField.GetValue(null)!, offsetProperty));
+        }
+        
+        // Ordered by the manifest's stable Id, never by load order: the server assigns offsets the
+        // same way, so both sides agree on the wire codes even if they load mods in a different order.
+        foreach (var (id, count, offsetProperty) in manifests.OrderBy(x => x.Id, StringComparer.Ordinal))
+        {
+            var offset = offsetProvider.GetNextOffset(count);
             offsetProperty.SetValue(null, offset);
 
-            Logger.LogDebug("Assigned server RPC offset {Offset} ({Count} events) from {Assembly}", offset, totalCount, assembly.GetName().Name);
+            Logger.LogDebug("Assigned server RPC offset {Offset} ({Count} events) to contract set {Id}", offset, count, id);
         }
     }
 

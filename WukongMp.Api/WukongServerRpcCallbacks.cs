@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Multiplayer;
 using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Relay.Client.Utilities;
 using ReadyM.Wukong.Common.Rpc;
@@ -12,6 +13,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api;
 
+[ServerRpcFor(typeof(SdkRpcContracts))]
 internal partial class WukongServerRpcCallbacks(
     IMappedEventManager mappedEvent,
     NetworkSessionStats sessionStats,
