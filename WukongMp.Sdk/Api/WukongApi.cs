@@ -12,6 +12,7 @@ public static class WukongApi
 {
     internal static void RegisterApis()
     {
+        Services.RegisterSingleton<WukongArchetypes>();
         Services.RegisterSingleton<IWukongSaveApi, WukongSelfHostedSaveApi>();
         Services.RegisterSingleton<IWukongFileApi, WukongFileApi>();
         Services.RegisterSingleton<IWukongConsoleApi, WukongConsoleApi>();

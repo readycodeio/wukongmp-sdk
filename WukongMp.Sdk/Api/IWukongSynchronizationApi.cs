@@ -8,6 +8,7 @@ using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
+using WukongMp.Sdk.Api.Implementation;
 using WukongMp.Sdk.Entities;
 using Constants = WukongMp.Api.Configuration.Constants;
 
@@ -18,6 +19,9 @@ namespace WukongMp.Sdk.Api;
 /// </summary>
 public interface IWukongSynchronizationApi
 {
+    /// <inheritdoc cref="WukongArchetypes"/>
+    WukongArchetypes Archetypes { get; }
+    
     /// <summary>
     /// Retrieves the disconnect reason and invokes the provided callback with it.
     /// </summary>
