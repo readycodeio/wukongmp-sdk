@@ -246,7 +246,7 @@ internal class Mod : ModBase
             var offset = offsetProvider.GetNextOffset(count);
             offsetProperty.SetValue(null, offset);
 
-            Logger.LogDebug("Assigned server RPC offset {Offset} ({Count} events) to contract set {Id}", offset, count, id);
+            Logger.LogInformation("Assigned server RPC offset {Offset} ({Count} events) to contract set {Id}", offset, count, id);
         }
     }
 
