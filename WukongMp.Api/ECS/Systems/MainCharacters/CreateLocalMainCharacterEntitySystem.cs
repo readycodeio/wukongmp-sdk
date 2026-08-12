@@ -1,11 +1,10 @@
 ﻿using b1;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.Multiplayer.Mapping.Data;
+using ReadyM.Api.Mapping.Data;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.ECS.Entities;
-using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
 
@@ -62,6 +61,7 @@ internal class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wuk
 
         if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(mainEntity, out var loadHp))
         {
+            loadHp.LoadFromGame(HpComponent.Fields.HpMaxMulPercent.In<BUC_AttrContainer>(), attrContainer);
             loadHp.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), attrContainer);
             loadHp.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), attrContainer);
         }
@@ -70,7 +70,11 @@ internal class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wuk
         {
             loadMain.LoadFromGame(MainCharacterComponent.Fields.Attributes.In<BUC_AttrContainer>(), attrContainer);
             loadMain.LoadFromGame(MainCharacterComponent.Fields.Equipment.In<BGUCharacterCS>(), pawn);
-            loadMain.SetFromGame(MainCharacterComponent.Fields.CharacterNickname, player.Nickname);
+        }
+        
+        if (DI.Instance.MappedField.CanLoadFromGame<NicknameComponent>(mainEntity, out var loadNick))
+        {
+            loadNick.SetFromGame(NicknameComponent.Fields.Nickname, player.Nickname);
         }
 
         var pawnTeamId = pawn.GetTeamIDInCS();

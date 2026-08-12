@@ -1,6 +1,6 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
@@ -8,7 +8,7 @@ internal readonly struct ProjectileSwitchEvent(
     Entity entity,
     string projectileClassName,
     int bulletSwitchId,
-    int switchIdx) : IEquatable<ProjectileSwitchEvent>, IOwnershipManaged
+    int switchIdx) : IEquatable<ProjectileSwitchEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly string ProjectileClassName = projectileClassName;

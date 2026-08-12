@@ -3,8 +3,8 @@ using b1;
 using BtlB1;
 using BtlShare;
 using ReadyM.Api.ECS.Worlds;
-using ReadyM.Api.Multiplayer.Mapping.Events;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
 using ReadyM.Wukong.Common.ECS.Values;
@@ -12,7 +12,6 @@ using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
-using WukongMp.Api.ECS.Values;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api.WukongUtils
@@ -227,16 +226,16 @@ namespace WukongMp.Api.WukongUtils
 
         public static void EnableSpectator(MainCharacterEntity mainEntity, SpectatorReason reason)
         {
-            Logging.LogDebug("Enabling spectator mode for player {PlayerId} with reason {Reason}", mainEntity.GetState().CharacterNickname, reason);
-            ref var pvp = ref mainEntity.GetPvP();
-            pvp.IsSpectator = true;
-            pvp.SpectatorReason = reason;
+            Logging.LogDebug("Enabling spectator mode for player {PlayerId} with reason {Reason}", mainEntity.GetNickname().Nickname, reason);
+            ref var state = ref mainEntity.GetState();
+            state.IsSpectator = true;
+            state.SpectatorReason = reason;
         }
 
         public static void DisableSpectator(MainCharacterEntity mainEntity)
         {
-            Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetState().CharacterNickname);
-            mainEntity.GetPvP().IsSpectator = false;
+            Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetNickname().Nickname);
+            mainEntity.GetState().IsSpectator = false;
             mainEntity.GetLocalState().IsDuringDeathAnim = false;
         }
     }

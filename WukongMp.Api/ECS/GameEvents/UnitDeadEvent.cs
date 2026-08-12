@@ -2,7 +2,7 @@
 using b1;
 using BtlShare;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
@@ -12,7 +12,7 @@ internal readonly struct UnitDeadEvent(
     int dmgId,
     int stiffLevel,
     bool isDotDmg,
-    EAbnormalStateType abnormalType) : IEquatable<UnitDeadEvent>, IOwnershipManaged
+    EAbnormalStateType abnormalType) : IEquatable<UnitDeadEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly EDeadReason DeadReason = deadReason;

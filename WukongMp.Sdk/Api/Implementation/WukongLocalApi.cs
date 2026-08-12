@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Relay.Client;
 using WukongMp.Api;
 using WukongMp.Api.UI;
@@ -9,7 +10,8 @@ namespace WukongMp.Sdk.Api.Implementation;
 internal sealed class WukongLocalApi(
     WukongEventBus eventBus,
     WukongWidgetManager widgetManager,
-    IClientEcsUpdateLoop ecsUpdateLoop
+    ReceiveSystem schedulerSystem,
+    ClientEcsUpdateLoop ecsLoop
 ) : IWukongLocalApi
 {
     /// Is the game currently in a gameplay level, as opposed to a menu or the like.
@@ -30,14 +32,14 @@ internal sealed class WukongLocalApi(
         _ = Task.Run(async () =>
         {
             await Task.Delay((int)(timeoutSeconds * 1000));
-            ecsUpdateLoop.Scheduler.Schedule(_ => { widgetManager.HideInfoMessage(); });
+            schedulerSystem.Scheduler.Schedule((_, wm) => { wm.HideInfoMessage(); }, widgetManager);
         });
     }
 
     public void HideInfoMessage() => widgetManager.HideInfoMessage();
 
     /// Waits for the given task to complete in a synchronous manner.
-    public void Wait(Task task) => ecsUpdateLoop.Wait(task);
+    public void Wait(Task task) => ecsLoop.Wait(task);
 
     public void ShowTip(string message, bool autoHide)
     {

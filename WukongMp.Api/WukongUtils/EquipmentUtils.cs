@@ -3,18 +3,20 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using b1;
 using HarmonyLib;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Values;
+using EquipPosition = BtlB1.EquipPosition;
 
 namespace WukongMp.Api.WukongUtils;
 
 internal static class EquipmentUtils
 {
-    private delegate void OnChangeEquipRealDelegate(BUS_EquipComp equipComp, BtlB1.EquipPosition position, int item);
+    private delegate void OnChangeEquipRealDelegate(BUS_EquipComp equipComp, EquipPosition position, int item);
 
     private static readonly OnChangeEquipRealDelegate OnChangeEquipReal =
         (OnChangeEquipRealDelegate)Delegate.CreateDelegate(
@@ -23,7 +25,7 @@ internal static class EquipmentUtils
             typeof(BUS_EquipComp).GetMethod("OnChangeEquipReal", BindingFlags.NonPublic | BindingFlags.Instance)!);
 
     // Weak cache: entries disappear when actor is collected.
-    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<BGUCharacterCS, BUS_EquipComp> EquipCompCache = new();
+    private static readonly ConditionalWeakTable<BGUCharacterCS, BUS_EquipComp> EquipCompCache = new();
 
     public static EquipmentState GetCurrentEquipmentStateForActor(APawn player)
     {
@@ -55,7 +57,7 @@ internal static class EquipmentUtils
         }
     }
 
-    public static void SetActorEquipment(BGUCharacterCS actor, EquipPosition position, int item)
+    public static void SetActorEquipment(BGUCharacterCS actor, ReadyM.Wukong.Common.ECS.Values.EquipPosition position, int item)
     {
         if (ShouldSkip(actor))
             return;

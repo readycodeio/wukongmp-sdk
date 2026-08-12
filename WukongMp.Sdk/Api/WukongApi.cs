@@ -12,6 +12,7 @@ public static class WukongApi
 {
     internal static void RegisterApis()
     {
+        Services.RegisterSingleton<WukongArchetypes>();
         Services.RegisterSingleton<IWukongSaveApi, WukongSelfHostedSaveApi>();
         Services.RegisterSingleton<IWukongFileApi, WukongFileApi>();
         Services.RegisterSingleton<IWukongConsoleApi, WukongConsoleApi>();
@@ -27,6 +28,15 @@ public static class WukongApi
     }
 
     public static IDependencyContainer Services => DI.Instance;
+
+    /// <inheritdoc cref="WukongArchetypes"/>
+    /// <remarks>
+    /// Safe to use from an <see cref="ReadyM.Api.ECS.Registry.IArchetypeRegistration"/>,
+    /// unlike the other APIs here: <see cref="WukongArchetypes"/> has no dependencies of
+    /// its own, so reaching it does not pull the ECS world back into the container while
+    /// the world is still being built.
+    /// </remarks>
+    public static WukongArchetypes Archetypes => Services.Resolve<WukongArchetypes>();
 
     /// <inheritdoc cref="IWukongInputApi"/>
     public static IWukongInputApi Input => Services.Resolve<IWukongInputApi>();

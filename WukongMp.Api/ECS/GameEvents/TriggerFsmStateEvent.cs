@@ -1,12 +1,12 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
 internal readonly struct TriggerFsmStateEvent(
     Entity entity,
-    string fsmStateName) : IEquatable<TriggerFsmStateEvent>, IOwnershipManaged
+    string fsmStateName) : IEquatable<TriggerFsmStateEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly string FsmStateName = fsmStateName;

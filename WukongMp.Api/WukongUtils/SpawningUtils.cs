@@ -134,14 +134,14 @@ internal static class SpawningUtils
         }
 
         Logging.LogDebug("Assigning team ID {TeamId} to player", teamId);
-        ClientUtils.RegisterAndSetPlayerTeam(newPawn, teamId);
+        ClientUtils.RegisterAndSetTeam(newPawn, teamId);
 
         // NOTE: Nickname already set in ECS. Therefore, the following can be removed
-        Logging.LogDebug("Setting initial Nickname to {Nickname}", mainComp.CharacterNickname);
+        Logging.LogDebug("Setting initial Nickname to {Nickname}", mainEntity.GetNickname().Nickname);
 
         // NOTE: Player properties already set in ECS. Therefore the following can be removed
         Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", pvpComp.IsReadyForPvP);
-        Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", pvpComp.IsSpectator);
+        Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", mainComp.IsSpectator);
 
         // FIXME: (refactor) Equipment should be synced on the actor here
 
@@ -283,12 +283,17 @@ internal static class SpawningUtils
     {
         Logging.LogDebug("Created monster state with team ID: {TeamId} (assigned)", teamId);
 
+        var info = BGW_GameDB.GetUnitBattleInfoExtendDesc(tamer.GetFinalBattleInfoExtendID());
+        var healthBarType = info?.BloodBarType;
+        var isBossOrElite = healthBarType is EBGUBloodBarType.BossBar or EBGUBloodBarType.EliteBar;
+        
         var entity = pawnState.CreateNetworkedTamer(
             new LocalTamerComponent(),
             new TamerComponent
             {
                 Guid = guid,
-                UnitPath = unitName
+                UnitPath = unitName,
+                IsBossOrElite = isBossOrElite
             },
             new TeamComponent
             {

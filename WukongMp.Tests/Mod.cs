@@ -35,7 +35,7 @@ namespace WukongMp.Tests
 
         public void Init()
         {
-            if (!LaunchParameters.Instance.ValidForCoOp)
+            if (!LaunchParameters.Instance.Valid)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
                 return;
@@ -83,7 +83,7 @@ namespace WukongMp.Tests
 
         public void LateInit()
         {
-            if (!LaunchParameters.Instance.ValidForCoOp)
+            if (!LaunchParameters.Instance.Valid)
             {
                 _logger.LogError("Multiplayer is disabled. Launch the game through the ReadyM Launcher to play WukongMP.");
                 return;
@@ -130,7 +130,7 @@ namespace WukongMp.Tests
         {
             _logger.LogInformation("DeInit");
 
-            if (!LaunchParameters.Instance.ValidForCoOp)
+            if (!LaunchParameters.Instance.Valid)
             {
                 return;
             }

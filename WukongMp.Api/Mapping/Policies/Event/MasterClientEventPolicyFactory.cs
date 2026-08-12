@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using ReadyM.Api.Helpers;
-using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Policies.Event;
+using ReadyM.Api.Mapping.Tags;
 using WukongMp.Api.Mapping.Tags;
 using WukongMp.Api.State;
 

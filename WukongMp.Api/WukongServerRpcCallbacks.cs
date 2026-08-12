@@ -1,17 +1,11 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api.DI;
-using ReadyM.Api.Helpers;
-using ReadyM.Api.Idents;
+using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer;
-using ReadyM.Api.Multiplayer.Client;
-using ReadyM.Api.Multiplayer.Mapping.Events;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
-using ReadyM.Relay.Client;
+using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Relay.Client.Utilities;
-using ReadyM.Wukong.Common.DTO;
-using ReadyM.Wukong.Common.ECS.Values;
+using ReadyM.Wukong.Common.Rpc;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.UI;
 
@@ -19,91 +13,44 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api;
 
+[ServerRpcFor(typeof(SdkRpcContracts))]
 internal partial class WukongServerRpcCallbacks(
-    IClientEcsUpdateLoop ecsLoop,
     IMappedEventManager mappedEvent,
-    IRelayClient relayClient,
     NetworkSessionStats sessionStats,
     WukongWidgetManager widgetManager,
     ILogger logger
-) : IHostedService
+) : ServerRpcClient
 {
-    private IRelayClient RelayClient => relayClient;
     private IMappedEventManager MappedEvent => mappedEvent;
 
-    public void OnScopeStart()
+    public override void OnScopeStart()
     {
-        InitRpc();
+        base.OnScopeStart();
 
         MappedEvent.RegisterEcsEventHandler<SkipMovieEvent, WukongServerRpcCallbacks>(static (ev, self) =>
         {
-            self.SendSkipMovie(
-                new SkipMovieData(
-                    sequenceId: ev.SequenceId,
-                    waitingPlayers: ev.WaitingPlayers,
-                    allPlayers: ev.AllPlayers
-                )
-            );
+            self.SendSkipMovie(ev.SequenceId);
         }, this);
     }
 
-    public void Dispose()
+    partial void OnSkipMovie(SkipMovieData data)
     {
-        DeInitRpc();
-    }
-
-    [ServerRpcEvent("SkipMovie")]
-    private void OnSkipMovie(SkipMovieData data)
-    {
-        ecsLoop.Scheduler.Schedule(static (_, self, data0) =>
+        RunOnGameThread(() =>
         {
-            self.MappedEvent.InvokeInGameIfApplicable(
+            MappedEvent.InvokeInGameIfApplicable(
                 new SkipMovieEvent(
-                    sequenceId: data0.SequenceId,
-                    waitingPlayers: data0.WaitingPlayers,
-                    allPlayers: data0.AllPlayers
+                    sequenceId: data.SequenceId,
+                    waitingPlayers: data.WaitingPlayers,
+                    allPlayers: data.AllPlayers
                 ), default(EmptyContext)
             );
-        }, this, data);
-    }
-
-    // NOTE: This is declared here in order to generate send methods
-    [ServerRpcEvent("MovieStarted")]
-    private void OnMovieStarted(int sequenceId, AreaId areaId)
-    {
-        // Do nothing on response from server.
-    }
-
-    // NOTE: This is declared here in order to generate send methods
-    [ServerRpcEvent("MovieFinished")]
-    private void OnMovieFinished(int sequenceId, AreaId areaId)
-    {
-        // Do nothing on response from server.
-    }
-
-    [ServerRpcEvent("BeguilingChant")]
-    private void OnBeguilingChant(byte stateRaw)
-    {
-        var state = (BeguilingChantState)stateRaw;
-        ecsLoop.Scheduler.Schedule(static (_, self, state0) =>
-        {
-            self.MappedEvent.InvokeInGameIfApplicable(new BeguilingChantEvent(
-                state: state0
-            ), default(EmptyContext));
-        }, this, state);
-    }
-
-    [ServerRpcEvent("EnableCheats")]
-    private void OnEnableCheats(AreaId areaId, bool enabled)
-    {
-        // Do nothing on response from server.
+        });
     }
 
     private static readonly Stopwatch PingStopwatch = Stopwatch.StartNew();
     private static long _lastPingTimestamp;
 
-    [ServerRpcEvent("Ping")]
-    private void OnPing(long timestamp)
+    partial void OnPing(long timestamp)
     {
         if (timestamp != _lastPingTimestamp)
         {
@@ -111,14 +58,15 @@ internal partial class WukongServerRpcCallbacks(
             var outdatedRtt = PingStopwatch.ElapsedMilliseconds - timestamp;
             logger.LogWarning("Received outdated ping response. Timestamp: {Timestamp}, now: {Now}, RTT: {Rtt}ms", timestamp, PingStopwatch.ElapsedMilliseconds, outdatedRtt);
 
-            widgetManager.SetPacketLossWarning();
+            RunOnGameThread(widgetManager.SetPacketLossWarning);
             return;
         }
 
         var now = PingStopwatch.ElapsedMilliseconds;
         var rtt = now - timestamp;
-        widgetManager.UpdatePingIndicator(rtt);
         sessionStats.AddPing(rtt);
+
+        RunOnGameThread(() => { widgetManager.UpdatePingIndicator(rtt); });
     }
 
     public void SendPing()

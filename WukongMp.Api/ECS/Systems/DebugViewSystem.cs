@@ -6,7 +6,7 @@ using WukongMp.Api.UI;
 
 namespace WukongMp.Api.ECS.Systems;
 
-internal class DebugViewSystem(WukongEventBus eventBus, WukongWidgetManager widgetManager) : QuerySystem<MainCharacterComponent, TransformComponent>
+internal class DebugViewSystem(WukongEventBus eventBus, WukongWidgetManager widgetManager) : QuerySystem<MainCharacterComponent, NicknameComponent, TransformComponent>
 {
     private const ulong TickInterval = 10; // Check every 10 ticks
     private ulong tickCounter;
@@ -22,15 +22,14 @@ internal class DebugViewSystem(WukongEventBus eventBus, WukongWidgetManager widg
         if (tickCounter++ % TickInterval != 0)
             return;
 
-        Query.ForEachEntity((ref mainCharacter, ref transform, entity) =>
+        Query.ForEachEntity((ref _, ref nickname, ref transform, entity) =>
         {
             var mainEntity = new MainCharacterEntity(entity);
 
-            var nickname = mainCharacter.CharacterNickname;
             var position = mainEntity.Pawn?.GetActorLocation() ?? FVector.ZeroVector;
             var ecsPosition = transform.Position.ToFVector();
 
-            widgetManager.UpdatePlayerPosition(nickname, position, ecsPosition);
+            widgetManager.UpdatePlayerPosition(nickname.Nickname, position, ecsPosition);
         });
     }
 }

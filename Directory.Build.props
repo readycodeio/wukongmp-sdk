@@ -3,13 +3,16 @@
 <Project>
     <PropertyGroup>
         <!-- Number of days since Dec 17, 2024 -->
-        <BuildValue>$([System.DateTime]::op_Subtraction($([System.DateTime]::UtcNow), $([System.DateTime]::Parse('2024-12-17'))).Days)</BuildValue>
+<!--        <BuildValue>$([System.DateTime]::op_Subtraction($([System.DateTime]::UtcNow), $([System.DateTime]::Parse('2024-12-17'))).Days)</BuildValue>-->
         <!-- Hours and minutes as a four-digit number -->
-        <RevisionValue>$([System.DateTime]::UtcNow.ToString('HHmm'))</RevisionValue>
-        <BuildTimestamp>$(BuildValue).$(RevisionValue)</BuildTimestamp>
-        <FileVersion>1.0.$(BuildTimestamp)</FileVersion>
-        <Version>1.0.$(BuildTimestamp)</Version>
-        <InformationalVersion>1.0.$(BuildTimestamp)</InformationalVersion>
+<!--        <RevisionValue>$([System.DateTime]::UtcNow.ToString('HHmm'))</RevisionValue>-->
+<!--        <BuildTimestamp>$(BuildValue).$(RevisionValue)</BuildTimestamp>-->
+<!--        <FileVersion>0.3.$(BuildTimestamp)</FileVersion>-->
+<!--        <Version>0.3.$(BuildTimestamp)</Version>-->
+<!--        <InformationalVersion>0.3.$(BuildTimestamp)</InformationalVersion>-->
+        <FileVersion>0.3.0</FileVersion>
+        <Version>0.3.0</Version>
+        <InformationalVersion>0.3.0</InformationalVersion>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <UseSdkProjectReferences>true</UseSdkProjectReferences>

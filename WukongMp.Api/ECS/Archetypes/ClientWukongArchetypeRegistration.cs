@@ -14,7 +14,7 @@ internal sealed class ClientWukongArchetypeRegistration : IArchetypeRegistration
     public ArchetypeId MainCharacterArchetype { get; private set; }
     public ArchetypeId PvPStateSingletonArchetype { get; private set; }
 
-    public void Register(Store world)
+    public void Register(IArchetypeRegistry world)
     {
         TamerArchetype = world.RegisterArchetype(b =>
         {

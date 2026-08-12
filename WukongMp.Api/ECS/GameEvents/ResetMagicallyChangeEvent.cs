@@ -1,13 +1,13 @@
 ﻿using System;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
 internal readonly struct ResetMagicallyChangeEvent(
     Entity entity,
-    EResetReason_MagicallyChange reason) : IEquatable<ResetMagicallyChangeEvent>, IOwnershipManaged
+    EResetReason_MagicallyChange reason) : IEquatable<ResetMagicallyChangeEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly EResetReason_MagicallyChange Reason = reason;

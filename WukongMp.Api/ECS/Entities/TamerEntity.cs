@@ -37,8 +37,8 @@ internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
     public ref MetadataComponent GetMeta()
         => ref Entity.GetComponent<MetadataComponent>();
 
-    public ref readonly TeamComponent GetTeam()
-        => ref Entity.GetComponent<TeamComponent>();
+    public TeamComponent GetTeam()
+        => Entity.GetComponent<TeamComponent>();
 
     public void SetTeam(TeamComponent team)
         => Entity.Set(team);

@@ -2,8 +2,9 @@ using System;
 using System.Numerics;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Wukong.Common.ECS.Components;
+using ReadyM.Wukong.Common.ECS.Values;
 using WukongMp.Api;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
@@ -12,6 +13,9 @@ using WukongMp.Sdk.Api;
 
 namespace WukongMp.Sdk.Entities;
 
+/// <summary>
+/// Represents the player character entity in the game.
+/// </summary>
 public readonly struct ReadyMainCharacter
     : IReadyEntity<ReadyMainCharacter>,
         IReadyConvertable<ReadyMainCharacter, ReadyCharacter>,
@@ -67,11 +71,11 @@ public readonly struct ReadyMainCharacter
 
     public string Nickname
     {
-        get => Entity.GetState().CharacterNickname;
+        get => Entity.GetNickname().Nickname;
         set
         {
-            if (DI.Instance.MappedField.CanSetFromApi<MainCharacterComponent>(Entity, out var set))
-                set.SetFromApi(MainCharacterComponent.Fields.CharacterNickname, value);
+            if (DI.Instance.MappedField.CanSetFromApi<NicknameComponent>(Entity, out var set))
+                set.SetFromApi(NicknameComponent.Fields.Nickname, value);
         }
     }
 
@@ -85,7 +89,8 @@ public readonly struct ReadyMainCharacter
         }
     }
 
-    public bool IsSpectator => Entity.GetPvP().IsSpectator;
+    public bool IsObserver => Entity.GetState().IsSpectator && Entity.GetState().SpectatorReason == SpectatorReason.Api;
+    public bool IsSpectator => Entity.GetState().IsSpectator;
 
     // ---
 

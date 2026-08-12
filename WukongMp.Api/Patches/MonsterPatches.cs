@@ -106,7 +106,16 @@ internal class PatchTamerBeginPlayCS_Implementation
                 var tamerEntity = DI.Instance.PawnState.GetEntityByTamerGuid(guid);
                 if (tamerEntity == null)
                 {
-                    SpawningUtils.CreateMonsterInEcs(DI.Instance.PawnState, guid, __instance, Constants.DefaultMonsterTeamId, __instance.PathName);
+                    var teamId = 0;
+                    var unitCommDesc = BGW_GameDB.GetUnitCommDesc(BGU_DataUtil.GetActorResID(__instance));
+                    if (unitCommDesc != null)
+                        teamId = unitCommDesc.TeamID;
+
+                    var instanceReadonlyData = BGU_DataUtil.GetGameInstanceReadonlyData<IBIC_TaskData, BIC_TaskData>(__instance);
+                    if (instanceReadonlyData != null && instanceReadonlyData.TryGetCacheNPCTeamID(__instance.GetFinalGuid(), out var cacheTeamId))
+                        teamId = cacheTeamId;
+                    
+                    SpawningUtils.CreateMonsterInEcs(DI.Instance.PawnState, guid, __instance, teamId, __instance.PathName);
                 }
                 else
                 {
@@ -224,7 +233,7 @@ internal class PatchTamerUnload
             {
                 tamerEntity.Value.SetTamer(null, false);
                 Logging.LogDebug("Deleting tamer entity from ECS: id {Entity} (DestroyTamer)", tamerEntity.Value.GetMeta().NetId);
-                DI.Instance.EcsLoop.CommandBuffer.DeleteEntity(tamerEntity.Value.Entity.Id);
+                DI.Instance.Scheduler.Scheduler.Schedule(static (cb, tid) => cb.DeleteEntity(tid), tamerEntity.Value.Entity.Id);
             }
         }
         else
@@ -618,6 +627,7 @@ internal class TamerTeamResetPatch
             if (tamer.Value.Pawn == ___OwnerAsCharacterCS && team != 0)
             {
                 Logging.LogDebug("Prevented team ID reset for {Guid} with team ID {TeamId}", tamer.Value.GetTamer().Guid, team);
+                ___OwnerAsCharacterCS.SetTeamIDInCS(team);
                 return false;
             }
         }

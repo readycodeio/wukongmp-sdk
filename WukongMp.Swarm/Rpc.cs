@@ -10,7 +10,7 @@ using WukongMp.Sdk.Api;
 
 namespace WukongMp.Swarm;
 
-public partial class Rpc(IRpcClient client, IRelaySerializer serializer) : RpcClassBase(client, serializer)
+public partial class Rpc : ClientRpcHandler
 {
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnSwarmStarted(PlayerId __sender)

@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.Mapping;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Mapping.Policies.Event;

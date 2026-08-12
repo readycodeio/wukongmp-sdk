@@ -1,10 +1,10 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct ExitPhantomRushEvent(Entity entity) : IEquatable<ExitPhantomRushEvent>, IOwnershipManaged
+internal readonly struct ExitPhantomRushEvent(Entity entity) : IEquatable<ExitPhantomRushEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
 

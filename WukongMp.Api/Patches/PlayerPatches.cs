@@ -533,7 +533,7 @@ internal static class PatchSetTargetToData
         if (newTargetPlayerEntity.HasValue)
         {
             newTarget = newTargetPlayerEntity.Value;
-            name = newTargetPlayerEntity.Value.GetState().CharacterNickname;
+            name = newTargetPlayerEntity.Value.GetNickname().Nickname;
             clearTarget = false;
         }
         else if (newTargetMonsterEntity.HasValue)
@@ -633,7 +633,7 @@ internal static class PatchOnTriggerInputActionImpl
         if (!mainEntity.HasValue)
             return true;
 
-        return !(mainEntity.Value.Pawn == __instance.GetOwner() && mainEntity.Value.GetPvP().IsSpectator);
+        return !(mainEntity.Value.Pawn == __instance.GetOwner() && mainEntity.Value.GetState().IsSpectator);
     }
 }
 

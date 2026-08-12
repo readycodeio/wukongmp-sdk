@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Linq;
-using System.Numerics;
 using System.Reflection;
 using b1;
-using Friflo.Engine.ECS;
 using HarmonyLib;
 using PreludeLib.Attributes;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 using UnrealEngine.Engine;
 using UnrealEngine.LevelSequence;
 using UnrealEngine.MovieScene;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.Resources;
 using WukongMp.Api.WukongUtils;
@@ -142,7 +139,7 @@ internal static class PatchRequestPlayMovie
             Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
             {
                 var areaEntity = DI.Instance.AreaState.CurrentArea;
-                if (areaEntity != null && !areaEntity.Value.GetMovie().FinishedSequences.Contains(SequenceId))
+                if (areaEntity != null && !areaEntity.Value.GetMovie().ContainsFinishedSequences(SequenceId))
                 {
                     DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MovieFinishedEvent(SequenceId, areaEntity.Value.Scope.AreaId), default(EmptyContext));
                 }
@@ -221,7 +218,7 @@ internal static class PatchTickForMovieSystem
             var peakRequest = GlobalMovieData.PlayMovieRequestQueue.Peek();
             var mainEntity = playerState.LocalMainCharacter;
             var areaEntity = DI.Instance.AreaState.CurrentArea;
-            var isMovieStartedByOthers = areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(peakRequest.SequenceID);
+            var isMovieStartedByOthers = areaEntity != null && areaEntity.Value.GetMovie().ContainsStartedSequences(peakRequest.SequenceID);
 
             if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(DI.Instance.State, DI.Instance.PlayerState, peakRequest.SequenceID) || !peakRequest.bDisablePlayerControl || isMovieStartedByOthers)
             {
@@ -236,7 +233,7 @@ internal static class PatchTickForMovieSystem
                 while (GlobalMovieData.PlayMovieRequestQueue.Count > 0)
                 {
                     var movieRequest = GlobalMovieData.PlayMovieRequestQueue.Dequeue();
-                    if (areaEntity != null && !areaEntity.Value.GetMovie().StartedSequences.Contains(movieRequest.SequenceID))
+                    if (areaEntity != null && !areaEntity.Value.GetMovie().ContainsStartedSequences(movieRequest.SequenceID))
                     {
                         // TODO: Event?
                         DI.Instance.ServerRpc.SendMovieStarted(movieRequest.SequenceID, areaEntity.Value.Scope.AreaId);
@@ -329,7 +326,7 @@ internal static class PatchOnSkipCurrentCameraMovie
         var sequenceId = movieData.CameraMovieInstance?.SequenceId ?? 0;
 
         var areaEntity = DI.Instance.AreaState.CurrentArea;
-        if (areaEntity != null && areaEntity.Value.GetMovie().StartedSequences.Contains(sequenceId) && !areaEntity.Value.GetMovie().FinishedSequences.Contains(sequenceId))
+        if (areaEntity != null && areaEntity.Value.GetMovie().ContainsStartedSequences(sequenceId) && !areaEntity.Value.GetMovie().ContainsFinishedSequences(sequenceId))
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(new SkipMovieEvent(sequenceId), default(EmptyContext));

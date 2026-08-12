@@ -31,6 +31,7 @@ if ($Mode -eq "coop")
 {
     $allDevFiles += @(
         @(@("WukongMp.Coop.dll"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
+        @(@("WukongMp.Coop.Common.dll"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
         @(@("manifest.json"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop"),
         @(@("ArchiveSaveFile.1.sav"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop")
     )
@@ -38,7 +39,8 @@ if ($Mode -eq "coop")
     if ($Configuration -eq "Debug")
     {
         $allDevFiles += @(
-            ,@(@("WukongMp.Coop.pdb"), "WukongMP-co-op-mod/WukongMp.Coop/bin/Debug/netstandard2.0", "Mods/WukongMp.Coop")
+            @(@("WukongMp.Coop.pdb"), "WukongMP-co-op-mod/WukongMp.Coop/bin/Debug/netstandard2.0", "Mods/WukongMp.Coop"),
+            @(@("WukongMp.Coop.Common.pdb"), "WukongMP-co-op-mod/WukongMp.Coop/bin/Debug/netstandard2.0", "Mods/WukongMp.Coop")
         )
     }
 }
@@ -48,7 +50,8 @@ else
         @(@("WukongMp.Pvp.dll"), "WukongMP-PvP-mod/WukongMp.PvP/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
         @(@("manifest.json"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp"),
         @(@("ArchiveSaveFile.0.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp"),
-        @(@("ArchiveSaveFile.1.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp")
+        @(@("ArchiveSaveFile.1.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp"),
+        @(@("ArchiveSaveFile.2.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp")
     )
 
     if ($Configuration -eq "Debug")

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using ReadyM.Api;
 using ReadyM.Api.Multiplayer.Client;
 using WukongMp.Api.Compat;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.Windows;
 
 namespace WukongMp.Api;
 
@@ -15,15 +15,10 @@ internal sealed class LaunchParameters
 
     public bool Valid => ServerIp is not null
                          && ServerPort is not null
-                         && Ticket != default;
-
-    public bool ValidForCoOp => Valid && JwtToken is not null
-                                      && ApiBaseUrl is not null
-                                      && ServerId is not null;
-
-    public bool ValidForPvP => LevelId is not null;
+                         && (Ticket != default || LevelId != null || ServerId != null); // self-hosted, pvp, coop
 
     public string? ModFolderOverride { get; }
+    public string? GameMode { get; }
     public string? ServerIp { get; }
     public int? ServerPort { get; }
     public int? ServerId { get; }
@@ -59,12 +54,16 @@ internal sealed class LaunchParameters
 
     private LaunchParameters()
     {
-        var data = _allParameters = IpcHelpers.ReadAndDeleteIpcHandshakeFile();
+        var ipc = new IpcHelper(DI.Instance.Logger);
+        var data = _allParameters = ipc.ReadAndDeleteIpcHandshakeFile("wukong_handshake.env");
+
+        // Hosted: Game mode
+        GameMode = data.GetValueOrDefault("GAME_MODE")?.ToLowerInvariant();
 
         // CO-OP: API base URL
         ApiBaseUrl = data.GetValueOrDefault("API_BASE_URL");
 
-        // JWT token and 
+        // JWT token 
         JwtToken = data.GetValueOrDefault("JWT_TOKEN");
 
         // BOTH: user GUID
@@ -81,7 +80,7 @@ internal sealed class LaunchParameters
         }
         
         // BOTH: single use connection ticket
-        var ticketString = data.GetValueOrDefault("TICKET");
+        var ticketString = data.GetValueOrDefault("TICKET") ?? UserGuid.ToString();
 
         if (ConnectionTicket.TryParse(ticketString, out var ticket))
         {
@@ -110,7 +109,7 @@ internal sealed class LaunchParameters
         }
 
         // BOTH: user nickname
-        Nickname = data.GetValueOrDefault("NICKNAME");
+        Nickname = data.GetValueOrDefault("NICKNAME")!;
 
         // BOTH: server region
         var region = data.GetValueOrDefault("REGION", "");

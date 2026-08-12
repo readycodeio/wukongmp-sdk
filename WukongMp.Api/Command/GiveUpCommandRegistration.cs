@@ -1,7 +1,7 @@
 using b1;
 using BtlShare;
 using ReadyM.Api.Command;
-using ReadyM.Relay.Client;
+using ReadyM.Api.Multiplayer.ECS.Systems;
 using WukongMp.Api.Chat;
 using WukongMp.Api.State;
 using WukongMp.Api.WukongUtils;
@@ -9,7 +9,7 @@ using WukongMp.Api.WukongUtils;
 namespace WukongMp.Api.Command;
 
 internal class GiveUpCommandRegistration(
-    IClientEcsUpdateLoop ecsLoop,
+    ReceiveSystem scheduleSystem,
     WukongPlayerState playerState,
     WukongChatter chatter) : IConsoleCommandRegistration
 {
@@ -25,7 +25,7 @@ internal class GiveUpCommandRegistration(
         chatter.SendLocalizedServerMessage("PlayerGaveUp", _playerState.Nickname);
 
         // no need to send an RPC event since in co-op all players are authoritative over their HP
-        ecsLoop.Scheduler.Schedule(static (_, self) =>
+        scheduleSystem.Scheduler.Schedule(static (_, self) =>
         {
             if (self._playerState.LocalMainCharacter is not { } mainEntity)
                 return;

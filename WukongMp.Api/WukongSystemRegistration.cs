@@ -3,9 +3,9 @@ using System.Linq;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using ReadyM.Api.DI;
+using ReadyM.Api.Mapping.Data;
+using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Multiplayer.ECS.Managers;
-using ReadyM.Api.Multiplayer.Mapping.Data;
-using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.State;
 using WukongMp.Api.Configuration;
@@ -29,7 +29,7 @@ internal sealed class WukongSystemRegistration(
     WukongPlayerPawnState playerPawnState,
     WukongPlayerModeManager modeManager,
     ClientOwnershipManager clientOwnership,
-    IClientEcsUpdateLoop ecsLoop,
+    ClientEcsUpdateLoop ecsLoop,
     IMappedEventManager mappedEvent,
     WukongEventBus eventBus,
     WukongWidgetManager widgetManager,
@@ -46,7 +46,7 @@ internal sealed class WukongSystemRegistration(
         new SyncTamersSystem(mappedEvent),
         new UnloadTamersSystem(),
         new KillAlreadyDeadMonstersSystem(clientOwnership, playerState, eventBus),
-        new SyncMonsterTeamSystem(),
+        new SyncMonsterTeamSystem(configuration),
         new ChangeTamerTargetSystem(clientOwnership),
         new CreateLocalMainCharacterEntitySystem(state, playerState, eventBus, mappedField, logger),
         new SpawnOtherMainCharactersSystem(state, playerState, playerPawnState, eventBus, clientOwnership, logger),

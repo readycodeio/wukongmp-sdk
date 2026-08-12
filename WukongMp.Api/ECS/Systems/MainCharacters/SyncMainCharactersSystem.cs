@@ -1,8 +1,8 @@
 ﻿using b1;
 using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
+using ReadyM.Api.Mapping.Data;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Api.Multiplayer.Mapping.Data;
 using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
@@ -54,7 +54,7 @@ internal class SyncMainCharactersSystem(
         ref var playerComp = ref playerEntity.GetState();
         ref var localMainComp = ref mainEntity.GetLocalState();
 
-        var isSpectator = mainEntity.GetPvP().IsSpectator;
+        var isSpectator = mainEntity.GetState().IsSpectator;
 
         if (isSpectator != localMainComp.IsSpectatorLocally)
         {
@@ -71,7 +71,7 @@ internal class SyncMainCharactersSystem(
         if (pawnTeamId != teamComp.TeamId)
         {
             logger.LogInformation("Assigning team ID {TeamId} to player {Name}", teamComp.TeamId, playerComp.Nickname);
-            ClientUtils.RegisterAndSetPlayerTeam(mainEntity.Pawn, teamComp.TeamId);
+            ClientUtils.RegisterAndSetTeam(mainEntity.Pawn, teamComp.TeamId);
             eventRouter.RaiseOnPlayerChangedTeam(playerEntity, mainEntity);
         }
     }

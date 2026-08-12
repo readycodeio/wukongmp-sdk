@@ -1,16 +1,16 @@
 ﻿using System.Collections.Generic;
 using b1;
+using BtlShare;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
-using ReadyM.Api.Multiplayer.Mapping.Events;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
-using WukongMp.Api.State;
 
 namespace WukongMp.Api.WukongUtils
 {
@@ -60,9 +60,20 @@ namespace WukongMp.Api.WukongUtils
                 var guid = BGU_DataUtil.GetActorGuid(actor);
                 Logging.LogDebug("Monster: {Name}, alive: {Flag}, phase {Phase}, type {Type}, guid: {Guid}", actor.GetName(), actor.GetMonster() != null, tamerRef.Phase, tamerRef.TamerType, guid);
                 var entity = DI.Instance.PawnState.GetEntityByTamerGuid(guid);
+
+                var teamId = 0;
+                var unitCommDesc = BGW_GameDB.GetUnitCommDesc(BGU_DataUtil.GetActorResID(actor));
+                if (unitCommDesc != null)
+                    teamId = unitCommDesc.TeamID;
+
+                var instanceReadonlyData = BGU_DataUtil.GetGameInstanceReadonlyData<IBIC_TaskData, BIC_TaskData>(actor);
+                if (instanceReadonlyData != null && instanceReadonlyData.TryGetCacheNPCTeamID(actor.GetFinalGuid(), out var cacheTeamId))
+                    teamId = cacheTeamId;
+
                 if (entity == null)
                 {
-                    SpawningUtils.CreateMonsterInEcs(DI.Instance.PawnState, guid, actor, Constants.DefaultMonsterTeamId, actor.PathName);
+                    Logging.LogDebug("Monster does not exist in ECS, spawning: {ActorName}, team {Team}", guid, teamId);
+                    SpawningUtils.CreateMonsterInEcs(DI.Instance.PawnState, guid, actor, teamId, actor.PathName);
                 }
                 else
                 {
@@ -104,7 +115,7 @@ namespace WukongMp.Api.WukongUtils
             ref var tamerComp = ref tamerEntity.GetTamer();
             var metaComp = tamerEntity.GetMeta();
             Logging.LogDebug("Adding spawned unit counter for tamer with guid: {Guid} (NetId {NetId}) for player {Player}", tamerComp.Guid, metaComp.NetId, playerId);
-            tamerComp.HoldingPlayers = tamerComp.HoldingPlayers.Add(playerId);
+            tamerComp.AddHoldingPlayers(playerId);
         }
 
         public static void SubtractSpawnedUnitRefCount(TamerEntity tamerEntity, PlayerId playerId)
@@ -117,7 +128,14 @@ namespace WukongMp.Api.WukongUtils
 
         public static void SubtractSpawnedUnitRefCount(ref TamerComponent tamerComp, PlayerId playerId)
         {
-            tamerComp.HoldingPlayers = tamerComp.HoldingPlayers.Remove(playerId);
+            for (var i = 0; i < tamerComp.HoldingPlayersCount; i++)
+            {
+                if (tamerComp.GetHoldingPlayers(i) == playerId)
+                {
+                    tamerComp.RemoveAtHoldingPlayers(i);
+                    return;
+                }
+            }
         }
 
         public static void ClearSpawnedUnitRefCount(TamerEntity tamerEntity)
@@ -125,7 +143,7 @@ namespace WukongMp.Api.WukongUtils
             ref var tamerComp = ref tamerEntity.GetTamer();
             var metaComp = tamerEntity.GetMeta();
             Logging.LogDebug("Clearing spawned unit counter for tamer with guid: {Guid} (NetId {NetId})", tamerComp.Guid, metaComp.NetId);
-            tamerComp.HoldingPlayers = tamerComp.HoldingPlayers.Clear();
+            tamerComp.ClearHoldingPlayers();
             ref var localTamer = ref tamerEntity.GetLocalTamer();
             localTamer.IsLocallySpawned = false;
         }

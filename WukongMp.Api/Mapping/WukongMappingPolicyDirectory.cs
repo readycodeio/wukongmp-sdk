@@ -3,12 +3,12 @@ using System.Diagnostics.CodeAnalysis;
 using b1;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Mapping;
+using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Mapping.Policies.Data;
+using ReadyM.Api.Mapping.Policies.Event;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Api.Multiplayer.Mapping;
-using ReadyM.Api.Multiplayer.Mapping.Events;
-using ReadyM.Api.Multiplayer.Mapping.Policies.Data;
-using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
 using UnrealEngine.Engine;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
@@ -121,7 +121,7 @@ internal class WukongMappingPolicyDirectory(
         return true;
     }
 
-    public bool IsTamerMapped([NotNullWhen(true)] BUTamerActor? tamer, [NotNullWhen(true)] out TamerEntity? tamerEntity)
+    public bool IsTamerMapped([NotNullWhen(true)] ABGUTamerBase? tamer, [NotNullWhen(true)] out TamerEntity? tamerEntity)
     {
         if (tamer.IsNullOrDestroyed())
         {
@@ -142,7 +142,7 @@ internal class WukongMappingPolicyDirectory(
             return false;
         }
 
-        tamerEntity = new(entity.Value);
+        tamerEntity = new TamerEntity(entity.Value);
 
         if (tamer != tamerEntity.Value.Tamer)
         {

@@ -7,9 +7,9 @@ using Friflo.Engine.ECS;
 using LiteNetLib;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Api.Multiplayer.Mapping.Events;
 using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
@@ -134,6 +134,16 @@ internal sealed class WukongSynchronizationApi(
         if (mappingDir.IsMainCharacterMapped(actor, out var entity))
         {
             return new ReadyMainCharacter(this, entity.Value.Entity);
+        }
+
+        return null;
+    }
+
+    public ReadyTamer? GetTamerEntityByActor(ABGUTamerBase? actor)
+    {
+        if (mappingDir.IsTamerMapped(actor, out var entity))
+        {
+            return new ReadyTamer(this, entity.Value.Entity);
         }
 
         return null;

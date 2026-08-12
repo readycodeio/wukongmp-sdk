@@ -54,6 +54,9 @@ internal readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainCha
 
     public ref MarkerComponent GetMarker()
         => ref Entity.GetComponent<MarkerComponent>();
+    
+    public ref NicknameComponent GetNickname()
+        => ref Entity.GetComponent<NicknameComponent>();
 
     public ref PvPComponent GetPvP()
         => ref Entity.GetComponent<PvPComponent>();

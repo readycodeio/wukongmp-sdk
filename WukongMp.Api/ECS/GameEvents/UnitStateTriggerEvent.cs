@@ -1,7 +1,7 @@
 ﻿using System;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
@@ -9,7 +9,7 @@ internal readonly struct UnitStateTriggerEvent(
     Entity entity,
     EBUStateTrigger trigger,
     float time,
-    bool needForceUpdate) : IEquatable<UnitStateTriggerEvent>, IOwnershipManaged
+    bool needForceUpdate) : IEquatable<UnitStateTriggerEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly EBUStateTrigger Trigger = trigger;

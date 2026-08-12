@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using b1;
 using BtlShare;
@@ -16,17 +17,18 @@ using ReadyM.Api.DI;
 using ReadyM.Api.ECS.Registry;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Helpers;
+using ReadyM.Api.Mapping;
+using ReadyM.Api.Mapping.Data;
+using ReadyM.Api.Mapping.Events;
+using ReadyM.Api.Mapping.Policies.Data;
+using ReadyM.Api.Mapping.Policies.Event;
+using ReadyM.Api.Mapping.Policies.Event.Common;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Archetypes;
 using ReadyM.Api.Multiplayer.ECS.Jobs;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
-using ReadyM.Api.Multiplayer.Mapping;
-using ReadyM.Api.Multiplayer.Mapping.Data;
-using ReadyM.Api.Multiplayer.Mapping.Events;
-using ReadyM.Api.Multiplayer.Mapping.Policies.Data;
-using ReadyM.Api.Multiplayer.Mapping.Policies.Event;
-using ReadyM.Api.Multiplayer.Mapping.Policies.Event.Common;
+using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Api.Multiplayer.Serialization;
 using ReadyM.Api.State;
@@ -45,7 +47,6 @@ using WukongMp.Api.Command;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.FreeCamera;
-using WukongMp.Api.Helpers;
 using WukongMp.Api.Input;
 using WukongMp.Api.Mapping;
 using WukongMp.Api.Mapping.Policies.Event;
@@ -66,20 +67,30 @@ internal sealed class DI : IDependencyContainer
     public IContainer Container { get; private set; } = new Container(rules =>
         rules.With(FactoryMethod.ConstructorWithResolvableArguments)
             .WithDefaultReuse(Reuse.Singleton)
+            // Additive by default, so mods contributing an IArchetypeRegistration or an
+            // INetworkedComponentRegistration do not wipe out the SDK's own registrations.
+            // Pass replace: true to deliberately take a service over.
+            .WithDefaultIfAlreadyRegistered(IfAlreadyRegistered.AppendNewImplementation)
+            .WithUnknownServiceHandler(req => { Logging.LogError("DI: Unknown service requested: {ServiceType}", req.ServiceType.FullName); })
             .WithUseInterpretation());
 
-    public void RegisterSingleton<TService, TImplementation>(TImplementation instance) where TImplementation : TService
-        => Container.RegisterInstance<TService>(instance);
+    public void RegisterSingleton<TService, TImplementation>(TImplementation instance, bool replace = false) where TImplementation : TService
+        => Container.RegisterInstance<TService>(instance, RegistrationMode(replace));
 
     public T Resolve<T>() => Container.Resolve<T>();
+    public IEnumerable<T> ResolveAll<T>() => Container.ResolveMany<T>();
 
-    public void RegisterSingleton<T>() => Container.Register<T>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
-    public void RegisterSingleton<T>(T instance) => Container.RegisterInstance(instance, ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+    public void RegisterSingleton<T>(bool replace = false) => Container.Register<T>(ifAlreadyRegistered: RegistrationMode(replace));
+    public void RegisterSingleton<T>(T instance, bool replace = false) => Container.RegisterInstance(instance, RegistrationMode(replace));
 
-    public void RegisterSingleton<TService>(Type type) => Container.Register(typeof(TService), type, ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+    public void RegisterSingleton<TService>(Type type, bool replace = false) => Container.Register(typeof(TService), type, ifAlreadyRegistered: RegistrationMode(replace));
 
-    public void RegisterSingleton<TService, TImplementation>() where TImplementation : TService
-        => Container.Register<TService, TImplementation>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+    public void RegisterSingleton<TService, TImplementation>(bool replace = false) where TImplementation : TService
+        => Container.Register<TService, TImplementation>(ifAlreadyRegistered: RegistrationMode(replace));
+
+    // null defers to the container rules above, which append rather than replace
+    private static IfAlreadyRegistered? RegistrationMode(bool replace)
+        => replace ? IfAlreadyRegistered.Replace : null;
 
     public InputManager InputManager => Container.Resolve<InputManager>();
     public ILoggerFactory LoggerFactory => Container.Resolve<ILoggerFactory>();
@@ -87,7 +98,8 @@ internal sealed class DI : IDependencyContainer
     public NetworkSessionStats NetworkSessionStats => Container.Resolve<NetworkSessionStats>();
 
     public Store World => Container.Resolve<Store>();
-    public IClientEcsUpdateLoop EcsLoop => Container.Resolve<IClientEcsUpdateLoop>();
+    public ReceiveSystem Scheduler => Container.Resolve<ReceiveSystem>();
+    public ClientEcsUpdateLoop EcsLoop => Container.Resolve<ClientEcsUpdateLoop>();
 
     public WukongMappingPolicyDirectory MappingPolicyDir => Container.Resolve<WukongMappingPolicyDirectory>();
     public IMappedEntityManager<AActor> MappedEntity => Container.Resolve<IMappedEntityManager<AActor>>();
@@ -142,8 +154,19 @@ internal sealed class DI : IDependencyContainer
     {
         Logger.LogDebug("Initializing DI...");
         Container.RegisterInstance<IDependencyContainer>(Instance);
-        
-        Container.Register<RpcOffsetProvider>();
+
+        Container.Register<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Client);
+        Container.Register<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Server);
+
+        Container.RegisterInitializer<object>((obj, s) =>
+        {
+            if (obj is RpcBase client)
+            {
+                client.RelayClient = s.Resolve<IRpcClient>();
+                client.Serializer = s.Resolve<IRelaySerializer>();
+                client.Scheduler = s.Resolve<ReceiveSystem>().Scheduler;
+            }
+        });
 
         Container.RegisterInstance(LaunchParameters.Instance);
         Container.RegisterInstance(new NetworkSessionStats(LaunchParameters.Instance.UserGuid.ToString(), LaunchParameters.Instance.Region));
@@ -157,8 +180,9 @@ internal sealed class DI : IDependencyContainer
 
         // TODO: the ArchetypeId on client and server are only in sync because the order of registration is the same
         // This is fragile and should be fixed
-        Container.Register<IArchetypeRegistration, DefaultAreaArchetypeRegistration>();
-        Container.Register<IArchetypeRegistration, DefaultPlayerArchetypeRegistration>();
+        Container.RegisterMany<DefaultAreaArchetypeRegistration>(nonPublicServiceTypes: true);
+        Container.RegisterMany<DefaultPlayerArchetypeRegistration>(nonPublicServiceTypes: true);
+        Container.RegisterMany<DefaultCellArchetypeRegistration>(nonPublicServiceTypes: true);
         Container.RegisterMany<ClientWukongArchetypeRegistration>(nonPublicServiceTypes: true);
 
         Container.Register<INetworkedComponentRegistration, DefaultNetworkedComponentRegistration>();
@@ -188,11 +212,12 @@ internal sealed class DI : IDependencyContainer
         Container.Register<ITextRelaySerializerRegistration, ClientShimTextSerializerRegistration>();
         Container.Register<TextRelaySerializer>();
 
-        Container.Register<IClientEcsUpdateLoop, ClientEcsUpdateLoop>();
-        Container.Register<JobRegistry>();
+        Container.Register<ReceiveSystem>();
+        Container.Register<ClientEcsUpdateLoop>();
+        Container.Register<SerializationJobRegistry>();
         Container.Register<ClientState>();
         Container.Register<WukongPlayerState>();
-        Container.Register<IClientEntityManager, ClientNetworkedEntityManager>();
+        Container.Register<IClientEntityManager, ClientNetworkedEntityState>();
 
         Container.Register<FreeCameraManager>();
         Container.Register<WukongWidgetManager>();
@@ -282,6 +307,8 @@ internal sealed class DI : IDependencyContainer
         Container.Register<PingWidgetUpdater>();
         Container.Register<IRuntimeBackend, RuntimeWeaverBackend>();
         Container.Register<RuntimePrelude>();
+
+        Container.Register<IComponentApi, NetworkComponentRegistrar>();
 
         Container.Register<WukongSystemRegistration>();
         Container.Register<TestsRunner>();
@@ -497,13 +524,37 @@ internal sealed class DI : IDependencyContainer
         fieldMappingRegistry.Register(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(),
             (ctx, value) =>
             {
-                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase),
-                        Constants.FloatComparisonTolerance))
+                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
                 {
+                    Logging.LogDebug("Setting HpMaxBase to {HpMaxBase}", value);
                     ctx.SetFloatValue(EBGUAttrFloat.HpMaxBase, value);
                 }
             },
-            ctx => ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase));
+            ctx =>
+            {
+                var value = ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase);
+                Logging.LogDebug("Loaded HpMaxBase as {HpMaxBase}", value);
+                return value;
+            });
+
+        fieldMappingRegistry.Register(HpComponent.Fields.HpMaxMulPercent.In<BUC_AttrContainer>(),
+            (ctx, value) =>
+            {
+                var floatVal = value * 100f - 10_000f; // WUkong sets these as (10_000 + X)/10_000, so 0 is 100% and 10_000 is 200%
+                if (!floatVal.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxMul), Constants.FloatComparisonTolerance))
+                {
+                    Logging.LogDebug("Setting HpMaxMul to {HpMaxMulPercent}%", value);
+                    ctx.SetFloatValue(EBGUAttrFloat.HpMaxMul, floatVal);
+                }
+            },
+            ctx =>
+            {
+                var value = ctx.GetFloatValue(EBGUAttrFloat.HpMaxMul);
+                var mult = 1 + value / 10_000f;
+                var percent = (int)(mult * 100);
+                Logging.LogDebug("Loaded HpMaxMul as {HpMaxMulPercent}%", percent);
+                return percent;
+            });
 
         fieldMappingRegistry.Register(MainCharacterComponent.Fields.Equipment.In<BGUCharacterCS>(),
             EquipmentUtils.SetActorEquipment,

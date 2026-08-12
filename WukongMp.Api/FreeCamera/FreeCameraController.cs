@@ -58,7 +58,7 @@ namespace WukongMp.Api.FreeCamera
         }
 
         private IEnumerable<PlayerId> AllNotSpectatingPlayerIds
-            => _state.AreaPlayers.Where(p => _playerState.GetMainCharacterByPlayerId(p)?.GetPvP().IsSpectator == false);
+            => _state.AreaPlayers.Where(p => _playerState.GetMainCharacterByPlayerId(p)?.GetState().IsSpectator == false);
 
         private IEnumerable<(PlayerId PlayerId, PlayerEntity Player, MainCharacterEntity Character)> AllPvPPlayers
             => AllNotSpectatingPlayerIds.Select(GetEntities).OfType<(PlayerId, PlayerEntity, MainCharacterEntity)>();
@@ -197,7 +197,7 @@ namespace WukongMp.Api.FreeCamera
             var cameraPosition = _freeCameraManager.GetCurrentCameraPosition();
             var characterLocation = spectatedCharacter!.GetActorLocation();
             SetInitialOrbitFromCamera(cameraPosition, characterLocation, spectatedCharacter!.GetActorRotation());
-            _widgetManager.SetSpectatingMessage(spectatedPlayer.Character.GetState().CharacterNickname);
+            _widgetManager.SetSpectatingMessage(spectatedPlayer.Character.GetNickname().Nickname);
         }
 
         private void DisablePlayerSpectating()

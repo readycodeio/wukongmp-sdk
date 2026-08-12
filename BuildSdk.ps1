@@ -18,20 +18,7 @@ if (-not (Test-Path $solutionPath))
 }
 
 Write-Output "Building solution $solutionPath in configuration $Configuration..."
-$buildOutput = dotnet build $solutionPath -c $Configuration | Tee-Object -FilePath 'build.log'
-
-# 2. Extract version number from build output
-$pattern = '\s*Build Version:\s*(?<ver>\d+(\.\d+){3})'
-$match = $buildOutput | Select-String -Pattern $pattern -AllMatches
-
-if (-not $match)
-{
-    Write-Error "Could not find 'Build Version' in build output."
-    exit 1
-}
-
-$version = $match[0].Matches[0].Groups['ver'].Value
-Write-Output "Extracted version: $version"
+dotnet build $solutionPath -c $Configuration
 
 # 3. Prepare temporary output directory
 $outputRoot = Join-Path $scriptDir 'Output'
@@ -54,6 +41,7 @@ foreach ($p in $Mods)
 # Append non-SDK mod files
 $allFiles += @(
     @(@("WukongMp.Coop.dll"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
+    @(@("WukongMp.Coop.Common.dll"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
     @(@("manifest.json"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop"),
     @(@("ArchiveSaveFile.1.sav"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop"),
     

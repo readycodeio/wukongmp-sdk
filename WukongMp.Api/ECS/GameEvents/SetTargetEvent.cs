@@ -1,13 +1,13 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
 internal readonly struct SetTargetEvent(
     Entity character,
     Entity target,
-    bool clearTarget) : IEquatable<SetTargetEvent>, IOwnershipManaged
+    bool clearTarget) : IEquatable<SetTargetEvent>, IOwnershipBased
 {
     public readonly Entity Character = character;
     public readonly Entity Target = target;

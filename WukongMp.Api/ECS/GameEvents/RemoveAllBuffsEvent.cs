@@ -1,14 +1,14 @@
 ﻿using System;
 using BtlShare;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
 internal readonly struct RemoveAllBuffsEvent(
     Entity entity,
     EBuffEffectTriggerType triggerType,
-    bool withTriggerRemoveEffect) : IEquatable<RemoveAllBuffsEvent>, IOwnershipManaged
+    bool withTriggerRemoveEffect) : IEquatable<RemoveAllBuffsEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly EBuffEffectTriggerType TriggerType = triggerType;

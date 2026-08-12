@@ -1,7 +1,7 @@
 ﻿using System;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.ECS.GameEvents;
@@ -9,7 +9,7 @@ namespace WukongMp.Api.ECS.GameEvents;
 internal readonly struct StartJumpEvent(
     Entity entity,
     ESkillDirection startJumpDir,
-    FVector2D inputVector) : IEquatable<StartJumpEvent>, IOwnershipManaged
+    FVector2D inputVector) : IEquatable<StartJumpEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly ESkillDirection StartJumpDir = startJumpDir;

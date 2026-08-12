@@ -1,7 +1,7 @@
 ﻿using System;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using ReadyM.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
@@ -10,7 +10,7 @@ internal readonly struct PlayerTransBeginEvent(
     int unitResId,
     int unitBornSkillId,
     bool enableBlendViewTarget,
-    EPlayerTransBeginType transBeginType) : IEquatable<PlayerTransBeginEvent>, IOwnershipManaged
+    EPlayerTransBeginType transBeginType) : IEquatable<PlayerTransBeginEvent>, IOwnershipBased
 {
     public readonly Entity Entity = entity;
     public readonly int UnitResId = unitResId;

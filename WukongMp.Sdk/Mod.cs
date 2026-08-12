@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using b1;
 using b1.BGW;
 using CSharpModBase;
@@ -12,8 +13,10 @@ using Friflo.Engine.ECS.Systems;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Compat;
 using ReadyM.Api;
+using ReadyM.Api.Command;
 using ReadyM.Api.DI;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Relay.Client;
 using UnrealEngine.Engine;
@@ -116,13 +119,17 @@ internal class Mod : ModBase
             return;
         }
 
-        AddModSystemsToEcs();
-        SetUpRpcOffsets();
-        DebugUtils.LogUe4SsPresence();
-        DetectSdkVersion();
-        RegisterKeybinds(DI.Instance);
-        DI.Instance.StartHostedServices();
-        StartRelayClient();
+        Utils.TryRunOnGameThread(() =>
+        {
+            AddModSystemsToEcs();
+            SetUpClientRpcOffsets();
+            SetUpServerRpcOffsets();
+            DebugUtils.LogUe4SsPresence();
+            DetectSdkVersion();
+            RegisterKeybinds(DI.Instance);
+            DI.Instance.StartHostedServices();
+            StartRelayClient();
+        });
     }
 
     private void DetectSdkVersion()
@@ -143,6 +150,7 @@ internal class Mod : ModBase
         {
             if (!DI.Instance.Connection.IsRunning)
             {
+                DI.Instance.World.SetThread(Thread.CurrentThread);
                 DI.Instance.EcsLoop.Start();
                 DI.Instance.Connection.Start();
             }
@@ -182,25 +190,63 @@ internal class Mod : ModBase
             DI.Instance.World.SystemRoot.Add(systemGroup);
         }
     }
-    
-    private void SetUpRpcOffsets()
+
+    private void SetUpClientRpcOffsets()
     {
         var rpcClasses = DI.Instance.Container.GetServiceRegistrations()
-            .Where(r => typeof(RpcClassBase).IsAssignableFrom(r.Factory.ImplementationType ?? r.ServiceType))
+            .Where(r => typeof(ClientRpcHandler).IsAssignableFrom(r.Factory.ImplementationType ?? r.ServiceType))
             .Where(r => r.Factory.Reuse is null or SingletonReuse)
             .OrderBy(t => t.FactoryRegistrationOrder) // ensure deterministic order
             .ToList();
-        
+
         Logger.LogDebug("Found {RpcCount} RPC classes", rpcClasses.Count);
-        var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>();
-        var ecsLoop = DI.Instance.Container.Resolve<IClientEcsUpdateLoop>();
-        
+        var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Client);
+
         foreach (var rpcClassRegistration in rpcClasses)
         {
-            var rpcObject = (RpcClassBase)DI.Instance.Container.Resolve(rpcClassRegistration.ServiceType, rpcClassRegistration.OptionalServiceKey);
+            var rpcObject = (ClientRpcHandler)DI.Instance.Container.Resolve(rpcClassRegistration.ServiceType, rpcClassRegistration.OptionalServiceKey);
             var offsetBefore = offsetProvider.CurrentOffset;
-            rpcObject.Initialize(offsetProvider, ecsLoop.Scheduler);
+            rpcObject.Initialize(offsetProvider);
             Logger.LogDebug("Registered RPC class {RpcClass} with codes {BeforeOffset}..{AfterOffset}", rpcClassRegistration.ServiceType.FullName, offsetBefore, offsetProvider.CurrentOffset - 1);
+        }
+    }
+
+    private void SetUpServerRpcOffsets()
+    {
+        var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Server);
+
+        var manifests = new List<(string Id, byte Count, PropertyInfo Offset)>();
+        
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(x => x.FullName))
+        {
+            var manifest = assembly
+                .GetTypes()
+                .FirstOrDefault(t => t is { Name: "ServerRpcManifest", IsAbstract: true, IsSealed: true });
+
+            if (manifest is null)
+                continue;
+
+            var totalCountField = manifest.GetField("TotalEventCount", BindingFlags.Public | BindingFlags.Static);
+            var offsetProperty = manifest.GetProperty("Offset", BindingFlags.Public | BindingFlags.Static);
+            var idField = manifest.GetField("Id", BindingFlags.Public | BindingFlags.Static);
+
+            if (totalCountField is null || offsetProperty is null || idField is null)
+            {
+                Logger.LogError("Assembly {Assembly} has ServerRpcManifest but is missing expected members - possible generator version mismatch.", assembly.GetName().Name);
+                continue;
+            }
+            
+            manifests.Add(((string)idField.GetValue(null)!, (byte)totalCountField.GetValue(null)!, offsetProperty));
+        }
+        
+        // Ordered by the manifest's stable Id, never by load order: the server assigns offsets the
+        // same way, so both sides agree on the wire codes even if they load mods in a different order.
+        foreach (var (id, count, offsetProperty) in manifests.OrderBy(x => x.Id, StringComparer.Ordinal))
+        {
+            var offset = offsetProvider.GetNextOffset(count);
+            offsetProperty.SetValue(null, offset);
+
+            Logger.LogInformation("Assigned server RPC offset {Offset} ({Count} events) to contract set {Id}", offset, count, id);
         }
     }
 
@@ -339,10 +385,7 @@ internal class Mod : ModBase
                 di.WidgetManager.ToggleChatVisibility();
         });
 
-        WukongApi.Input.RegisterKeyBind(Key.F1, () =>
-        {
-            di.WidgetManager.ToggleCommandVisibility();
-        });
+        WukongApi.Input.RegisterKeyBind(Key.F1, () => { di.WidgetManager.ToggleCommandVisibility(); });
 
         WukongApi.Input.RegisterKeyBind(Key.UP, () =>
         {
@@ -384,11 +427,6 @@ internal class Mod : ModBase
     public override void DeInit()
     {
         Logger.LogInformation("DeInit");
-
-        if (!LaunchParameters.Instance.ValidForCoOp)
-        {
-            return;
-        }
 
         if (_apiPatcher.IsPatched)
             _apiPatcher.Unpatch();

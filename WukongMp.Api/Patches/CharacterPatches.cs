@@ -8,7 +8,6 @@ using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
-using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
@@ -56,6 +55,7 @@ internal static class PatchAttrs
                     return;
                 }
 
+                sync.SyncToGame(HpComponent.Fields.HpMaxMulPercent.In<BUC_AttrContainer>(), __instance);
                 sync.SyncToGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), __instance);
                 sync.SyncToGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), __instance);
             }
@@ -209,6 +209,7 @@ internal static class PatchHp
                     if (!localTamer.IsTamerSynced)
                         return; // not synced
 
+                    loader.LoadFromGame(HpComponent.Fields.HpMaxMulPercent.In<BUC_AttrContainer>(), ___AttrContainer);
                     loader.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), ___AttrContainer);
                     loader.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), ___AttrContainer);
                 }
@@ -682,39 +683,6 @@ internal class PatchBeAttackedDeadEventSettlementProcess
             return false;
 
         return true;
-    }
-}
-
-[HarmonyPatch(typeof(CharacterAttrDataInitTemplate), nameof(CharacterAttrDataInitTemplate.InitDataPreBeginPlay))]
-[HarmonyPatchCategory(PatchCategory.Connected)]
-internal static class PatchTamerStatResetOnBeginPlay
-{
-    public static void Postfix(AActor ___Owner)
-    {
-        if (___Owner is not BGU_CharacterAI ai)
-            return;
-
-        var tamer = ai.GetTamerOwner();
-
-        if (tamer.IsNullOrDestroyed())
-            return; // no tamer
-
-        var tamerEntity = DI.Instance.PawnState.GetEntityByTamer(tamer);
-
-        if (!tamerEntity.HasValue)
-            return; // not found
-
-        if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
-            return; // not owned
-
-        ref var localTamer = ref tamerEntity.Value.GetLocalTamer();
-
-        if (!localTamer.IsTamerSynced)
-            return; // not synced
-
-        ref var hpComp = ref tamerEntity.Value.GetHp();
-
-        hpComp.HpMultiplier = 1; // Reset multiplier so that the HP scaling system will re-scale it again
     }
 }
 

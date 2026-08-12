@@ -8,6 +8,7 @@ using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
+using WukongMp.Sdk.Api.Implementation;
 using WukongMp.Sdk.Entities;
 using Constants = WukongMp.Api.Configuration.Constants;
 
@@ -73,6 +74,13 @@ public interface IWukongSynchronizationApi
     /// Gets a list of tamers (monsters) in the current area.
     /// </summary>
     EntityList<ReadyTamer> AreaTamers { get; }
+    
+    /// <summary>
+    /// Gets the tamer entity associated with the specified actor.
+    /// </summary>
+    /// <param name="actor">The tamer actor to find the tamer entity for.</param>
+    /// <returns>The tamer entity, or <c>null</c> if not found.</returns>
+    ReadyTamer? GetTamerEntityByActor(ABGUTamerBase? actor);
 
     /// <summary>
     /// Gets a list of all main characters.
