@@ -10,7 +10,6 @@ internal class Mod : ServerModBase
     protected override void Init()
     {
         Services.RegisterSingleton<RpcHandlers>();
-        Services.RegisterSingleton<WukongArchetypes>();
 
         var logger = Services.Resolve<ILogger>();
         logger.LogInformation("Serverside SDK mod initialized");
