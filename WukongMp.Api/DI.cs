@@ -67,6 +67,7 @@ internal sealed class DI : IDependencyContainer
     public IContainer Container { get; private set; } = new Container(rules =>
         rules.With(FactoryMethod.ConstructorWithResolvableArguments)
             .WithDefaultReuse(Reuse.Singleton)
+            .WithUnknownServiceHandler(req => { Logging.LogError("DI: Unknown service requested: {ServiceType}", req.ServiceType.FullName); })
             .WithUseInterpretation());
 
     public void RegisterSingleton<TService, TImplementation>(TImplementation instance) where TImplementation : TService
@@ -145,7 +146,7 @@ internal sealed class DI : IDependencyContainer
     {
         Logger.LogDebug("Initializing DI...");
         Container.RegisterInstance<IDependencyContainer>(Instance);
-        
+
         Container.Register<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Client);
         Container.Register<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Server);
 
@@ -298,6 +299,8 @@ internal sealed class DI : IDependencyContainer
         Container.Register<PingWidgetUpdater>();
         Container.Register<IRuntimeBackend, RuntimeWeaverBackend>();
         Container.Register<RuntimePrelude>();
+
+        Container.Register<IComponentApi, NetworkComponentRegistrar>();
 
         Container.Register<WukongSystemRegistration>();
         Container.Register<TestsRunner>();
@@ -525,7 +528,7 @@ internal sealed class DI : IDependencyContainer
                 Logging.LogDebug("Loaded HpMaxBase as {HpMaxBase}", value);
                 return value;
             });
-        
+
         fieldMappingRegistry.Register(HpComponent.Fields.HpMaxMulPercent.In<BUC_AttrContainer>(),
             (ctx, value) =>
             {
