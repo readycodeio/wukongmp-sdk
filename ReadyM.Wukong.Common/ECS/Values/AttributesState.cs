@@ -6,6 +6,9 @@ using ReadyM.Api.Serialization;
 
 namespace ReadyM.Wukong.Common.ECS.Values;
 
+/// <summary>
+/// Entity attributes. Keys correspond to the EBGUAttrFloat enum in the game.
+/// </summary>
 public struct AttributesState() : INetSerializable, IDeltaEquatable<AttributesState>
 {
     private ReadOnlyDictionary<byte, float>? _data = null;
@@ -18,7 +21,10 @@ public struct AttributesState() : INetSerializable, IDeltaEquatable<AttributesSt
     public void Serialize(NetDataWriter writer)
     {
         if (_data is null)
+        {
+            writer.Put((byte)0);
             return;
+        }
 
         writer.Put((byte)_data.Count);
         foreach (var kvp in _data)
@@ -31,6 +37,12 @@ public struct AttributesState() : INetSerializable, IDeltaEquatable<AttributesSt
     public void Deserialize(NetDataReader reader)
     {
         var count = reader.GetByte();
+        if (count == 0)
+        {
+            _data = null;
+            return;
+        }
+
         var data = new Dictionary<byte, float>(count);
 
         for (var i = 0; i < count; i++)
@@ -77,7 +89,7 @@ public struct AttributesState() : INetSerializable, IDeltaEquatable<AttributesSt
         newData[key] = value;
         return new AttributesState(newData);
     }
-    
+
     public Dictionary<byte, float> ToDictionary()
     {
         return _data != null ? new Dictionary<byte, float>(_data) : [];

@@ -2,15 +2,18 @@
 using System.Runtime.InteropServices;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Generators;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
 using ReadyM.Wukong.Common.ECS.Values;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
+/// <summary>
+/// Holds the main character state.
+/// </summary>
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
-public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IReadyComponent, IOwnershipManaged
+public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IOwnershipBased
 {
     private PlayerId _playerId;
     
@@ -23,9 +26,9 @@ public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IR
     private int _waitingSequenceId;
 
     private bool _isTransformed;
-
-    // NOTE: This describes the nick displayed over the Wukong character
-    private string _characterNickname = "";
+    
+    private SpectatorReason _spectatorReason;
+    private bool _isSpectator;
 
     private bool _beguilingChantEligible;
 

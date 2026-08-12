@@ -1,34 +1,23 @@
-﻿using System;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Runtime.InteropServices;
-using Friflo.Json.Fliox;
+﻿using System.Runtime.InteropServices;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Generators;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
+using Yooni.Native.Container;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
+/// <summary>
+/// Holds the state of a tamer (monster) entity. 
+/// </summary>
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
-public partial struct TamerComponent : IOwnershipManaged
+public partial struct TamerComponent : IOwnershipBased
 {
-    private string? _guid;
-    private string? _unitPath;
-    private string? _holdingPlayersEncoded;
+    private string? _guid; // TODO: Unmanaged
+    private string? _unitPath; // TODO: Unmanaged
+    private NativeList<PlayerId> _holdingPlayers;
     private bool _hasFsmPaused;
-
-    [Ignore]
-    public ImmutableHashSet<PlayerId> HoldingPlayers
-    {
-        get
-        {
-            var str = HoldingPlayersEncoded;
-            return str == null ? [] : str.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(s => new PlayerId(ushort.Parse(s))).ToImmutableHashSet();
-        }
-
-        set => HoldingPlayersEncoded = string.Join(";", value.Select(s => s.RawValue.ToString()));
-    }
-
-    public bool ForceKeepSpawned => HoldingPlayers.Count > 0;
+    private bool _isBossOrElite;
+    
+    public bool ForceKeepSpawned => _holdingPlayers.Count > 0;
 }

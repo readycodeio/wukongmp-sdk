@@ -1,12 +1,15 @@
 ﻿using System.Runtime.InteropServices;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Generators;
-using ReadyM.Api.Multiplayer.Mapping.Tags;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
+/// <summary>
+/// Holds entity team ID.
+/// </summary>
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
-public partial struct TeamComponent : IReadyComponent, IOwnershipManaged
+public partial struct TeamComponent : IOwnershipBased
 {
     private int _teamId;
 }
