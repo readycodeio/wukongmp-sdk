@@ -67,22 +67,30 @@ internal sealed class DI : IDependencyContainer
     public IContainer Container { get; private set; } = new Container(rules =>
         rules.With(FactoryMethod.ConstructorWithResolvableArguments)
             .WithDefaultReuse(Reuse.Singleton)
+            // Additive by default, so mods contributing an IArchetypeRegistration or an
+            // INetworkedComponentRegistration do not wipe out the SDK's own registrations.
+            // Pass replace: true to deliberately take a service over.
+            .WithDefaultIfAlreadyRegistered(IfAlreadyRegistered.AppendNewImplementation)
             .WithUnknownServiceHandler(req => { Logging.LogError("DI: Unknown service requested: {ServiceType}", req.ServiceType.FullName); })
             .WithUseInterpretation());
 
-    public void RegisterSingleton<TService, TImplementation>(TImplementation instance) where TImplementation : TService
-        => Container.RegisterInstance<TService>(instance);
+    public void RegisterSingleton<TService, TImplementation>(TImplementation instance, bool replace = false) where TImplementation : TService
+        => Container.RegisterInstance<TService>(instance, RegistrationMode(replace));
 
     public T Resolve<T>() => Container.Resolve<T>();
     public IEnumerable<T> ResolveAll<T>() => Container.ResolveMany<T>();
 
-    public void RegisterSingleton<T>() => Container.Register<T>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
-    public void RegisterSingleton<T>(T instance) => Container.RegisterInstance(instance, ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+    public void RegisterSingleton<T>(bool replace = false) => Container.Register<T>(ifAlreadyRegistered: RegistrationMode(replace));
+    public void RegisterSingleton<T>(T instance, bool replace = false) => Container.RegisterInstance(instance, RegistrationMode(replace));
 
-    public void RegisterSingleton<TService>(Type type) => Container.Register(typeof(TService), type, ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+    public void RegisterSingleton<TService>(Type type, bool replace = false) => Container.Register(typeof(TService), type, ifAlreadyRegistered: RegistrationMode(replace));
 
-    public void RegisterSingleton<TService, TImplementation>() where TImplementation : TService
-        => Container.Register<TService, TImplementation>(ifAlreadyRegistered: IfAlreadyRegistered.Replace);
+    public void RegisterSingleton<TService, TImplementation>(bool replace = false) where TImplementation : TService
+        => Container.Register<TService, TImplementation>(ifAlreadyRegistered: RegistrationMode(replace));
+
+    // null defers to the container rules above, which append rather than replace
+    private static IfAlreadyRegistered? RegistrationMode(bool replace)
+        => replace ? IfAlreadyRegistered.Replace : null;
 
     public InputManager InputManager => Container.Resolve<InputManager>();
     public ILoggerFactory LoggerFactory => Container.Resolve<ILoggerFactory>();

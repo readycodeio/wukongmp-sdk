@@ -31,7 +31,6 @@ namespace WukongMp.Sdk.Api.Implementation;
 internal sealed class WukongSynchronizationApi(
     Store world,
     ClientState state,
-    WukongArchetypes archetypes,
     WukongAreaState areaState,
     WukongPlayerState playerState,
     WukongPawnState pawnState,
@@ -40,8 +39,6 @@ internal sealed class WukongSynchronizationApi(
     IRelayClient relayClient
 ) : IWukongSynchronizationApi
 {
-    public WukongArchetypes Archetypes => archetypes;
-    
     // ---
 
     public void GetDisconnectReasonAndInvoke(Action<DisconnectedReason> callback)

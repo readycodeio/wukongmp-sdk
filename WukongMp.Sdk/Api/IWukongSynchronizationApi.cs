@@ -19,9 +19,6 @@ namespace WukongMp.Sdk.Api;
 /// </summary>
 public interface IWukongSynchronizationApi
 {
-    /// <inheritdoc cref="WukongArchetypes"/>
-    WukongArchetypes Archetypes { get; }
-    
     /// <summary>
     /// Retrieves the disconnect reason and invokes the provided callback with it.
     /// </summary>
