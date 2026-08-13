@@ -35,7 +35,9 @@ if (-not (Test-Path $solutionPath))
 }
 
 Write-Output "Building solution $solutionPath in configuration $Configuration..."
-$buildOutput = dotnet build $solutionPath -c $Configuration -v minimal /t:Rebuild | Tee-Object -FilePath 'build.log'
+# UseBuildTimestamp makes Directory.Build.props stamp a time-based version, so every ZIP is newer
+# than the last one. The SDK build does not pass it and stays on the static version.
+$buildOutput = dotnet build $solutionPath -c $Configuration -v minimal /t:Rebuild -p:UseBuildTimestamp=true | Tee-Object -FilePath 'build.log'
 
 # 2. Extract version number from build output
 $pattern = '\s*Build Version:\s*(?<ver>\d+(\.\d+){3})'
