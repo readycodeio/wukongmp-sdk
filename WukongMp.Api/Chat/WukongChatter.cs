@@ -6,7 +6,6 @@ using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Api.Multiplayer.Generators;
 using ReadyM.Api.Multiplayer.Protocol.Enums;
 using ReadyM.Api.Multiplayer.RPC;
-using ReadyM.Api.Multiplayer.Serialization;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.DTO;
 using WukongMp.Api.Resources;
@@ -22,7 +21,7 @@ internal partial class WukongChatter(
     ILogger logger
 ) : ClientRpcHandler
 {
-    private string NickName => playerState.LocalPlayerEntity?.GetState().Nickname ?? "";
+    private string NickName => playerState.LocalPlayerEntity?.GetState().Nickname.ToString() ?? "";
 
     [RpcEvent(RelayMode.AreaOfInterestAll)]
     private void OnChatMessage(ChatMessage message)

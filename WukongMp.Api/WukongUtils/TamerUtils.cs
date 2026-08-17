@@ -46,7 +46,7 @@ namespace WukongMp.Api.WukongUtils
             ref var tamerComp = ref tamerEntity.GetTamer();
 
             var bgsEvents = BGS_EventCollectionCS.Get(tamerEntity.Tamer);
-            bgsEvents?.Evt_TamerBlockingSpawnImmediately.Invoke(tamerComp.Guid);
+            bgsEvents?.Evt_TamerBlockingSpawnImmediately.Invoke(tamerComp.Guid.ToString());
         }
 
         public static void DiscoverTamers()

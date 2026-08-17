@@ -197,7 +197,7 @@ internal sealed class WukongWidgetManager(
         var player = playerState.GetPlayerById(playerId);
         if (player.HasValue)
         {
-            _debugViewWidget.Value.AddPlayer(player.Value.GetState().Nickname);
+            _debugViewWidget.Value.AddPlayer(player.Value.GetState().Nickname.ToString());
         }
     }
 
@@ -206,7 +206,7 @@ internal sealed class WukongWidgetManager(
         var player = playerState.GetPlayerById(playerId);
         if (player.HasValue)
         {
-            _debugViewWidget.Value.RemovePlayer(player.Value.GetState().Nickname);
+            _debugViewWidget.Value.RemovePlayer(player.Value.GetState().Nickname.ToString());
         }
     }
 
@@ -215,7 +215,7 @@ internal sealed class WukongWidgetManager(
         var playerEntity = playerState.LocalPlayerEntity;
         if (playerEntity.HasValue)
         {
-            _debugViewWidget.Value.AddPlayer(playerEntity.Value.GetState().Nickname);
+            _debugViewWidget.Value.AddPlayer(playerEntity.Value.GetState().Nickname.ToString());
         }
 
         AreaEntity joinedAreaEntity = new(areaEntity);
@@ -229,7 +229,7 @@ internal sealed class WukongWidgetManager(
         var playerEntity = playerState.LocalPlayerEntity;
         if (playerEntity.HasValue)
         {
-            _debugViewWidget.Value.RemovePlayer(playerEntity.Value.GetState().Nickname);
+            _debugViewWidget.Value.RemovePlayer(playerEntity.Value.GetState().Nickname.ToString());
         }
     }
 

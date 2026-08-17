@@ -29,7 +29,7 @@ internal class DebugViewSystem(WukongEventBus eventBus, WukongWidgetManager widg
             var position = mainEntity.Pawn?.GetActorLocation() ?? FVector.ZeroVector;
             var ecsPosition = transform.Position.ToFVector();
 
-            widgetManager.UpdatePlayerPosition(nickname.Nickname, position, ecsPosition);
+            widgetManager.UpdatePlayerPosition(nickname.Nickname.ToString(), position, ecsPosition);
         });
     }
 }

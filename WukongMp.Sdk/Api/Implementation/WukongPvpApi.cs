@@ -87,12 +87,27 @@ internal sealed class WukongPvpApi(WukongAreaState areaState, IClientEntityManag
 
     public IEnumerable<int> RoundWinners
     {
-        get => areaState.PvpState?.RoundWinners ?? [];
+        get
+        {
+            if (areaState.PvpState is { } pvpState)
+            {
+                for (var i = 0; i < pvpState.RoundWinnersCount; i++)
+                {
+                    yield return pvpState.GetRoundWinners(i);
+                }
+            }
+        }
         set
         {
             if (areaState.OwnsPvpState)
             {
-                areaState.OwnedPvpStateRef().RoundWinners = value;
+                ref var state = ref areaState.OwnedPvpStateRef();
+
+                state.ClearRoundWinners();
+                foreach (var winner in value)
+                {
+                    state.AddRoundWinners(winner);
+                }
             }
             else
             {

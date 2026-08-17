@@ -88,7 +88,8 @@ public readonly struct ReadyTamer
         get
         {
             var tamerEntity = new TamerEntity(Entity);
-            return tamerEntity.GetTamer().Guid;
+            var guid = tamerEntity.GetTamer().Guid.ToString();
+            return guid.Length == 0 ? null : guid;
         }
     }
     

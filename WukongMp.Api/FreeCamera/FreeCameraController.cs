@@ -197,7 +197,7 @@ namespace WukongMp.Api.FreeCamera
             var cameraPosition = _freeCameraManager.GetCurrentCameraPosition();
             var characterLocation = spectatedCharacter!.GetActorLocation();
             SetInitialOrbitFromCamera(cameraPosition, characterLocation, spectatedCharacter!.GetActorRotation());
-            _widgetManager.SetSpectatingMessage(spectatedPlayer.Character.GetNickname().Nickname);
+            _widgetManager.SetSpectatingMessage(spectatedPlayer.Character.GetNickname().Nickname.ToString());
         }
 
         private void DisablePlayerSpectating()

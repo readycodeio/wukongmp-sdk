@@ -10,6 +10,7 @@ using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Relay.Client.Host;
 using ReadyM.Relay.Client.State;
 using ReadyM.Wukong.Common.ECS.Components;
+using Yooni.Native.Container;
 using Constants = WukongMp.Api.Configuration.Constants;
 
 namespace WukongMp.Api;
@@ -47,7 +48,7 @@ internal class WukongConnectionManager(
 
     private static void OnConnectedHandler(PlayerId player, Entity entity)
     {
-        entity.GetComponent<PlayerComponent>().Nickname = LaunchParameters.Instance.Nickname;
+        entity.GetComponent<PlayerComponent>().Nickname = new NativeString256(LaunchParameters.Instance.Nickname, false);
     }
 
     public void Start()

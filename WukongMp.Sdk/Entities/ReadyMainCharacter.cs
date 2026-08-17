@@ -10,6 +10,7 @@ using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk.Api;
+using Yooni.Native.Container;
 
 namespace WukongMp.Sdk.Entities;
 
@@ -71,11 +72,11 @@ public readonly struct ReadyMainCharacter
 
     public string Nickname
     {
-        get => Entity.GetNickname().Nickname;
+        get => Entity.GetNickname().Nickname.ToString();
         set
         {
             if (DI.Instance.MappedField.CanSetFromApi<NicknameComponent>(Entity, out var set))
-                set.SetFromApi(NicknameComponent.Fields.Nickname, value);
+                set.SetFromApi(NicknameComponent.Fields.Nickname, new NativeString256(value, false));
         }
     }
 

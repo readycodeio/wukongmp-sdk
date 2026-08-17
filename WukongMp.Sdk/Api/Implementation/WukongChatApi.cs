@@ -27,7 +27,7 @@ internal sealed class WukongChatApi(
         }
 
         var playerId = playerState.LocalPlayerId!;
-        var nickname = player.Value.GetState().Nickname;
+        var nickname = player.Value.GetState().Nickname.ToString();
 
         chatter.SendChatMessage(playerId.Value, nickname, message);
     }

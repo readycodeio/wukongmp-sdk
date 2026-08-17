@@ -166,7 +166,7 @@ internal sealed class WukongSynchronizationApi(
         if (entity.HasValue)
         {
             var comp = entity.Value.GetState();
-            nickname = comp.Nickname;
+            nickname = comp.Nickname.ToString();
             team = comp.TeamId;
             return true;
         }

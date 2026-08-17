@@ -533,13 +533,13 @@ internal static class PatchSetTargetToData
         if (newTargetPlayerEntity.HasValue)
         {
             newTarget = newTargetPlayerEntity.Value;
-            name = newTargetPlayerEntity.Value.GetNickname().Nickname;
+            name = newTargetPlayerEntity.Value.GetNickname().Nickname.ToString();
             clearTarget = false;
         }
         else if (newTargetMonsterEntity.HasValue)
         {
             newTarget = newTargetMonsterEntity.Value;
-            name = newTargetMonsterEntity.Value.GetTamer().Guid ?? "Unknown monster";
+            name = newTargetMonsterEntity.Value.GetTamer().Guid.ToString();
             clearTarget = false;
         }
 

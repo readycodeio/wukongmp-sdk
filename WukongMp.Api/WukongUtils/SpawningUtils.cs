@@ -14,6 +14,7 @@ using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.FreeCamera;
 using WukongMp.Api.Mapping;
 using WukongMp.Api.State;
+using Yooni.Native.Container;
 
 namespace WukongMp.Api.WukongUtils;
 
@@ -218,7 +219,7 @@ internal static class SpawningUtils
             transComp.Rotation = Vector3.Zero;
 
             ref var nameComp = ref tamerEntity.GetNickname();
-            nameComp.Nickname = "Bot";
+            nameComp.Nickname = new NativeString256("Bot", false);
 
             Logging.LogDebug("Sending spawn unit {Name} at {Location}", tamerKind, location.ToString());
 
@@ -291,8 +292,8 @@ internal static class SpawningUtils
             new LocalTamerComponent(),
             new TamerComponent
             {
-                Guid = guid,
-                UnitPath = unitName,
+                Guid = new NativeString256(guid, false),
+                UnitPath = new NativeString256(unitName, false),
                 IsBossOrElite = isBossOrElite
             },
             new TeamComponent

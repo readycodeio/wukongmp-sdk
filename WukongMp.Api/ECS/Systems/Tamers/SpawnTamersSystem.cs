@@ -8,6 +8,7 @@ using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.WukongUtils;
+using Yooni.Native.Container;
 
 namespace WukongMp.Api.ECS.Systems.Tamers;
 
@@ -18,7 +19,7 @@ namespace WukongMp.Api.ECS.Systems.Tamers;
 /// <param name="state"></param>
 internal sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter router, GameplayConfiguration configuration) : QuerySystem<MetadataComponent, HpComponent, TeamComponent, TamerComponent, LocalTamerComponent>
 {
-    private readonly HashSet<string?> _notYetSpawnedGuids = [];
+    private readonly HashSet<NativeString256> _notYetSpawnedGuids = [];
 
     protected override void OnUpdate()
     {

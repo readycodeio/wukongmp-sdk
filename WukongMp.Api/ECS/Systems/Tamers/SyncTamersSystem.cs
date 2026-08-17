@@ -14,11 +14,11 @@ namespace WukongMp.Api.ECS.Systems.Tamers;
 internal sealed class SyncTamersSystem(IMappedEventManager mappedEvent) : QuerySystem<TamerComponent, LocalTamerComponent, TransformComponent, MetadataComponent>
 {
     private const ulong TickInterval = 10; // Check every 10 ticks
-    private ulong tickCounter;
+    private ulong _tickCounter;
 
     protected override void OnUpdate()
     {
-        if (tickCounter++ % TickInterval != 0)
+        if (_tickCounter++ % TickInterval != 0)
             return;
 
         var allTamers =
@@ -31,13 +31,13 @@ internal sealed class SyncTamersSystem(IMappedEventManager mappedEvent) : QueryS
         {
             if (!localTamerComp.IsTamerSynced)
             {
-                if (tamerComp.Guid is null)
+                if (tamerComp.Guid.Length == 0)
                 {
                     Logging.LogError("Entity {EntityId} has a TamerComponent with a null Guid. Cannot sync tamer.", entity.Id);
                     return;
                 }
 
-                if (allTamers.TryGetValue(tamerComp.Guid, out var actor))
+                if (allTamers.TryGetValue(tamerComp.Guid.ToString(), out var actor))
                 {
                     var tamerEntity = new TamerEntity(entity);
                     
@@ -52,9 +52,9 @@ internal sealed class SyncTamersSystem(IMappedEventManager mappedEvent) : QueryS
                 }
                 else
                 {
-                    if (tamerComp is { UnitPath: not null })
+                    if (tamerComp is { UnitPath.Length: not 0 })
                     {
-                        SpawningUtils.SpawnUnitLocallyByPath(tamerComp.Guid, tamerComp.UnitPath, translation.Position.ToFVector());
+                        SpawningUtils.SpawnUnitLocallyByPath(tamerComp.Guid.ToString(), tamerComp.UnitPath.ToString(), translation.Position.ToFVector());
                     }
                 }
             }
