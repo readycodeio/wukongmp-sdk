@@ -345,7 +345,7 @@ internal class PatchOnUnitDead
         if (!__state)
             return; // skipped prefix
 
-        if (DeadReason is EDeadReason.PlayerTrans or EDeadReason.OnlyDestroyUnit)
+        if (DeadReason is EDeadReason.PlayerTrans)
             return;
 
         var owner = __instance.GetOwner();
