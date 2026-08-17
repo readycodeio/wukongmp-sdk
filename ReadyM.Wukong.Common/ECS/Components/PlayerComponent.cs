@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using ReadyM.Api.Multiplayer.Generators;
+using Yooni.Native.Container;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
@@ -11,7 +12,7 @@ public partial struct PlayerComponent
     /// Globally persisted player nickname.
     /// <see cref="NicknameComponent"/> attached to an area-scoped player character entity is recreated from this value on area change.
     /// </summary>
-    private string _nickname; // TODO: Unmanaged
+    private NativeString256 _nickname;
 
     /// <summary>
     /// This is the players' Team ID, used in PvP, possibly in the future in creative mode

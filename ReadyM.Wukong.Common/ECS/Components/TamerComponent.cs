@@ -13,11 +13,11 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 [StructLayout(LayoutKind.Auto)]
 public partial struct TamerComponent : IOwnershipBased
 {
-    private string? _guid; // TODO: Unmanaged
-    private string? _unitPath; // TODO: Unmanaged
+    private NativeString256 _guid;
+    private NativeString256 _unitPath;
     private NativeList<PlayerId> _holdingPlayers;
     private bool _hasFsmPaused;
     private bool _isBossOrElite;
-    
+
     public bool ForceKeepSpawned => _holdingPlayers.Count > 0;
 }

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using Friflo.Json.Fliox;
+﻿using System.Runtime.InteropServices;
 using ReadyM.Api.Multiplayer.Generators;
+using Yooni.Native.Container;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
@@ -24,29 +21,17 @@ public partial struct PvpStateComponent
     private int _enemiesNgPlusLevel;
     private bool _cheatsAllowed;
     private bool _antiStallEnabled;
-    
+
     // in-game state
     private bool _inPvP;
     private bool _inTournament;
-    private string? _roundWinnersEncoded;
 
-    [Ignore]
-    public IEnumerable<int> RoundWinners
-    {
-        get
-        {
-            var str = RoundWinnersEncoded;
-            return str == null ? [] : str.Split([';'], StringSplitOptions.RemoveEmptyEntries).Select(int.Parse);
-        }
-        set => RoundWinnersEncoded = string.Join(";", value);
-    }
+    private NativeList<int> _roundWinners;
 
-    public int CurrentRound => RoundWinners.Count() + 1;
+    public int CurrentRound => RoundWinnersCount + 1;
 
     public void SetLastRoundWinnerTeam(int teamId)
     {
-        var winners = RoundWinners.ToList();
-        winners.Add(teamId);
-        RoundWinners = winners;
+        AddRoundWinners(teamId);
     }
 }

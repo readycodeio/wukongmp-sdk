@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Generators;
+using Yooni.Native.Container;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
@@ -11,5 +12,5 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 [StructLayout(LayoutKind.Auto)]
 public partial struct NicknameComponent : IOwnershipBased
 {
-    private string _nickname;
+    private NativeString256 _nickname;
 }
