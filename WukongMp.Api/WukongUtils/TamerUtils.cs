@@ -128,7 +128,7 @@ namespace WukongMp.Api.WukongUtils
 
         public static void SubtractSpawnedUnitRefCount(ref TamerComponent tamerComp, PlayerId playerId)
         {
-            for (var i = 0; i < tamerComp.HoldingPlayersCount; i++)
+            for (var i = tamerComp.HoldingPlayersCount - 1; i >= 0; i--)
             {
                 if (tamerComp.GetHoldingPlayers(i) == playerId)
                 {
