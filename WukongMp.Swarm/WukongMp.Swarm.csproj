@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Reference Include="UnrealEngine.Runtime">
+        <Reference Include="UnrealEngine.Runtime" Private="false">
             <HintPath>..\WukongMp.Api\Game\UnrealEngine.Runtime.dll</HintPath>
         </Reference>
     </ItemGroup>

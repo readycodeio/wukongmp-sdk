@@ -35,112 +35,112 @@
             <HintPath>Core\CSharpModBaseV2.dll</HintPath>
         </Reference>
 
-        <Reference Include="b1.Managed">
+        <Reference Include="b1.Managed" Private="false">
             <HintPath>Game\b1.Managed.dll</HintPath>
         </Reference>
-        <Reference Include="b1.Native">
+        <Reference Include="b1.Native" Private="false">
             <HintPath>Game\b1.Native.dll</HintPath>
         </Reference>
-        <Reference Include="b1.NativePlugins">
+        <Reference Include="b1.NativePlugins" Private="false">
             <HintPath>Game\b1.NativePlugins.dll</HintPath>
         </Reference>
-        <Reference Include="B1UI_GSE.Script">
+        <Reference Include="B1UI_GSE.Script" Private="false">
             <HintPath>Game\B1UI_GSE.Script.dll</HintPath>
         </Reference>
-        <Reference Include="BtlSvr.Main">
+        <Reference Include="BtlSvr.Main" Private="false">
             <HintPath>Game\BtlSvr.Main.dll</HintPath>
         </Reference>
-        <Reference Include="Diana.Client.Common">
+        <Reference Include="Diana.Client.Common" Private="false">
             <HintPath>Game\Diana.Client.Common.dll</HintPath>
         </Reference>
-        <Reference Include="Diana.Common">
+        <Reference Include="Diana.Common" Private="false">
             <HintPath>Game\Diana.Common.dll</HintPath>
         </Reference>
-        <Reference Include="Diana.Server.Common">
+        <Reference Include="Diana.Server.Common" Private="false">
             <HintPath>Game\Diana.Server.Common.dll</HintPath>
         </Reference>
-        <Reference Include="Google.Protobuf">
+        <Reference Include="Google.Protobuf" Private="false">
             <HintPath>Game\Google.Protobuf.dll</HintPath>
         </Reference>
-        <Reference Include="GSE.Core">
+        <Reference Include="GSE.Core" Private="false">
             <HintPath>Game\GSE.Core.dll</HintPath>
         </Reference>
-        <Reference Include="GSE.GSNet">
+        <Reference Include="GSE.GSNet" Private="false">
             <HintPath>Game\GSE.GSNet.dll</HintPath>
         </Reference>
-        <Reference Include="GSE.GSSdk">
+        <Reference Include="GSE.GSSdk" Private="false">
             <HintPath>Game\GSE.GSSdk.dll</HintPath>
         </Reference>
-        <Reference Include="GSE.OnlineBase">
+        <Reference Include="GSE.OnlineBase" Private="false">
             <HintPath>Game\GSE.OnlineBase.dll</HintPath>
         </Reference>
-        <Reference Include="GSE.ProtobufDB">
+        <Reference Include="GSE.ProtobufDB" Private="false">
             <HintPath>Game\GSE.ProtobufDB.dll</HintPath>
         </Reference>
-        <Reference Include="GUR.Runtime">
+        <Reference Include="GUR.Runtime" Private="false">
             <HintPath>Game\GUR.Runtime.dll</HintPath>
         </Reference>
-        <Reference Include="ICSharpCode.SharpZipLib">
+        <Reference Include="ICSharpCode.SharpZipLib" Private="false">
             <HintPath>Game\ICSharpCode.SharpZipLib.dll</HintPath>
         </Reference>
-        <Reference Include="ILRuntime">
+        <Reference Include="ILRuntime" Private="false">
             <HintPath>Game\ILRuntime.dll</HintPath>
         </Reference>
-        <Reference Include="ILRuntime.Mono.Cecil">
+        <Reference Include="ILRuntime.Mono.Cecil" Private="false">
             <HintPath>Game\ILRuntime.Mono.Cecil.dll</HintPath>
         </Reference>
-        <Reference Include="ILRuntime.Mono.Cecil.Mdb">
+        <Reference Include="ILRuntime.Mono.Cecil.Mdb" Private="false">
             <HintPath>Game\ILRuntime.Mono.Cecil.Mdb.dll</HintPath>
         </Reference>
-        <Reference Include="ILRuntime.Mono.Cecil.Pdb">
+        <Reference Include="ILRuntime.Mono.Cecil.Pdb" Private="false">
             <HintPath>Game\ILRuntime.Mono.Cecil.Pdb.dll</HintPath>
         </Reference>
-        <Reference Include="LitJson">
+        <Reference Include="LitJson" Private="false">
             <HintPath>Game\LitJson.dll</HintPath>
         </Reference>
-        <Reference Include="Mono.Cecil">
+        <Reference Include="Mono.Cecil" Private="false">
             <HintPath>Game\Mono.Cecil.dll</HintPath>
         </Reference>
-        <Reference Include="Mono.Data.Sqlite">
+        <Reference Include="Mono.Data.Sqlite" Private="false">
             <HintPath>Game\Mono.Data.Sqlite.dll</HintPath>
         </Reference>
-        <Reference Include="Mono.Posix">
+        <Reference Include="Mono.Posix" Private="false">
             <HintPath>Game\Mono.Posix.dll</HintPath>
         </Reference>
-        <Reference Include="Mono.Security">
+        <Reference Include="Mono.Security" Private="false">
             <HintPath>Game\Mono.Security.dll</HintPath>
         </Reference>
-        <Reference Include="Mono.WebBrowser">
+        <Reference Include="Mono.WebBrowser" Private="false">
             <HintPath>Game\Mono.WebBrowser.dll</HintPath>
         </Reference>
-        <Reference Include="Novell.Directory.Ldap">
+        <Reference Include="Novell.Directory.Ldap" Private="false">
             <HintPath>Game\Novell.Directory.Ldap.dll</HintPath>
         </Reference>
-        <Reference Include="Protobuf.RunTime">
+        <Reference Include="Protobuf.RunTime" Private="false">
             <HintPath>Game\Protobuf.RunTime.dll</HintPath>
         </Reference>
-        <Reference Include="Sentry">
+        <Reference Include="Sentry" Private="false">
             <HintPath>Game\Sentry.dll</HintPath>
         </Reference>
-        <Reference Include="System.Buffers">
+        <Reference Include="System.Buffers" Private="false">
             <HintPath>Game\System.Buffers.dll</HintPath>
         </Reference>
-        <Reference Include="System.IO.FileSystem">
+        <Reference Include="System.IO.FileSystem" Private="false">
             <HintPath>Game\System.IO.FileSystem.dll</HintPath>
         </Reference>
-        <Reference Include="System.Numerics.Vectors">
+        <Reference Include="System.Numerics.Vectors" Private="false">
             <HintPath>Game\System.Numerics.Vectors.dll</HintPath>
         </Reference>
-        <Reference Include="System.ServiceModel.Internals">
+        <Reference Include="System.ServiceModel.Internals" Private="false">
             <HintPath>Game\System.ServiceModel.Internals.dll</HintPath>
         </Reference>
-        <Reference Include="System.Threading.Tasks.Extensions">
+        <Reference Include="System.Threading.Tasks.Extensions" Private="false">
             <HintPath>Game\System.Threading.Tasks.Extensions.dll</HintPath>
         </Reference>
-        <Reference Include="UnrealEngine">
+        <Reference Include="UnrealEngine" Private="false">
             <HintPath>Game\UnrealEngine.dll</HintPath>
         </Reference>
-        <Reference Include="UnrealEngine.Runtime">
+        <Reference Include="UnrealEngine.Runtime" Private="false">
             <HintPath>Game\UnrealEngine.Runtime.dll</HintPath>
         </Reference>
     </ItemGroup>

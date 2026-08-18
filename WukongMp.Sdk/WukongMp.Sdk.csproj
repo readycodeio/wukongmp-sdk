@@ -22,10 +22,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Reference Include="b1.Native">
+        <Reference Include="b1.Native" Private="false">
             <HintPath>..\WukongMp.Api\Game\b1.Native.dll</HintPath>
         </Reference>
-        <Reference Include="BtlSvr.Main">
+        <Reference Include="BtlSvr.Main" Private="false">
             <HintPath>..\WukongMp.Api\Game\BtlSvr.Main.dll</HintPath>
         </Reference>
         <Reference Include="CSharpModBase">
@@ -34,16 +34,16 @@
         <Reference Include="CSharpModBaseV2">
           <HintPath>..\WukongMp.Api\Core\CSharpModBaseV2.dll</HintPath>
         </Reference>
-        <Reference Include="GSE.ProtobufDB">
+        <Reference Include="GSE.ProtobufDB" Private="false">
             <HintPath>..\WukongMp.Api\Game\GSE.ProtobufDB.dll</HintPath>
         </Reference>
         <Reference Include="PreludeLib">
           <HintPath>..\WukongMp.Api\Core\PreludeLib.dll</HintPath>
         </Reference>
-        <Reference Include="UnrealEngine">
+        <Reference Include="UnrealEngine" Private="false">
             <HintPath>..\WukongMp.Api\Game\UnrealEngine.dll</HintPath>
         </Reference>
-        <Reference Include="UnrealEngine.Runtime">
+        <Reference Include="UnrealEngine.Runtime" Private="false">
             <HintPath>..\WukongMp.Api\Game\UnrealEngine.Runtime.dll</HintPath>
         </Reference>
     </ItemGroup>
