@@ -7,7 +7,7 @@
   "dependencies": [
     {
       "uniqueId": "WukongMp.Sdk",
-      "minimumVersion": "0.3.0"
+      "minimumVersion": "0.3.1"
     }
   ]
 }
