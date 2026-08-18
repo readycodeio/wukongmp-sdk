@@ -22,29 +22,14 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Reference Include="b1.Native" Private="false">
-            <HintPath>..\WukongMp.Api\Game\b1.Native.dll</HintPath>
-        </Reference>
-        <Reference Include="BtlSvr.Main" Private="false">
-            <HintPath>..\WukongMp.Api\Game\BtlSvr.Main.dll</HintPath>
-        </Reference>
         <Reference Include="CSharpModBase">
           <HintPath>..\WukongMp.Api\Core\CSharpModBase.dll</HintPath>
         </Reference>
         <Reference Include="CSharpModBaseV2">
           <HintPath>..\WukongMp.Api\Core\CSharpModBaseV2.dll</HintPath>
         </Reference>
-        <Reference Include="GSE.ProtobufDB" Private="false">
-            <HintPath>..\WukongMp.Api\Game\GSE.ProtobufDB.dll</HintPath>
-        </Reference>
         <Reference Include="PreludeLib">
           <HintPath>..\WukongMp.Api\Core\PreludeLib.dll</HintPath>
-        </Reference>
-        <Reference Include="UnrealEngine" Private="false">
-            <HintPath>..\WukongMp.Api\Game\UnrealEngine.dll</HintPath>
-        </Reference>
-        <Reference Include="UnrealEngine.Runtime" Private="false">
-            <HintPath>..\WukongMp.Api\Game\UnrealEngine.Runtime.dll</HintPath>
         </Reference>
     </ItemGroup>
 
@@ -54,4 +39,10 @@
       </None>
     </ItemGroup>
 
+
+    <ItemGroup>
+        <!-- Reference-only assemblies for the game. Compile-time only, the real
+             assemblies are already loaded in the game process at runtime. -->
+        <PackageReference Include="ReadyM.Wukong.GameRefs" Version="1.0.21.23831-preview.1" />
+    </ItemGroup>
 </Project>
