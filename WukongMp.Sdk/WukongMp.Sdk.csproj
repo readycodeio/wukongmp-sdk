@@ -15,9 +15,15 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\readym-core-sdk\src\Friflo.Engine.ECS\src\ECS\Friflo.Engine.ECS.csproj" />
-        <ProjectReference Include="..\readym-core-sdk\src\ReadyM.Api\ReadyM.Api.csproj" />
+    <!-- The core SDK. Defaults to the submodule here; an uberrepo overrides it
+         so one checkout is shared across every consumer. -->
+    <PropertyGroup>
+        <CoreSdkRoot Condition="'$(CoreSdkRoot)' == ''">$(MSBuildThisFileDirectory)..\readym-core-sdk</CoreSdkRoot>
+    </PropertyGroup>
+
+<ItemGroup>
+        <ProjectReference Include="$(CoreSdkRoot)\src\Friflo.Engine.ECS\src\ECS\Friflo.Engine.ECS.csproj" />
+        <ProjectReference Include="$(CoreSdkRoot)\src\ReadyM.Api\ReadyM.Api.csproj" />
         <ProjectReference Include="..\WukongMp.Api\WukongMp.Api.csproj" />
     </ItemGroup>
 
