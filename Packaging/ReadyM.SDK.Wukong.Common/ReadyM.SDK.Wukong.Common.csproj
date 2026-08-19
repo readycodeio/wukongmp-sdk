@@ -1,0 +1,81 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+        The shared surface, for a mod's common project: component types, RPC contracts and
+        the source generator that turns them into registrations.
+
+        Both the client and server packages depend on this one, so it holds everything both
+        sides need and nothing either side needs alone. That is what stops a mod's shared
+        code from reaching into client-only API and then failing when the server loads it.
+
+        Multi-targeted so a net10.0 server mod gets the net10.0 builds rather than falling
+        back to netstandard2.0.
+    -->
+
+    <PropertyGroup>
+        <TargetFrameworks>netstandard2.0;net10.0</TargetFrameworks>
+        <_PrimaryTargetFramework>netstandard2.0</_PrimaryTargetFramework>
+
+        <PackageId>ReadyM.SDK.Wukong.Common</PackageId>
+        <Title>WukongMP SDK, shared</Title>
+        <Description>Shared types for WukongMP mods: ECS components, RPC contracts and the ReadyM source generator. Referenced by a mod's common project, and by both the client and server SDK packages.</Description>
+    </PropertyGroup>
+
+    <Import Project="..\Packaging.targets" />
+
+    <!--
+        ReadyM.Wukong.Common brings the whole shared set transitively, so this stays a
+        single reference and the list below is what decides what ships.
+    -->
+    <ItemGroup>
+        <ProjectReference Include="..\..\ReadyM.Wukong.Common\ReadyM.Wukong.Common.csproj" PrivateAssets="all" />
+        <ProjectReference Include="$(CoreSdkRoot)\src\ReadyM.Api.Generators\ReadyM.Api.Generators.csproj"
+                          PrivateAssets="all" ReferenceOutputAssembly="true" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <SdkPackageAssembly Include="ReadyM.Wukong.Common" />
+        <SdkPackageAssembly Include="ReadyM.Api" />
+        <SdkPackageAssembly Include="ReadyM.Api.Multiplayer" />
+        <SdkPackageAssembly Include="Friflo.Engine.ECS" />
+        <SdkPackageAssembly Include="Friflo.Engine.ECS.Boost" />
+        <SdkPackageAssembly Include="LiteNetLib" />
+        <SdkPackageAssembly Include="Yooni.Native.Container" />
+        <SdkPackageAssembly Include="Yooni.Native.LowLevel" />
+        <SdkPackageAssembly Include="Yooni.Native.Serialization" />
+
+        <SdkPackageAnalyzer Include="ReadyM.Api.Generators" />
+    </ItemGroup>
+
+    <!-- BEGIN GENERATED DEPENDENCIES -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+        <PackageReference Include="DryIoc.dll" Version="5.4.3" />
+        <PackageReference Include="Friflo.Json.Fliox" Version="1.0.4" />
+        <PackageReference Include="Friflo.Json.Fliox.Annotation" Version="1.0.4" />
+        <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
+        <PackageReference Include="Superpower" Version="3.1.0" />
+        <PackageReference Include="System.Collections.Immutable" Version="10.0.8" />
+        <PackageReference Include="System.Numerics.Vectors" Version="4.6.1" />
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="10.0.8" />
+        <PackageReference Include="System.Text.Json" Version="10.0.8" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+        <PackageReference Include="DryIoc.dll" Version="5.4.3" />
+        <PackageReference Include="Friflo.Json.Fliox" Version="1.0.4" />
+        <PackageReference Include="Friflo.Json.Fliox.Annotation" Version="1.0.4" />
+        <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
+        <PackageReference Include="Superpower" Version="3.1.0" />
+        <PackageReference Include="System.Collections.Immutable" Version="10.0.8" />
+        <PackageReference Include="System.Numerics.Vectors" Version="4.6.1" />
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="10.0.8" />
+        <PackageReference Include="System.Text.Json" Version="10.0.8" />
+    </ItemGroup>
+    <!-- END GENERATED DEPENDENCIES -->
+
+</Project>

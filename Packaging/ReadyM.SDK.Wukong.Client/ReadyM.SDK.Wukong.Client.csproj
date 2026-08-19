@@ -1,0 +1,81 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+        The client surface, for the mod that runs inside the game.
+
+        Only assemblies that exist in the game process: the client SDK and the mod loader's
+        own. Nothing here is available to a server-side mod, because the server package does
+        not depend on this one.
+    -->
+
+    <PropertyGroup>
+        <!-- Plural, with one entry, on purpose. It puts pack on the outer/inner build
+             path, where reference satellite assemblies are collected before the
+             packaging hook runs. With the singular form they are silently absent. -->
+        <TargetFrameworks>netstandard2.0</TargetFrameworks>
+        <_PrimaryTargetFramework>netstandard2.0</_PrimaryTargetFramework>
+
+        <PackageId>ReadyM.SDK.Wukong.Client</PackageId>
+        <Title>WukongMP SDK, client</Title>
+        <Description>SDK for the in-game half of a WukongMP mod. Includes the mod loader assemblies mods patch and derive from.</Description>
+    </PropertyGroup>
+
+    <Import Project="..\Packaging.targets" />
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\WukongMp.Sdk\WukongMp.Sdk.csproj" PrivateAssets="all" />
+        <ProjectReference Include="..\..\WukongMp.Api\WukongMp.Api.csproj" PrivateAssets="all" />
+        <ProjectReference Include="$(CoreSdkRoot)\src\ReadyM.Relay.Client\ReadyM.Relay.Client.csproj" PrivateAssets="all" />
+    </ItemGroup>
+
+    <!--
+        The shared package. Deliberately not PrivateAssets, so packing records it as a
+        dependency and a mod that references only this one still gets the shared types.
+    -->
+    <ItemGroup>
+        <ProjectReference Include="..\ReadyM.SDK.Wukong.Common\ReadyM.SDK.Wukong.Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <SdkPackageAssembly Include="WukongMp.Sdk" />
+        <SdkPackageAssembly Include="WukongMp.Api" />
+        <SdkPackageAssembly Include="WukongMp.Api.resources" />
+        <SdkPackageAssembly Include="ReadyM.Relay.Client" />
+    </ItemGroup>
+
+    <!--
+        Mod loader assemblies. Mods patch through Harmony and derive from the loader's base
+        types, so they are compile-time references. These are binaries from the mod loader
+        repository rather than build output, so they are added by path.
+    -->
+    <ItemGroup>
+        <None Include="..\..\WukongMp.Api\Core\*.dll" Pack="true" PackagePath="lib/netstandard2.0/" />
+    </ItemGroup>
+
+    <!-- BEGIN GENERATED DEPENDENCIES -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+        <PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
+        <PackageReference Include="HttpMachine.PCL" Version="5.0.1" />
+        <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Bcl.Memory" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Bcl.Numerics" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.8" />
+        <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+        <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
+        <PackageReference Include="Nito.AsyncEx.Context" Version="5.1.2" />
+        <PackageReference Include="ReadyM.Wukong.GameRefs" Version="1.0.21.23831-preview.1" />
+        <PackageReference Include="Superpower" Version="3.1.0" />
+        <PackageReference Include="System.Collections.Immutable" Version="10.0.8" />
+        <PackageReference Include="System.Memory" Version="4.6.3" />
+        <PackageReference Include="System.Reflection.Emit" Version="4.7.0" />
+        <PackageReference Include="System.Reflection.Metadata" Version="10.0.8" />
+        <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+        <PackageReference Include="System.Text.Encodings.Web" Version="10.0.8" />
+        <PackageReference Include="System.Text.Json" Version="10.0.8" />
+    </ItemGroup>
+    <!-- END GENERATED DEPENDENCIES -->
+
+</Project>

@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <!--
+        The server surface, for the half of a mod that runs on the relay server.
+
+        Only assemblies that exist in the server process. The client SDK is absent, so a
+        server-side mod cannot reference client-only API even by accident.
+    -->
+
+    <PropertyGroup>
+        <!-- Plural, with one entry, on purpose. It puts pack on the outer/inner build
+             path, where reference satellite assemblies are collected before the
+             packaging hook runs. With the singular form they are silently absent. -->
+        <TargetFrameworks>net10.0</TargetFrameworks>
+        <_PrimaryTargetFramework>net10.0</_PrimaryTargetFramework>
+
+        <PackageId>ReadyM.SDK.Wukong.Server</PackageId>
+        <Title>WukongMP SDK, server</Title>
+        <Description>SDK for the server-side half of a WukongMP mod, hosted by the ReadyM relay server.</Description>
+    </PropertyGroup>
+
+    <Import Project="..\Packaging.targets" />
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\WukongMp.Sdk.Serverside\WukongMp.Sdk.Serverside.csproj" PrivateAssets="all" />
+        <ProjectReference Include="$(CoreSdkRoot)\src\ReadyM.Relay.Server.Sdk\ReadyM.Relay.Server.Sdk.csproj" PrivateAssets="all" />
+    </ItemGroup>
+
+    <!--
+        The shared package. Deliberately not PrivateAssets, so packing records it as a
+        dependency and a mod that references only this one still gets the shared types.
+    -->
+    <ItemGroup>
+        <ProjectReference Include="..\ReadyM.SDK.Wukong.Common\ReadyM.SDK.Wukong.Common.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <SdkPackageAssembly Include="WukongMp.Sdk.Serverside" />
+        <SdkPackageAssembly Include="ReadyM.Relay.Server.Sdk" />
+    </ItemGroup>
+
+    <!-- BEGIN GENERATED DEPENDENCIES -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+        <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
+    </ItemGroup>
+    <!-- END GENERATED DEPENDENCIES -->
+
+</Project>

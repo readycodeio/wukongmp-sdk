@@ -1,19 +1,25 @@
 #!powershell.exe -ExecutionPolicy Bypass -File
 
 <#
-    Builds the ReadyM.SDK.Wukong NuGet package.
+    Builds the WukongMP SDK NuGet packages.
 
-    The package carries both the WukongMP SDK and the ReadyM core SDK it builds on. They
-    ship together on purpose: the core SDK is not released on its own and has no version of
-    its own, so a mod can never end up pairing a Wukong version with a core version that
-    never shipped with it.
+    Three packages, matching the three project shapes a mod has:
+
+      ReadyM.SDK.Wukong.Common   shared types, ECS components, RPC contracts, the generator
+      ReadyM.SDK.Wukong.Client   the in-game half, plus the mod loader assemblies
+      ReadyM.SDK.Wukong.Server   the relay-server half
+
+    Client and Server both depend on Common and neither depends on the other, so a mod's
+    server-side project cannot reference client-only API and vice versa. The core SDK is not
+    a package of its own: it has no version of its own, so its assemblies are distributed
+    across these three by which side actually needs them.
 
     Third-party assemblies are not bundled. They are declared as package dependencies, and
-    that list is generated from the projects that go into each lib folder rather than
+    that list is generated from the projects whose assemblies each package ships rather than
     maintained by hand.
 
-      -SyncDependencies    regenerate the dependency list in the packaging project
-      -CheckDependencies   fail if the list has drifted, without changing anything
+      -SyncDependencies    regenerate the dependency lists in the packaging projects
+      -CheckDependencies   fail if a list has drifted, without changing anything
 #>
 
 param(
@@ -25,39 +31,60 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$packaging = Join-Path $PSScriptRoot 'Packaging\ReadyM.SDK.Wukong.csproj'
 $coreSdk = Join-Path $PSScriptRoot 'readym-core-sdk\src'
+$packagingDir = Join-Path $PSScriptRoot 'Packaging'
 
-# What lands in each lib folder. Keep in step with the ProjectReferences in the packaging
-# project: these are the same assemblies, listed here so their dependencies can be read.
-$buckets = [ordered]@{
-    'netstandard2.0' = @(
-        "$PSScriptRoot\WukongMp.Api\WukongMp.Api.csproj"
-        "$PSScriptRoot\WukongMp.Sdk\WukongMp.Sdk.csproj"
-        "$PSScriptRoot\ReadyM.Wukong.Common\ReadyM.Wukong.Common.csproj"
-        "$coreSdk\ReadyM.Api\ReadyM.Api.csproj"
-        "$coreSdk\ReadyM.Api.Multiplayer\ReadyM.Api.Multiplayer.csproj"
-        "$coreSdk\ReadyM.Relay.Client\ReadyM.Relay.Client.csproj"
-        "$coreSdk\YooniCSharp\Native\Container\Yooni.Native.Container.csproj"
-        "$coreSdk\YooniCSharp\Native\LowLevel\Yooni.Native.LowLevel.csproj"
-        "$coreSdk\YooniCSharp\Native\Serialization\Yooni.Native.Serialization.csproj"
-        "$coreSdk\Friflo.Engine.ECS\src\ECS\Friflo.Engine.ECS.csproj"
-        "$coreSdk\Friflo.Engine.ECS\src\ECS.Boost\Friflo.Engine.ECS.Boost.csproj"
-        "$coreSdk\LiteNetLib\LiteNetLib\LiteNetLib.csproj"
-    )
-    'net10.0' = @(
-        "$PSScriptRoot\WukongMp.Sdk.Serverside\WukongMp.Sdk.Serverside.csproj"
-        "$PSScriptRoot\ReadyM.Wukong.Common\ReadyM.Wukong.Common.csproj"
-        "$coreSdk\ReadyM.Api\ReadyM.Api.csproj"
-        "$coreSdk\ReadyM.Api.Multiplayer\ReadyM.Api.Multiplayer.csproj"
-        "$coreSdk\ReadyM.Relay.Server.Sdk\ReadyM.Relay.Server.Sdk.csproj"
-        "$coreSdk\YooniCSharp\Native\Container\Yooni.Native.Container.csproj"
-        "$coreSdk\YooniCSharp\Native\LowLevel\Yooni.Native.LowLevel.csproj"
-        "$coreSdk\YooniCSharp\Native\Serialization\Yooni.Native.Serialization.csproj"
-        "$coreSdk\Friflo.Engine.ECS\src\ECS\Friflo.Engine.ECS.csproj"
-        "$coreSdk\Friflo.Engine.ECS\src\ECS.Boost\Friflo.Engine.ECS.Boost.csproj"
-        "$coreSdk\LiteNetLib\LiteNetLib\LiteNetLib.csproj"
-    )
+# The shared set, referenced by both sides. Listed once and used for both frameworks.
+$sharedProjects = @(
+    "$PSScriptRoot\ReadyM.Wukong.Common\ReadyM.Wukong.Common.csproj"
+    "$coreSdk\ReadyM.Api\ReadyM.Api.csproj"
+    "$coreSdk\ReadyM.Api.Multiplayer\ReadyM.Api.Multiplayer.csproj"
+    "$coreSdk\YooniCSharp\Native\Container\Yooni.Native.Container.csproj"
+    "$coreSdk\YooniCSharp\Native\LowLevel\Yooni.Native.LowLevel.csproj"
+    "$coreSdk\YooniCSharp\Native\Serialization\Yooni.Native.Serialization.csproj"
+    "$coreSdk\Friflo.Engine.ECS\src\ECS\Friflo.Engine.ECS.csproj"
+    "$coreSdk\Friflo.Engine.ECS\src\ECS.Boost\Friflo.Engine.ECS.Boost.csproj"
+    "$coreSdk\LiteNetLib\LiteNetLib\LiteNetLib.csproj"
+)
+
+# Packed in this order: Common first, so a feed is never left with a client or server
+# package whose shared dependency is not there yet.
+#
+# Buckets are the projects whose assemblies each package ships, per framework. They exist so
+# the dependency list can be read from them, and they must stay in step with the
+# SdkPackageAssembly lists in the packaging projects.
+$packages = @(
+    [ordered]@{
+        Name = 'ReadyM.SDK.Wukong.Common'
+        Buckets = [ordered]@{
+            'netstandard2.0' = $sharedProjects
+            'net10.0' = $sharedProjects
+        }
+    }
+    [ordered]@{
+        Name = 'ReadyM.SDK.Wukong.Client'
+        Buckets = [ordered]@{
+            'netstandard2.0' = @(
+                "$PSScriptRoot\WukongMp.Sdk\WukongMp.Sdk.csproj"
+                "$PSScriptRoot\WukongMp.Api\WukongMp.Api.csproj"
+                "$coreSdk\ReadyM.Relay.Client\ReadyM.Relay.Client.csproj"
+            )
+        }
+    }
+    [ordered]@{
+        Name = 'ReadyM.SDK.Wukong.Server'
+        Buckets = [ordered]@{
+            'net10.0' = @(
+                "$PSScriptRoot\WukongMp.Sdk.Serverside\WukongMp.Sdk.Serverside.csproj"
+                "$coreSdk\ReadyM.Relay.Server.Sdk\ReadyM.Relay.Server.Sdk.csproj"
+            )
+        }
+    }
+)
+
+foreach ($p in $packages)
+{
+    $p.Project = Join-Path $packagingDir "$($p.Name)\$($p.Name).csproj"
 }
 
 # The forks multi-target below net10.0, so ask them about the framework they actually build.
@@ -82,10 +109,10 @@ function Get-VersionKey([string] $v)
     return [version]::new($parts[0], $parts[1], $parts[2], $parts[3])
 }
 
-function Get-BucketDependencies([string] $tfm)
+function Get-BucketDependencies([string] $tfm, [array] $projects)
 {
     $found = @{}
-    foreach ($proj in $buckets[$tfm])
+    foreach ($proj in $projects)
     {
         if (-not (Test-Path $proj))
         {
@@ -120,15 +147,15 @@ function Get-BucketDependencies([string] $tfm)
     return $found
 }
 
-function Format-DependencyRegion()
+function Format-DependencyRegion($package)
 {
     $sb = [System.Text.StringBuilder]::new()
-    foreach ($tfm in $buckets.Keys)
+    foreach ($tfm in $package.Buckets.Keys)
     {
-        $deps = Get-BucketDependencies $tfm
+        $deps = Get-BucketDependencies $tfm $package.Buckets[$tfm]
         # Write-Host, not Write-Output: anything written to the pipeline here would end up
         # concatenated into this function's return value and land in the csproj.
-        Write-Host "  $tfm : $($deps.Count) dependencies"
+        Write-Host "    $tfm : $($deps.Count) dependencies"
         [void]$sb.AppendLine('    <ItemGroup Condition="''$(TargetFramework)'' == ''' + $tfm + '''">')
         foreach ($id in ($deps.Keys | Sort-Object))
         {
@@ -143,35 +170,45 @@ if ($SyncDependencies -or $CheckDependencies)
 {
     $begin = '    <!-- BEGIN GENERATED DEPENDENCIES -->'
     $end = '    <!-- END GENERATED DEPENDENCIES -->'
-    $text = Get-Content $packaging -Raw
-    $bi = $text.IndexOf($begin)
-    $ei = $text.IndexOf($end)
-    if ($bi -lt 0 -or $ei -lt 0)
-    {
-        Write-Error 'generated markers not found in the packaging project'
-    }
+    $drifted = @()
 
-    Write-Output 'Reading dependencies from the bundled projects...'
-    $fresh = Format-DependencyRegion
-    $current = $text.Substring($bi + $begin.Length, $ei - $bi - $begin.Length).Trim([char]13, [char]10)
+    foreach ($package in $packages)
+    {
+        Write-Host "$($package.Name):"
+        $text = Get-Content $package.Project -Raw
+        $bi = $text.IndexOf($begin)
+        $ei = $text.IndexOf($end)
+        if ($bi -lt 0 -or $ei -lt 0)
+        {
+            Write-Error "generated markers not found in $($package.Project)"
+        }
 
-    $same = $current.Replace([string][char]13, '') -eq $fresh.Replace([string][char]13, '')
-    if ($same)
-    {
-        Write-Output 'Dependency list is up to date.'
-    }
-    elseif (-not $SyncDependencies)
-    {
-        Write-Output ''
-        Write-Output 'Dependency list has drifted from the bundled projects. Run with -SyncDependencies.'
-        exit 1
-    }
-    else
-    {
+        $fresh = Format-DependencyRegion $package
+        $current = $text.Substring($bi + $begin.Length, $ei - $bi - $begin.Length).Trim([char]13, [char]10)
+
+        if ($current.Replace([string][char]13, '') -eq $fresh.Replace([string][char]13, ''))
+        {
+            Write-Host '    up to date'
+            continue
+        }
+
+        if (-not $SyncDependencies)
+        {
+            $drifted += $package.Name
+            continue
+        }
+
         $nl = [string][char]13 + [string][char]10
         $updated = $text.Substring(0, $bi + $begin.Length) + $nl + $fresh + $nl + $text.Substring($ei)
-        Set-Content -Path $packaging -Value $updated -NoNewline
-        Write-Output 'Dependency list updated.'
+        Set-Content -Path $package.Project -Value $updated -NoNewline
+        Write-Host '    updated'
+    }
+
+    if ($drifted.Count -gt 0)
+    {
+        Write-Output ''
+        Write-Output "Dependency lists have drifted: $($drifted -join ', '). Run with -SyncDependencies."
+        exit 1
     }
 
     if ($CheckDependencies -and -not $SyncDependencies)
@@ -186,19 +223,24 @@ if (-not (Test-Path $Output))
     New-Item -ItemType Directory -Force $Output | Out-Null
 }
 
-Write-Output ''
-Write-Output "Packing ReadyM.SDK.Wukong ($Configuration) into $Output"
-& dotnet pack $packaging -c $Configuration -o $Output
-if ($LASTEXITCODE -ne 0)
+foreach ($package in $packages)
 {
-    Write-Error 'pack failed'
-    exit 1
+    Write-Output ''
+    Write-Output "Packing $($package.Name) ($Configuration)"
+    & dotnet pack $package.Project -c $Configuration -o $Output
+    if ($LASTEXITCODE -ne 0)
+    {
+        Write-Error "pack failed for $($package.Name)"
+        exit 1
+    }
 }
 
-Get-ChildItem $Output -Filter 'ReadyM.SDK.Wukong.*.nupkg' |
-        Sort-Object LastWriteTime -Descending |
-        Select-Object -First 1 |
-        ForEach-Object {
-            Write-Output ''
-            Write-Output "Built $($_.Name) ($([math]::Round($_.Length / 1MB, 1)) MB)"
-        }
+Write-Output ''
+Write-Output "Built into $Output"
+foreach ($package in $packages)
+{
+    Get-ChildItem $Output -Filter "$($package.Name).*.nupkg" |
+            Sort-Object LastWriteTime -Descending |
+            Select-Object -First 1 |
+            ForEach-Object { Write-Output "  $($_.Name)  $([math]::Round($_.Length / 1MB, 1)) MB" }
+}
