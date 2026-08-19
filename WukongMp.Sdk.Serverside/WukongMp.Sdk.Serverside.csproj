@@ -13,8 +13,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ReadyM.Relay.Server.Sdk\ReadyM.Relay.Server.Sdk.csproj"/>
-        <ProjectReference Include="..\ReadyM.Api.Generators\ReadyM.Api.Generators.csproj" ReferenceOutputAssembly="true" OutputItemType="Analyzer"/>
+        <ProjectReference Include="..\readym-core-sdk\src\ReadyM.Relay.Server.Sdk\ReadyM.Relay.Server.Sdk.csproj"/>
+        <ProjectReference Include="..\readym-core-sdk\src\ReadyM.Api.Generators\ReadyM.Api.Generators.csproj" ReferenceOutputAssembly="true" OutputItemType="Analyzer"/>
         <ProjectReference Include="..\ReadyM.Wukong.Common\ReadyM.Wukong.Common.csproj" />
     </ItemGroup>
 
