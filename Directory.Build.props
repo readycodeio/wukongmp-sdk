@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <Project>
+    <!--
+        MSBuild stops at the first Directory.Build.props it finds walking up, so without
+        this import an uberrepo above us could not contribute anything. Importing it first
+        means outer values are already set when conditional defaults elsewhere run, so the
+        outer ones win and a standalone clone is unaffected.
+
+        The path goes through a property because a Condition cannot contain the nested
+        quotes that GetPathOfFileAbove's arguments need.
+    -->
+    <PropertyGroup>
+        <ParentBuildProps>$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))</ParentBuildProps>
+    </PropertyGroup>
+    <Import Project="$(ParentBuildProps)" Condition="'$(ParentBuildProps)' != ''" />
+
     <PropertyGroup>
         <FileVersion>0.3.1</FileVersion>
         <Version>0.3.1</Version>
