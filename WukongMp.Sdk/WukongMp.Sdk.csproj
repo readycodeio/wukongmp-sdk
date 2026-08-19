@@ -16,8 +16,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\readym-gameserver\src\Friflo.Engine.ECS\src\ECS\Friflo.Engine.ECS.csproj" />
-        <ProjectReference Include="..\readym-gameserver\src\ReadyM.Api\ReadyM.Api.csproj" />
+        <ProjectReference Include="..\readym-core-sdk\src\Friflo.Engine.ECS\src\ECS\Friflo.Engine.ECS.csproj" />
+        <ProjectReference Include="..\readym-core-sdk\src\ReadyM.Api\ReadyM.Api.csproj" />
         <ProjectReference Include="..\WukongMp.Api\WukongMp.Api.csproj" />
     </ItemGroup>
 
