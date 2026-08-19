@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 
 <Project>
     <!--
@@ -34,6 +34,10 @@
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <UseSdkProjectReferences>true</UseSdkProjectReferences>
+        <!-- The SDK ships as one package, ReadyM.SDK.Wukong, built by the project under
+             Packaging/. Individual projects are not published, so keep them unpackable
+             and let that project opt itself back in. -->
+        <IsPackable>false</IsPackable>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)' == 'NoDisconnect'">
         <DefineConstants>$(DefineConstants);DEBUG;NO_DISCONNECT</DefineConstants>
