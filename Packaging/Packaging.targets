@@ -25,8 +25,8 @@
         <Authors>ReadyCode Limited</Authors>
         <Company>ReadyCode Limited</Company>
         <PackageTags>wukong;wukongmp;readym;modding;multiplayer</PackageTags>
-        <PackageProjectUrl>https://github.com/readycodeio/wukong-csharp-mod</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/readycodeio/wukong-csharp-mod</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/readycodeio/wukongmp-sdk</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/readycodeio/wukongmp-sdk</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
 
         <CoreSdkRoot Condition="'$(CoreSdkRoot)' == ''">$(MSBuildThisFileDirectory)..\readym-core-sdk</CoreSdkRoot>
