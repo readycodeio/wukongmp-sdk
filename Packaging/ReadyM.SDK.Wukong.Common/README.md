@@ -30,8 +30,8 @@ Add `--prerelease` while the version you want is a preview.
 ## What is in it
 
 The ReadyM core API and multiplayer layer, the Wukong component types, the Yooni native
-container and serialization assemblies, and our forks of
-[Friflo.Engine.ECS](https://github.com/friflo/Friflo.Engine.ECS) and
+container and serialization assemblies, our fork of
+[Friflo.Engine.ECS](https://github.com/friflo/Friflo.Engine.ECS), and
 [LiteNetLib](https://github.com/RevenantX/LiteNetLib). The source generator ships as an
 analyzer, so it runs in every project that references this package.
 
