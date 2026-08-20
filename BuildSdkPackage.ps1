@@ -18,6 +18,7 @@
     that list is generated from the projects whose assemblies each package ships rather than
     maintained by hand.
 
+      -PackageVersion      override the version, e.g. 0.3.1-preview.1
       -SyncDependencies    regenerate the dependency lists in the packaging projects
       -CheckDependencies   fail if a list has drifted, without changing anything
 #>
@@ -25,6 +26,10 @@
 param(
     [string] $Configuration = 'Release',
     [string] $Output = (Join-Path $PSScriptRoot '..\local-nuget-feed'),
+    # Overrides the version from Directory.Build.props. Passed as a global property so the
+    # dependency the client and server packages record on the shared one carries the same
+    # version, rather than the three drifting apart.
+    [string] $PackageVersion,
     [switch] $SyncDependencies,
     [switch] $CheckDependencies
 )
@@ -223,11 +228,17 @@ if (-not (Test-Path $Output))
     New-Item -ItemType Directory -Force $Output | Out-Null
 }
 
+$versionArgs = @()
+if ($PackageVersion)
+{
+    $versionArgs = @("-p:PackageVersion=$PackageVersion", "-p:Version=$PackageVersion")
+}
+
 foreach ($package in $packages)
 {
     Write-Output ''
-    Write-Output "Packing $($package.Name) ($Configuration)"
-    & dotnet pack $package.Project -c $Configuration -o $Output
+    Write-Output "Packing $($package.Name) ($Configuration)$(if ($PackageVersion) { " $PackageVersion" })"
+    & dotnet pack $package.Project -c $Configuration -o $Output @versionArgs
     if ($LASTEXITCODE -ne 0)
     {
         Write-Error "pack failed for $($package.Name)"
