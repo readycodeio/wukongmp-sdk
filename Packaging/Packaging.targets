@@ -22,6 +22,7 @@
         <NoWarn>$(NoWarn);NU5128;CS2008</NoWarn>
         <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PackSdkAssemblies</TargetsForTfmSpecificContentInPackage>
 
+        <PackageReadmeFile>README.md</PackageReadmeFile>
         <Authors>ReadyCode Limited</Authors>
         <Company>ReadyCode Limited</Company>
         <PackageTags>wukong;wukongmp;readym;modding;multiplayer</PackageTags>
@@ -31,6 +32,12 @@
 
         <CoreSdkRoot Condition="'$(CoreSdkRoot)' == ''">$(MSBuildThisFileDirectory)..\readym-core-sdk</CoreSdkRoot>
     </PropertyGroup>
+
+    <!-- nuget.org renders this on the package page. One per package: they are read
+         by different people. -->
+    <ItemGroup>
+        <None Include="$(MSBuildProjectDirectory)\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
 
     <Target Name="PackSdkAssemblies" DependsOnTargets="ResolveReferences">
 
