@@ -30,6 +30,10 @@ param(
     # dependency the client and server packages record on the shared one carries the same
     # version, rather than the three drifting apart.
     [string] $PackageVersion,
+    # An extra NuGet source, added to the configured ones rather than replacing them. Needed
+    # when a dependency is only in a local feed, such as a ReadyM.Wukong.GameRefs version
+    # that has not been published yet.
+    [string] $AdditionalSource,
     [switch] $SyncDependencies,
     [switch] $CheckDependencies
 )
@@ -228,17 +232,21 @@ if (-not (Test-Path $Output))
     New-Item -ItemType Directory -Force $Output | Out-Null
 }
 
-$versionArgs = @()
+$packArgs = @()
 if ($PackageVersion)
 {
-    $versionArgs = @("-p:PackageVersion=$PackageVersion", "-p:Version=$PackageVersion")
+    $packArgs += @("-p:PackageVersion=$PackageVersion", "-p:Version=$PackageVersion")
+}
+if ($AdditionalSource)
+{
+    $packArgs += "-p:RestoreAdditionalProjectSources=$AdditionalSource"
 }
 
 foreach ($package in $packages)
 {
     Write-Output ''
     Write-Output "Packing $($package.Name) ($Configuration)$(if ($PackageVersion) { " $PackageVersion" })"
-    & dotnet pack $package.Project -c $Configuration -o $Output @versionArgs
+    & dotnet pack $package.Project -c $Configuration -o $Output @packArgs
     if ($LASTEXITCODE -ne 0)
     {
         Write-Error "pack failed for $($package.Name)"
