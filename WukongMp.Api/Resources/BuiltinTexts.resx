@@ -372,6 +372,9 @@
   <data name="Banned" xml:space="preserve">
     <value>You were banned from the server.</value>
   </data>
+  <data name="ServerBanned" xml:space="preserve">
+    <value>This server is banned by ReadyM and is not accepting players.</value>
+  </data>
   <data name="Kicked" xml:space="preserve">
     <value>You were kicked from the server.</value>
   </data>

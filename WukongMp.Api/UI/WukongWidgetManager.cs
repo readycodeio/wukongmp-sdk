@@ -182,6 +182,7 @@ internal sealed class WukongWidgetManager(
             DisconnectedReason.ServerFull => BuiltinTexts.ServerFull,
             DisconnectedReason.Kicked => BuiltinTexts.Kicked,
             DisconnectedReason.Banned => BuiltinTexts.Banned,
+            DisconnectedReason.ServerBanned => BuiltinTexts.ServerBanned,
             _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, null)
         };
         _infoMessageWidget.Value.SetText(_lastDisconnectText);

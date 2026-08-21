@@ -372,6 +372,9 @@
   <data name="Banned" xml:space="preserve">
     <value>您已被该服务器封禁。</value>
   </data>
+  <data name="ServerBanned" xml:space="preserve">
+    <value>此服务器已被 ReadyM 封禁，暂不接受玩家加入。</value>
+  </data>
   <data name="IncompatibleVersion" xml:space="preserve">
     <value>无法连接。SDK 版本不兼容。</value>
   </data>
