@@ -717,6 +717,15 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This server is banned by ReadyM and is not accepting players..
+        /// </summary>
+        public static string ServerBanned {
+            get {
+                return ResourceManager.GetString("ServerBanned", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Server is full, try again later..
         /// </summary>
         public static string ServerFull {

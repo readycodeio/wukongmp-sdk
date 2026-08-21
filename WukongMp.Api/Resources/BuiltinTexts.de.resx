@@ -373,6 +373,9 @@
   <data name="Banned" xml:space="preserve">
     <value>Du wurdest vom Server gebannt.</value>
   </data>
+  <data name="ServerBanned" xml:space="preserve">
+    <value>Dieser Server wurde von ReadyM gesperrt und nimmt keine Spieler auf.</value>
+  </data>
   <data name="IncompatibleVersion" xml:space="preserve">
     <value>Verbindung fehlgeschlagen. Inkompatible SDK-Version.</value>
   </data>
