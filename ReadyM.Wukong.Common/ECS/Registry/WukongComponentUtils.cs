@@ -16,7 +16,8 @@ internal static class WukongComponentUtils
             .Add<MonsterAnimationComponent>()
             .Add<NicknameComponent>()
             .Add<TeamComponent>()
-            .Add<TransformComponent>();
+            .Add<TransformComponent>()
+            .AddTag<AllowOwnershipTransferOnScopeLeaveTag>();
 
     public static void SetupServerMainCharacterArchetype(EntityBuilderBase b)
         => b.Add(new MainCharacterComponent())
@@ -27,8 +28,7 @@ internal static class WukongComponentUtils
             })
             .Add<TransformComponent>()
             .Add<TeamComponent>()
-            .Add<PvPComponent>()
-            .AddTag<DisallowOwnershipTransferOnScopeLeaveTag>();
+            .Add<PvPComponent>();
 
     public static void SetupServerPvpStateArchetype(EntityBuilderBase b)
         => b.Add(new PvpStateComponent());
