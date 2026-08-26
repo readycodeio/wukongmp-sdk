@@ -33,6 +33,7 @@ $modFilesCore = @(
     "System.Reflection.Emit.dll"
     "WukongMp.Api.dll"
     "WukongMp.Sdk.dll"
+    "Yooni.Native.Logging.dll"
     "Yooni.Native.Container.dll"
     "Yooni.Native.LowLevel.dll"
     "Yooni.Native.Serialization.dll"

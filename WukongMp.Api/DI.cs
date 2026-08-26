@@ -179,11 +179,20 @@ internal sealed class DI : IDependencyContainer
         Container.Register<IPlayerComponentRegistration, WukongPlayerRegistration>();
         Container.Register<IPlayerComponentRegistry, PlayerComponentRegistry>();
 
+        // Wukong contributes no world-scoped components, but the registry is still needed so the world
+        // archetype below can be registered.
+        Container.Register<IWorldComponentRegistry, WorldComponentRegistry>();
+
         // TODO: the ArchetypeId on client and server are only in sync because the order of registration is the same
         // This is fragile and should be fixed
+        //
+        // Wukong has neither cells nor world scope, but both archetypes are registered anyway: the relay server
+        // registers them unconditionally, and an archetype the client skips shifts the id of every archetype after
+        // it, so the client would ask the server for the wrong one.
         Container.RegisterMany<DefaultAreaArchetypeRegistration>(nonPublicServiceTypes: true);
         Container.RegisterMany<DefaultPlayerArchetypeRegistration>(nonPublicServiceTypes: true);
         Container.RegisterMany<DefaultCellArchetypeRegistration>(nonPublicServiceTypes: true);
+        Container.RegisterMany<DefaultWorldArchetypeRegistration>(nonPublicServiceTypes: true);
         Container.RegisterMany<ClientWukongArchetypeRegistration>(nonPublicServiceTypes: true);
 
         Container.Register<INetworkedComponentRegistration, DefaultNetworkedComponentRegistration>();
