@@ -27,8 +27,7 @@ if (-not (Test-Path $outputRoot))
     New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
 }
 
-$destRoot = Join-Path $outputRoot "SDK"
-New-Item -ItemType Directory -Path $destRoot -Force | Out-Null
+New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
 
 # 4. Build combined file list across variants
 $allFiles = @()
@@ -38,33 +37,19 @@ foreach ($p in $Mods)
     $allFiles += $lists.Mod
 }
 
-# Append non-SDK mod files
-$allFiles += @(
-    @(@("WukongMp.Coop.dll"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
-    @(@("WukongMp.Coop.Common.dll"), "WukongMP-co-op-mod/WukongMp.Coop/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Coop"),
-    @(@("manifest.json"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop"),
-    @(@("ArchiveSaveFile.1.sav"), "WukongMP-co-op-mod/Content", "Mods/WukongMp.Coop"),
-    
-    @(@("WukongMp.Pvp.dll"), "WukongMP-PvP-mod/WukongMp.PvP/bin/$Configuration/netstandard2.0", "Mods/WukongMp.Pvp"),
-    @(@("manifest.json"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp"),
-    @(@("ArchiveSaveFile.0.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp"),
-    @(@("ArchiveSaveFile.1.sav"), "WukongMP-PvP-mod/Content", "Mods/WukongMp.Pvp")
-)
-
+# Append PDB files in Debug configuration
 if ($Configuration -eq "Debug")
 {
     $allFiles += @(
-        @(@("WukongMp.Api.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "Mods/WukongMp.Sdk"),
-        @(@("WukongMp.Sdk.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "Mods/WukongMp.Sdk"),
-        @(@("WukongMp.Coop.pdb"), "WukongMP-co-op-mod/WukongMp.Coop/bin/Debug/netstandard2.0", "Mods/WukongMp.Coop"),
-        @(@("WukongMp.Pvp.pdb"), "WukongMP-PvP-mod/WukongMp.Pvp/bin/Debug/netstandard2.0", "Mods/WukongMp.Pvp")
+        @(@("WukongMp.Api.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "mods/WukongMp.Sdk"),
+        @(@("WukongMp.Sdk.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "mods/WukongMp.Sdk")
     )
 }
 
 # Create destination directories
 foreach ($item in $allFiles)
 {
-    $destDir = Join-Path $destRoot $item[2]
+    $destDir = Join-Path $outputRoot $item[2]
     if (-not (Test-Path $destDir))
     {
         New-Item -ItemType Directory -Path $destDir -Force | Out-Null
@@ -76,7 +61,7 @@ foreach ($item in $allFiles)
 {
     $files = $item[0]
     $sourceDir = $item[1]
-    $destDir = Join-Path $destRoot $item[2]
+    $destDir = Join-Path $outputRoot $item[2]
     CopyFiles $files $sourceDir $destDir
 }
 

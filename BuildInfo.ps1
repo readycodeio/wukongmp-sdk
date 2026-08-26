@@ -1,7 +1,7 @@
 #!powershell.exe -ExecutionPolicy Bypass -File
 
 # Static metadata
-$solutionName = "WukongCSharpMod"
+$solutionName = "WukongMP.SDK"
 $zipName = "WukongMp"
 
 # Shared (variant-agnostic) file name lists
@@ -79,9 +79,9 @@ function Get-ModFiles
     $reflectionOnlySourceDir = "WukongMp.Api/Game"
     $binariesSourceDir = "Deployment"
 
-    $modDestDir = "Mods/WukongMp.$Mod"
-    $reflectionOnlyDestDir = "Mods/ReflectionOnly"
-    $overridesDestDir = "Mods/Overrides"
+    $modDestDir = "mods/WukongMp.$Mod"
+    $reflectionOnlyDestDir = "mods/ReflectionOnly"
+    $overridesDestDir = "mods/Overrides"
 
     # Compose the triplets: @( <files>, <sourceDir>, <destDir> )
     $modFiles = @(
