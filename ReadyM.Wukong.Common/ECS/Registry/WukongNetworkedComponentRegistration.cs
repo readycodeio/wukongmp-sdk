@@ -13,7 +13,7 @@ internal class WukongNetworkedComponentRegistration : INetworkedComponentRegistr
         registry.RegisterComponent<HpComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<NicknameComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<TeamComponent>(DeliveryMethod.ReliableOrdered);
-        
+
         // Tamer (area-scoped)
         registry.RegisterComponent<TamerComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<AnimationComponent>();
@@ -29,7 +29,7 @@ internal class WukongNetworkedComponentRegistration : INetworkedComponentRegistr
 
         // Player (global, scope)
         registry.RegisterComponent<PlayerComponent>(DeliveryMethod.ReliableOrdered);
-        
+
         // PvP State (global)
         registry.RegisterComponent<PvpStateComponent>(DeliveryMethod.ReliableOrdered); // TODO: Move to PvP mod (server-side)
     }

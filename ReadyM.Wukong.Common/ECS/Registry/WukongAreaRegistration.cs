@@ -8,7 +8,7 @@ internal class WukongAreaRegistration : IAreaComponentRegistration
 {
     public void Register(IAreaComponentRegistry registry)
     {
-        registry.RegisterComponent(() => new RoomComponent
+        registry.RegisterComponent(new RoomComponent
         {
             ChatEnabled = true,
             ConsumablesAllowed = true,
@@ -19,6 +19,6 @@ internal class WukongAreaRegistration : IAreaComponentRegistration
             AntiStallEnabled = true,
             CheatsAllowed = false,
         });
-        registry.RegisterComponent(() => new MovieComponent(AllocatorKind.Default));
+        registry.RegisterComponent<MovieComponent>();
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using ReadyM.Api.ECS.Components;
 using ReadyM.Api.Multiplayer.Generators;
 using Yooni.Native.Container;
 using Yooni.Native.LowLevel;
@@ -10,8 +11,14 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 /// </summary>
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
-public partial struct MovieComponent(AllocatorKind allocatorKind)
+public partial struct MovieComponent : INativeInit
 {
-    private NativeList<int> _startedSequences = new(8, allocatorKind);
-    private NativeList<int> _finishedSequences = new(8, allocatorKind);
+    private NativeList<int> _startedSequences;
+    private NativeList<int> _finishedSequences;
+
+    public void Init(AllocatorKind allocatorKind)
+    {
+        _startedSequences = new NativeList<int>(8, allocatorKind);
+        _finishedSequences = new NativeList<int>(8, allocatorKind);
+    }
 }

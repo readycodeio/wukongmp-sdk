@@ -6,8 +6,9 @@ namespace ReadyM.Wukong.Common.ECS.Registry;
 
 internal static class WukongComponentUtils
 {
-    public static void SetupServerMonsterArchetype(EntityBuilderBase b)
-        => b.Add<TamerComponent>()
+    public static ArchetypeBuilder GetServerMonsterArchetype()
+        => new ArchetypeBuilder()
+            .Add<TamerComponent>()
             .Add<AnimationComponent>()
             .Add(new HpComponent
             {
@@ -19,8 +20,9 @@ internal static class WukongComponentUtils
             .Add<TransformComponent>()
             .AddTag<AllowOwnershipTransferOnScopeLeaveTag>();
 
-    public static void SetupServerMainCharacterArchetype(EntityBuilderBase b)
-        => b.Add(new MainCharacterComponent())
+    public static ArchetypeBuilder GetServerMainCharacterArchetype()
+        => new ArchetypeBuilder()
+            .Add(new MainCharacterComponent())
             .Add<NicknameComponent>()
             .Add(new HpComponent
             {
@@ -30,6 +32,7 @@ internal static class WukongComponentUtils
             .Add<TeamComponent>()
             .Add<PvPComponent>();
 
-    public static void SetupServerPvpStateArchetype(EntityBuilderBase b)
-        => b.Add(new PvpStateComponent());
+    public static ArchetypeBuilder GetServerPvpStateArchetype()
+        => new ArchetypeBuilder()
+            .Add(new PvpStateComponent());
 }

@@ -33,6 +33,7 @@ using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Api.Multiplayer.Serialization;
 using ReadyM.Api.State;
 using ReadyM.Relay.Client;
+using ReadyM.Relay.Client.ConflictResolution;
 using ReadyM.Relay.Client.Mapping.Policies;
 using ReadyM.Relay.Client.Serialization;
 using ReadyM.Relay.Client.State;
@@ -227,6 +228,7 @@ internal sealed class DI : IDependencyContainer
         Container.Register<WukongPlayerPawnState>();
         Container.Register<NetworkedOwnershipManager>();
         Container.Register<ClientOwnershipManager>();
+        Container.Register<IClientNetworkTime, ClientNetworkTime>();
         Container.Register<WukongSynchronizer>();
         Container.Register<CutsceneStatusSynchronizer>();
         Container.Register<WukongAreaState>();
