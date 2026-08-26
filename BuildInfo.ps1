@@ -49,6 +49,19 @@ $modFilesDebugCore = @(
     "Friflo.Engine.ECS.Boost.pdb"
 )
 
+# Copied into server_mods. Server mods have no folder of their own, every file sits next to
+# the mods' own server files, so only ship what the SDK owns. Everything else these assemblies
+# need (ReadyM.Api, Friflo, Yooni, the relay server SDK) is already part of the server host.
+$serverModFilesCore = @(
+    "WukongMp.Sdk.Serverside.dll"
+    "ReadyM.Wukong.Common.dll"
+)
+
+$serverModFilesDebugCore = @(
+    "WukongMp.Sdk.Serverside.pdb",
+    "ReadyM.Wukong.Common.pdb"
+)
+
 $reflectionOnlyFiles = @("*")
 
 $overridesFilesDebug = @(
@@ -76,10 +89,12 @@ function Get-ModFiles
 
     # Compute *per-variant* paths
     $modSourceDir = "WukongMp.$Mod/bin/$Configuration/netstandard2.0"
+    $serverModSourceDir = "WukongMp.$Mod.Serverside/bin/$Configuration/net10.0"
     $reflectionOnlySourceDir = "WukongMp.Api/Game"
     $binariesSourceDir = "Deployment"
 
     $modDestDir = "mods/WukongMp.$Mod"
+    $serverModDestDir = "server_mods"
     $reflectionOnlyDestDir = "mods/ReflectionOnly"
     $overridesDestDir = "mods/Overrides"
 
@@ -95,10 +110,22 @@ function Get-ModFiles
         @($reflectionOnlyFiles, $reflectionOnlySourceDir, $reflectionOnlyDestDir)
     )
 
-    # Return both sets so caller can pick based on configuration
+    # Server files are kept out of Mod/Dev on purpose: those two feed the client mod ZIP and the
+    # game's CSharpLoader folder, and a server assembly has no business in either.
+    $serverFiles = @(
+        ,@($serverModFilesCore, $serverModSourceDir, $serverModDestDir)
+    )
+
+    $serverDevFiles = $serverFiles + @(
+        ,@($serverModFilesDebugCore, $serverModSourceDir, $serverModDestDir)
+    )
+
+    # Return every set so the caller can pick based on configuration and on whether it deploys a server
     return @{
         Mod = $modFiles
         Dev = $devFiles
+        Server = $serverFiles
+        ServerDev = $serverDevFiles
     }
 }
 

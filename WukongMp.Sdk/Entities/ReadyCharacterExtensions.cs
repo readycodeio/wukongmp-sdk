@@ -96,6 +96,19 @@ public static class ReadyCharacterExtensions
                     ? hpComp.IsDead 
                     : throw new InvalidOperationException($"{nameof(HpComponent)} not present on entity");
             }
+            set
+            {
+                obj.Deconstruct(out _, out var entity);
+
+                if (DI.Instance.MappedField.CanSetFromApi<HpComponent>(entity, out var sync))
+                {
+                    sync.SetFromApi(HpComponent.Fields.IsDead, value);
+                }
+                else
+                {
+                    Logging.LogError("Not allowed to set another player's dead state");
+                }
+            }
         }
 
         public void SetMarkerMessage(string message, string color)

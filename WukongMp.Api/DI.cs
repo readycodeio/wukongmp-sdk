@@ -405,7 +405,7 @@ internal sealed class DI : IDependencyContainer
         }
     }
 
-    private void RegisterDataMappings(ComponentFieldMappingRegistry fieldMappingRegistry)
+    private void RegisterDataMappings(IComponentFieldMappingRegistryConfig fieldMappingRegistry)
     {
         fieldMappingRegistry.Register(MainCharacterComponent.Fields.Velocity.In<BUC_ABPCharacterData>(),
             (ctx, vec) =>
@@ -501,17 +501,20 @@ internal sealed class DI : IDependencyContainer
             });
 
         fieldMappingRegistry.Register(HpComponent.Fields.Hp.In<BUC_AttrContainer>(),
-            (ctx, value) =>
+            (ctx, hp) =>
             {
-                if (value <= -80000)
+                if (hp.Hp <= -80000)
                 {
-                    Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", value);
+                    Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", hp.Hp);
                     return;
                 }
 
-                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                if (hp is { Hp: <= 0, IsDead: false })
+                    return;
+
+                if (!hp.Hp.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                 {
-                    ctx.SetFloatValue(EBGUAttrFloat.Hp, value);
+                    ctx.SetFloatValue(EBGUAttrFloat.Hp, hp.Hp);
                 }
             },
             (ref hp, ctx) =>
@@ -526,6 +529,8 @@ internal sealed class DI : IDependencyContainer
         fieldMappingRegistry.Register(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(),
             (ctx, value) =>
             {
+                if (value <= 0) return;
+
                 if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
                 {
                     Logging.LogDebug("Setting HpMaxBase to {HpMaxBase}", value);

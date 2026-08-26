@@ -678,7 +678,7 @@ internal class PatchBeAttackedDeadEventSettlementProcess
         if (!tamerEntity.HasValue)
             return true;
 
-        // Owned entity - do not trigger unit dead
+        // Not owned entity - do not trigger unit dead
         if (!DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
             return false;
 
