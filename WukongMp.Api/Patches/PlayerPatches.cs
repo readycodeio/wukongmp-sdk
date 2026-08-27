@@ -401,12 +401,14 @@ internal class PatchOnUnitDead
 
         if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(ownerCharacter, out var tamerEntity))
         {
-            if (DeadReason != EDeadReason.OnlyDestroyUnit)
+            // OnlyDestroyUnit means the game is tearing the monster instance down, not killing it,
+            // which is what happens when a tamer unloads at distance.
+            if (DeadReason == EDeadReason.OnlyDestroyUnit)
+                return;
+
+            if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(tamerEntity.Value, out var load))
             {
-                if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(tamerEntity.Value, out var load))
-                {
-                    load.SetFromGame(HpComponent.Fields.IsDead, true);
-                }
+                load.SetFromGame(HpComponent.Fields.IsDead, true);
             }
 
             var payload = new UnitDeadEvent(tamerEntity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
