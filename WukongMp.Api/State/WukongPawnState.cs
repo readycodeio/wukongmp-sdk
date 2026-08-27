@@ -19,12 +19,13 @@ internal class WukongPawnState(
     Store world,
     IMappedEntityManager<AActor> mappedEntity,
     ClientWukongArchetypeRegistration wukongArchetype,
-    IClientEntityManager netClientEntity)
+    IClientEntityManager netClientEntity
+)
 {
     public Entity CreateNetworkedTamer(
-        LocalTamerComponent localTamerComp, 
-        TamerComponent tamerComp, 
-        TeamComponent teamComp, 
+        LocalTamerComponent localTamerComp,
+        TamerComponent tamerComp,
+        TeamComponent teamComp,
         BUTamerActor tamer)
     {
         var entity = netClientEntity.CreateAreaEntity(wukongArchetype.TamerArchetype, b =>
@@ -35,6 +36,14 @@ internal class WukongPawnState(
             b.Add(new MappingComponent<AActor>(tamer));
         });
         Logging.LogDebug("Creating local networked monster with {NetId}", entity.GetNetId());
+
+        // Prevent spawning the monster in world origin due to uninitialized transform component.
+        if (!tamer.IsNullOrDestroyed() && DI.Instance.MappedField.CanLoadFromGame<TransformComponent>(entity, out var load))
+        {
+            load.SetFromGame(TransformComponent.Fields.Position, tamer.GetActorLocation().ToVector3());
+            load.SetFromGame(TransformComponent.Fields.Rotation, tamer.GetActorRotation().ToVector3());
+        }
+
         return entity;
     }
 
@@ -65,7 +74,7 @@ internal class WukongPawnState(
                 result = tamerEntity;
             }
         });
-        
+
         return result;
     }
 
@@ -96,7 +105,7 @@ internal class WukongPawnState(
 
         if (!TamerEntity.TryGetTamer(entity.Value, out var tamerEntity))
             return null;
-        
+
         return tamerEntity;
     }
 
@@ -110,10 +119,10 @@ internal class WukongPawnState(
 
         if (!MainCharacterEntity.TryGetMainCharacter(entity.Value, out var mainEntity))
             return null;
-        
+
         return mainEntity;
     }
-    
+
     [Obsolete]
     public MainCharacterEntity? GetEntityByLastPlayerPawn(AActor? owner)
     {
@@ -136,7 +145,7 @@ internal class WukongPawnState(
     {
         if (owner.IsNullOrDestroyed())
             return null;
-        
+
         var playerEntity = GetEntityByPlayerActor(owner);
         if (playerEntity.HasValue)
         {
@@ -156,13 +165,13 @@ internal class WukongPawnState(
     {
         if (owner.IsNullOrDestroyed())
             return null;
-        
+
         if (!mappedEntity.IsMapped(owner, out var entity))
             return null;
-            
+
         return entity;
     }
-    
+
     public bool TryGetEntityByCharacter(BGUCharacterCS? character, [NotNullWhen(true)] out Entity? entity)
     {
         entity = null;
