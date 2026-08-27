@@ -318,43 +318,18 @@ internal class PatchCharacterAnimation
             {
                 syncAnim.SyncToGame(AnimationComponent.Fields.Velocity.In<BUC_ABPCharacterData>(), __instance);
                 syncAnim.SyncToGame(AnimationComponent.Fields.MoveAcceleration.In<BUC_ABPCharacterData>(), __instance);
-            }
-
-            if (DI.Instance.MappedField.CanLoadFromGame<TransformComponent>(tamerEntity.Value, out var loadTrans))
-            {
-                loadTrans.SetFromGame(TransformComponent.Fields.Position, __instance.ActorLocation.ToVector3());
-                if (character is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
-                {
-                    loadTrans.SetFromGame(TransformComponent.Fields.Rotation, ai.Mesh.GetSocketRotation(new FName("Head")).ToVector3());
-                }
-                else
-                {
-                    loadTrans.SetFromGame(TransformComponent.Fields.Rotation, __instance.ActorRotation.ToVector3());
-                }
-            }
-            else if (DI.Instance.MappedField.CanSyncToGame<TransformComponent>(tamerEntity.Value, out var syncTrans))
-            {
-                var events = BUS_EventCollectionCS.Get(character);
-                syncTrans.SyncToGame(static (comp, pair) =>
-                {
-                    var location = comp.Position.ToFVector();
-                    var rotation = comp.Rotation.ToFRotator();
-
-                    if (!location.Equals(pair.__instance.ActorLocation, Constants.FloatComparisonTolerance))
-                    {
-                        pair.events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
-                    }
-                }, (events, __instance));
 
                 if (__instance.RealWorldVelocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                 {
                     __instance.Velocity = FVector.ZeroVector;
-                    // mainEntity.Velocity = FVector.ZeroVector.ToVector3();
                     __instance.MoveAcceleration = FVector.ZeroVector;
-                    // mainEntity.MoveAcceleration = FVector.ZeroVector.ToVector3();
                     __instance.LastVelocity = FVector.ZeroVector;
                 }
             }
+
+            // NOTE: TransformComponent is synced in PatchMovementTickForMonster instead of here. This
+            // hook is throttled by the monster's screen size on the owning client, which starves the
+            // replicated sample rate as soon as the owner walks away or looks elsewhere.
         }
     }
 
@@ -407,33 +382,16 @@ internal class PatchSpiderMove
             {
                 syncAnim.SyncToGame(static (comp, move) => { move.Velocity = comp.Velocity.ToFVector(); }, ___MovementComp);
                 // TODO: Acceleration?
-            }
-
-            if (DI.Instance.MappedField.CanLoadFromGame<TransformComponent>(tamerEntity.Value, out var loadTrans))
-            {
-                var trans = ai.GetActorTransform();
-                loadTrans.SetFromGame(TransformComponent.Fields.Position, trans.Translation.ToVector3());
-                loadTrans.SetFromGame(TransformComponent.Fields.Rotation, trans.Rotation.Rotator().ToVector3());
-            }
-            else if (DI.Instance.MappedField.CanSyncToGame<TransformComponent>(tamerEntity.Value, out var syncTrans))
-            {
-                var events = BUS_EventCollectionCS.Get(ai);
-                syncTrans.SyncToGame(static (comp, pair) =>
-                {
-                    var location = comp.Position.ToFVector();
-                    var rotation = comp.Rotation.ToFRotator();
-
-                    if (!location.Equals(pair.ai.GetActorLocation(), Constants.FloatComparisonTolerance))
-                    {
-                        pair.events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
-                    }
-                }, (events, ai));
 
                 if (___MovementComp.Velocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                 {
                     ___MovementComp.Velocity = FVector.ZeroVector;
                 }
             }
+
+            // NOTE: TransformComponent is synced in PatchMovementTickForMonster instead of here, for
+            // the same reason as in PatchCharacterAnimation: animation hooks are rate-limited by the
+            // monster's screen size, the movement tick is not.
         }
     }
 }

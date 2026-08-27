@@ -11,6 +11,7 @@ using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
 
@@ -522,6 +523,43 @@ internal class PatchMovementTickForMonster
                 var events = BUS_EventCollectionCS.Get(tamerEntity.Value.Pawn);
                 events.Evt_SwitchMoveAIType.Invoke((EBGUMoveAIType)anim.MoveAiType);
             }
+
+            SyncTransform(character, tamerEntity.Value);
+        }
+    }
+
+    // BUC_ABPCharacterData.Update_GameThread is throttled by LOD,
+    // so the transform sync for enemies must be done here, not in BUC_ABPCharacterData.Update_GameThread
+    private static void SyncTransform(BGUCharacterCS character, TamerEntity tamerEntity)
+    {
+        if (!tamerEntity.GetLocalTamer().IsTamerSynced || tamerEntity.Pawn == null)
+            return;
+
+        if (DI.Instance.MappedField.CanLoadFromGame<TransformComponent>(tamerEntity, out var loadTrans))
+        {
+            loadTrans.SetFromGame(TransformComponent.Fields.Position, character.GetActorLocation().ToVector3());
+            if (character is BGU_CharacterAI ai && ai.GetActorGuid(out var guid) && guid == "UGuid.HYS.JiRuHuo01")
+            {
+                loadTrans.SetFromGame(TransformComponent.Fields.Rotation, ai.Mesh.GetSocketRotation(new FName("Head")).ToVector3());
+            }
+            else
+            {
+                loadTrans.SetFromGame(TransformComponent.Fields.Rotation, character.GetActorRotation().ToVector3());
+            }
+        }
+        else if (DI.Instance.MappedField.CanSyncToGame<TransformComponent>(tamerEntity, out var syncTrans))
+        {
+            var events = BUS_EventCollectionCS.Get(character);
+            syncTrans.SyncToGame(static (comp, pair) =>
+            {
+                var location = comp.Position.ToFVector();
+                var rotation = comp.Rotation.ToFRotator();
+
+                if (!location.Equals(pair.character.GetActorLocation(), Constants.FloatComparisonTolerance))
+                {
+                    pair.events.Evt_InterpolationMove.Invoke(location, rotation, Constants.ToleratedLatencyMs / 1000f, true, false, false, true);
+                }
+            }, (events, character));
         }
     }
 }
