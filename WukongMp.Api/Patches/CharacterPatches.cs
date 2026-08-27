@@ -295,9 +295,7 @@ internal class PatchCharacterAnimation
                 if (__instance.RealWorldVelocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                 {
                     __instance.Velocity = FVector.ZeroVector;
-                    // mainEntity.Velocity = FVector.ZeroVector.ToVector3();
                     __instance.MoveAcceleration = FVector.ZeroVector;
-                    // mainEntity.MoveAcceleration = FVector.ZeroVector.ToVector3();
                     __instance.LastVelocity = FVector.ZeroVector;
                 }
             }
