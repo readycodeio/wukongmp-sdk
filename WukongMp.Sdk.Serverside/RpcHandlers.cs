@@ -65,16 +65,4 @@ internal partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandle
             }
         });
     }
-
-    partial void OnMovieFinished(RpcContext context, int sequenceId, AreaId areaId)
-    {
-        ecs.Query<MovieComponent, AreaScopeComponent>((ref movie, ref area) =>
-        {
-            if (areaId == area.AreaId)
-            {
-                movie.AddFinishedSequences(sequenceId);
-                logger.LogDebug("Marked movie {Id} as finished in area {AreaId}", sequenceId, areaId);
-            }
-        });
-    }
 }
