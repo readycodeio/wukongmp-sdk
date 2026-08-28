@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using b1;
+using Friflo.Engine.ECS;
 using Friflo.Engine.ECS.Systems;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Client.State;
@@ -30,6 +31,33 @@ internal sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter r
             ref tamerComp,
             ref localTamerComp, entity) =>
         {
+            // The spawn path below is the only place that loads HpMaxBase, and PatchHp only refreshes HP on an
+            // actual HP change, so a monster that is already active and has never been hit keeps Hp = 0 and
+            // HpMaxBase = 0 in ECS. Either being missing is enough to need the repair: HP scaling reads both, and
+            // a populated HpMaxBase next to Hp = 0 is what makes a scaled boss show up at half health. Everyone who does not own it maps HpComponent the other way, so those zeroes
+            // reach their local pawn's attributes and it dies to the first hit. Only the owner can repair this.
+            if (localTamerComp is { IsTamerSynced: true, IsMonsterActive: true }
+                && (hpComp.HpMaxBase <= 0 || hpComp.Hp <= 0)
+                && DI.Instance.ClientOwnership.OwnsEntity(entity))
+            {
+                var activePawn = new TamerEntity(entity).Tamer?.GetMonster();
+
+                if (activePawn != null && !BGUFunctionLibraryCS.BGUHasUnitState(activePawn, EBGUUnitState.Dead))
+                {
+                    var activeAttrs = BGU_DataUtil.GetReadOnlyData<BUC_AttrContainer>(activePawn);
+
+                    if (activeAttrs != null)
+                    {
+                        LoadHpFromGame(entity, activeAttrs);
+
+                        if (hpComp.HpMaxBase > 0)
+                        {
+                            Logging.LogDebug("Reloaded HP of active monster {Guid}: {Hp}/{HpMaxBase}.", tamerComp.Guid, hpComp.Hp, hpComp.HpMaxBase);
+                        }
+                    }
+                }
+            }
+
             // FIXME: Are some of those flags supposed to be removed now that all monsters are in ECS (including the
             // ones spawned in PVP?)
             if ((localTamerComp.IsMonsterActive && !hpComp.IsDead) || !tamerComp.ForceKeepSpawned)
@@ -76,13 +104,8 @@ internal sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter r
 
             if (attrs != null)
             {
-                if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(entity, out var loader))
-                {
-                    loader.LoadFromGame(HpComponent.Fields.HpMaxMulPercent.In<BUC_AttrContainer>(), attrs);
-                    loader.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), attrs);
-                    loader.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), attrs);
-                }
-                
+                LoadHpFromGame(entity, attrs);
+
                 if (DI.Instance.ClientOwnership.OwnsEntity(entity))
                 {
                     if (configuration.SyncTamerTeamFromGameToEcs)
@@ -134,5 +157,19 @@ internal sealed class SpawnTamersSystem(ClientState state, GameplayEventRouter r
 
             Logging.LogDebug("Monster {Guid} synced", tamerComp.Guid);
         });
+    }
+
+    /// <summary>
+    /// Copies the pawn's real HP into ECS. This is a no-op for anyone who does not own the entity, since the
+    /// ownership policy maps <see cref="HpComponent"/> from ECS to the game for them instead.
+    /// </summary>
+    private static void LoadHpFromGame(Entity entity, BUC_AttrContainer attrs)
+    {
+        if (!DI.Instance.MappedField.CanLoadFromGame<HpComponent>(entity, out var loader))
+            return;
+
+        loader.LoadFromGame(HpComponent.Fields.HpMaxMulPercent.In<BUC_AttrContainer>(), attrs);
+        loader.LoadFromGame(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(), attrs);
+        loader.LoadFromGame(HpComponent.Fields.Hp.In<BUC_AttrContainer>(), attrs);
     }
 }

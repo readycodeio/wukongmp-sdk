@@ -12,7 +12,7 @@ internal struct LocalTamerComponent : IComponent
     
     public MontageStateData MontageState;
 
-    // Has the game spawned monster for this tamer (refers to the local game state)
+    /// Has the game spawned monster for this tamer (refers to the local game state)
     public bool IsLocallySpawned;
     public bool HasPendingUnload;
     public bool IsCheckedForDead;

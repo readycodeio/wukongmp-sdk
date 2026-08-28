@@ -8,6 +8,11 @@ namespace WukongMp.Sdk.Api.Implementation;
 /// <summary>
 /// Provides references for core entity archetypes in WukongMP.
 /// </summary>
+/// <remarks>
+/// Ids are positional: they are handed out in the order archetypes are registered, and the client and the relay
+/// server have to agree. Ids 2 and 3 belong to the cell and world archetypes, which Wukong does not use but still
+/// registers on both sides so that everything after them lines up. Do not close the gap.
+/// </remarks>
 public class WukongArchetypes
 {
     /// Global player entity archetype.
@@ -36,7 +41,7 @@ public class WukongArchetypes
     /// * <see cref="AnimationComponent"/><br/>
     /// * <see cref="MonsterAnimationComponent"/>
     /// </summary>
-    public ArchetypeId TamerArchetype => new ArchetypeId(3);
+    public ArchetypeId TamerArchetype => new ArchetypeId(4);
 
     /// <summary>
     /// Area-scoped main character entity archetype.
@@ -48,7 +53,7 @@ public class WukongArchetypes
     /// * <see cref="TeamComponent"/><br/>
     /// * <see cref="PvPComponent"/><br/>
     /// </summary>
-    public ArchetypeId MainCharacterArchetype => new ArchetypeId(4);
+    public ArchetypeId MainCharacterArchetype => new ArchetypeId(5);
 
     /// <summary>
     /// Global PvP state entity archetype. Used by the PvP mod.
@@ -56,5 +61,5 @@ public class WukongArchetypes
     /// * <see cref="PvpStateComponent"/>
     /// </summary>
     [Obsolete("Will be moved to the PvP mod in future refactoring.")]
-    public ArchetypeId PvpStateArchetype => new ArchetypeId(5);
+    public ArchetypeId PvpStateArchetype => new ArchetypeId(6);
 }

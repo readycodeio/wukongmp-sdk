@@ -112,18 +112,22 @@ namespace WukongMp.Api.WukongUtils
 
         public static void AddSpawnedUnitRefCount(TamerEntity tamerEntity, PlayerId playerId)
         {
-            ref var tamerComp = ref tamerEntity.GetTamer();
-            var metaComp = tamerEntity.GetMeta();
-            Logging.LogDebug("Adding spawned unit counter for tamer with guid: {Guid} (NetId {NetId}) for player {Player}", tamerComp.Guid, metaComp.NetId, playerId);
-            tamerComp.AddHoldingPlayers(playerId);
+            if (DI.Instance.MappedField.CanSetFromApi<TamerComponent>(tamerEntity.Entity, out _))
+            {
+                ref var tamerComp = ref tamerEntity.GetTamer();
+                Logging.LogDebug("Adding spawned unit counter for tamer with guid: {Guid} for player {Player}", tamerComp.Guid, playerId);
+                tamerComp.AddHoldingPlayers(playerId);
+            }
         }
 
         public static void SubtractSpawnedUnitRefCount(TamerEntity tamerEntity, PlayerId playerId)
         {
-            var metaComp = tamerEntity.GetMeta();
-            ref var tamerComp = ref tamerEntity.GetTamer();
-            Logging.LogDebug("Subtracting spawned unit counter for tamer with guid: {Guid} (NetId {NetId}) for player {Player}", tamerComp.Guid, metaComp.NetId, playerId);
-            SubtractSpawnedUnitRefCount(ref tamerComp, playerId);
+            if (DI.Instance.MappedField.CanSetFromApi<TamerComponent>(tamerEntity.Entity, out _))
+            {
+                ref var tamerComp = ref tamerEntity.GetTamer();
+                Logging.LogDebug("Subtracting spawned unit counter for tamer with guid: {Guid} for player {Player}", tamerComp.Guid, playerId);
+                SubtractSpawnedUnitRefCount(ref tamerComp, playerId);
+            }
         }
 
         public static void SubtractSpawnedUnitRefCount(ref TamerComponent tamerComp, PlayerId playerId)

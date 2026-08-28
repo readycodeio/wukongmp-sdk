@@ -381,9 +381,13 @@ internal class PatchOnUnitDead
 
                 localState.DeadAnimationTime = 6f; // Value from game.
 
-                if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(entity.Value, out var load))
+
+                if (DeadReason != EDeadReason.OnlyDestroyUnit)
                 {
-                    load.SetFromGame(HpComponent.Fields.IsDead, true);
+                    if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(entity.Value, out var load))
+                    {
+                        load.SetFromGame(HpComponent.Fields.IsDead, true);
+                    }
                 }
 
                 // TODO: Check required before call to this
@@ -397,10 +401,16 @@ internal class PatchOnUnitDead
 
         if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(ownerCharacter, out var tamerEntity))
         {
+            // OnlyDestroyUnit means the game is tearing the monster instance down, not killing it,
+            // which is what happens when a tamer unloads at distance.
+            if (DeadReason == EDeadReason.OnlyDestroyUnit)
+                return;
+
             if (DI.Instance.MappedField.CanLoadFromGame<HpComponent>(tamerEntity.Value, out var load))
             {
                 load.SetFromGame(HpComponent.Fields.IsDead, true);
             }
+
             var payload = new UnitDeadEvent(tamerEntity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(payload, tamerEntity.Value.Entity);
             DI.Instance.GameplayEventRouter.RaiseOnUnitDead(tamerEntity.Value, attackerEntity);

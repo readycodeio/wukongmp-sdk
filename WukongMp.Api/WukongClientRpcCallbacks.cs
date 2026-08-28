@@ -1013,9 +1013,7 @@ internal partial class WukongClientRpcCallbacks(
         }, this, netId);
     }
 
-    // TODO: Find a better way to synchronize this event. If it's sent in entity owner mode, the server may not have the entity's data yet.
-    // NOTE(api): Changed from AreaOfInterestAll
-    [RpcEvent(RelayMode.AreaOfInterestOthers)]
+    [RpcEvent(RelayMode.EntityOwner)]
     private void OnUnitSpawned(PlayerId __sender, NetworkId netId)
     {
         scheduleSystem.Scheduler.Schedule(static (_, self, sender, netId0) =>
@@ -1037,10 +1035,6 @@ internal partial class WukongClientRpcCallbacks(
     {
         scheduleSystem.Scheduler.Schedule(static (_, self, sender, netId0) =>
         {
-            // NOTE: There's an extra check so that we don't send this to ourselves
-            if (sender == self._playerState.LocalPlayerId)
-                return;
-
             self._logger.LogDebug("OnUnitDespawn called for player {PlayerId} with entity {NetId}", sender, netId0);
 
             if (!self._netEntity.TryGetEntityByNetworkId(netId0, out var entity))

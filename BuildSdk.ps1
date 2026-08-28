@@ -29,12 +29,14 @@ if (-not (Test-Path $outputRoot))
 
 New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
 
-# 4. Build combined file list across variants
+# 4. Build combined file list across variants. The client mod goes to Output/mods/WukongMp.Sdk,
+# the server mod to Output/server_mods, mirroring the layout a server drop expects.
 $allFiles = @()
 foreach ($p in $Mods)
 {
     $lists = Get-ModFiles -Mod $p -Configuration $Configuration
     $allFiles += $lists.Mod
+    $allFiles += if ($Configuration -eq "Debug") { $lists.ServerDev } else { $lists.Server }
 }
 
 # Append PDB files in Debug configuration

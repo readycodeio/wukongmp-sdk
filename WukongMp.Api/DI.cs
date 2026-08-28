@@ -179,11 +179,20 @@ internal sealed class DI : IDependencyContainer
         Container.Register<IPlayerComponentRegistration, WukongPlayerRegistration>();
         Container.Register<IPlayerComponentRegistry, PlayerComponentRegistry>();
 
+        // Wukong contributes no world-scoped components, but the registry is still needed so the world
+        // archetype below can be registered.
+        Container.Register<IWorldComponentRegistry, WorldComponentRegistry>();
+
         // TODO: the ArchetypeId on client and server are only in sync because the order of registration is the same
         // This is fragile and should be fixed
+        //
+        // Wukong has neither cells nor world scope, but both archetypes are registered anyway: the relay server
+        // registers them unconditionally, and an archetype the client skips shifts the id of every archetype after
+        // it, so the client would ask the server for the wrong one.
         Container.RegisterMany<DefaultAreaArchetypeRegistration>(nonPublicServiceTypes: true);
         Container.RegisterMany<DefaultPlayerArchetypeRegistration>(nonPublicServiceTypes: true);
         Container.RegisterMany<DefaultCellArchetypeRegistration>(nonPublicServiceTypes: true);
+        Container.RegisterMany<DefaultWorldArchetypeRegistration>(nonPublicServiceTypes: true);
         Container.RegisterMany<ClientWukongArchetypeRegistration>(nonPublicServiceTypes: true);
 
         Container.Register<INetworkedComponentRegistration, DefaultNetworkedComponentRegistration>();
@@ -405,7 +414,7 @@ internal sealed class DI : IDependencyContainer
         }
     }
 
-    private void RegisterDataMappings(ComponentFieldMappingRegistry fieldMappingRegistry)
+    private void RegisterDataMappings(IComponentFieldMappingRegistryConfig fieldMappingRegistry)
     {
         fieldMappingRegistry.Register(MainCharacterComponent.Fields.Velocity.In<BUC_ABPCharacterData>(),
             (ctx, vec) =>
@@ -501,17 +510,20 @@ internal sealed class DI : IDependencyContainer
             });
 
         fieldMappingRegistry.Register(HpComponent.Fields.Hp.In<BUC_AttrContainer>(),
-            (ctx, value) =>
+            (ctx, hp) =>
             {
-                if (value <= -80000)
+                if (hp.Hp <= -80000)
                 {
-                    Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", value);
+                    Logging.LogError("Would set HP to {HP} but will not (OOB fall damage)", hp.Hp);
                     return;
                 }
 
-                if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
+                if (hp is { Hp: <= 0, IsDead: false })
+                    return;
+
+                if (!hp.Hp.Equals(ctx.GetFloatValue(EBGUAttrFloat.Hp), Constants.FloatComparisonTolerance))
                 {
-                    ctx.SetFloatValue(EBGUAttrFloat.Hp, value);
+                    ctx.SetFloatValue(EBGUAttrFloat.Hp, hp.Hp);
                 }
             },
             (ref hp, ctx) =>
@@ -526,6 +538,8 @@ internal sealed class DI : IDependencyContainer
         fieldMappingRegistry.Register(HpComponent.Fields.HpMaxBase.In<BUC_AttrContainer>(),
             (ctx, value) =>
             {
+                if (value <= 0) return;
+
                 if (!value.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxBase), Constants.FloatComparisonTolerance))
                 {
                     Logging.LogDebug("Setting HpMaxBase to {HpMaxBase}", value);
@@ -543,11 +557,15 @@ internal sealed class DI : IDependencyContainer
             (ctx, value) =>
             {
                 var floatVal = value * 100f - 10_000f; // WUkong sets these as (10_000 + X)/10_000, so 0 is 100% and 10_000 is 200%
-                if (!floatVal.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxMul), Constants.FloatComparisonTolerance))
-                {
-                    Logging.LogDebug("Setting HpMaxMul to {HpMaxMulPercent}%", value);
-                    ctx.SetFloatValue(EBGUAttrFloat.HpMaxMul, floatVal);
-                }
+                if (floatVal.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxMul), Constants.FloatComparisonTolerance))
+                    return;
+                
+                var previousMax = ctx.GetFloatValue(EBGUAttrFloat.HpMax);
+                var fraction = previousMax > 0f ? ctx.GetFloatValue(EBGUAttrFloat.Hp) / previousMax : 1f;
+
+                Logging.LogDebug("Setting HpMaxMul to {HpMaxMulPercent}% (keeping {Fraction:P0} of max)", value, fraction);
+                ctx.SetFloatValue(EBGUAttrFloat.HpMaxMul, floatVal);
+                ctx.SetFloatValue(EBGUAttrFloat.Hp, ctx.GetFloatValue(EBGUAttrFloat.HpMax) * fraction);
             },
             ctx =>
             {
