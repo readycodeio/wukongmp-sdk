@@ -557,11 +557,15 @@ internal sealed class DI : IDependencyContainer
             (ctx, value) =>
             {
                 var floatVal = value * 100f - 10_000f; // WUkong sets these as (10_000 + X)/10_000, so 0 is 100% and 10_000 is 200%
-                if (!floatVal.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxMul), Constants.FloatComparisonTolerance))
-                {
-                    Logging.LogDebug("Setting HpMaxMul to {HpMaxMulPercent}%", value);
-                    ctx.SetFloatValue(EBGUAttrFloat.HpMaxMul, floatVal);
-                }
+                if (floatVal.Equals(ctx.GetFloatValue(EBGUAttrFloat.HpMaxMul), Constants.FloatComparisonTolerance))
+                    return;
+                
+                var previousMax = ctx.GetFloatValue(EBGUAttrFloat.HpMax);
+                var fraction = previousMax > 0f ? ctx.GetFloatValue(EBGUAttrFloat.Hp) / previousMax : 1f;
+
+                Logging.LogDebug("Setting HpMaxMul to {HpMaxMulPercent}% (keeping {Fraction:P0} of max)", value, fraction);
+                ctx.SetFloatValue(EBGUAttrFloat.HpMaxMul, floatVal);
+                ctx.SetFloatValue(EBGUAttrFloat.Hp, ctx.GetFloatValue(EBGUAttrFloat.HpMax) * fraction);
             },
             ctx =>
             {
