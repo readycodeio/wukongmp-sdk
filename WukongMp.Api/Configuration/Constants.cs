@@ -21,6 +21,9 @@ internal static class Constants
     public const float SpawnOwnershipRadius = 7500f; // 75m
     public const float BaseMarkerHeightCoefficient = 0.12f;
     public const float MaxMarkerHeightDistance = 10000f;
+    public const int YinTigerChallengeSequenceId = 31100101;
+    public const int YinTigerChallengeFailedSequenceId = 31100103;
+    public const int YinTigerChallengeWinAgainSequenceId = 31100104;
 
     public const string SupremeInspectorFirewallName = "BP_szlc_wanglingguan_mf_hq";
     public static readonly FVector SupremeInspectorFirewallLocation = new(107491.700, 92122.520, 15129.590);

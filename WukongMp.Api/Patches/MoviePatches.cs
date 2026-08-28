@@ -138,12 +138,6 @@ internal static class PatchRequestPlayMovie
 
             Instance.MovieFinishCallBack = (Action)Delegate.Combine(Instance.MovieFinishCallBack, () =>
             {
-                var areaEntity = DI.Instance.AreaState.CurrentArea;
-                if (areaEntity != null && !areaEntity.Value.GetMovie().ContainsFinishedSequences(SequenceId))
-                {
-                    DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MovieFinishedEvent(SequenceId, areaEntity.Value.Scope.AreaId), default(EmptyContext));
-                }
-
                 var playerState = DI.Instance.PlayerState;
                 if (playerState.LocalMainCharacter.HasValue)
                 {
@@ -218,9 +212,14 @@ internal static class PatchTickForMovieSystem
             var peakRequest = GlobalMovieData.PlayMovieRequestQueue.Peek();
             var mainEntity = playerState.LocalMainCharacter;
             var areaEntity = DI.Instance.AreaState.CurrentArea;
-            var isMovieStartedByOthers = areaEntity != null && areaEntity.Value.GetMovie().ContainsStartedSequences(peakRequest.SequenceID);
 
-            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(DI.Instance.State, DI.Instance.PlayerState, peakRequest.SequenceID) || !peakRequest.bDisablePlayerControl || isMovieStartedByOthers)
+            var isMovieStartedByOthers = areaEntity != null && areaEntity.Value.GetMovie().ContainsStartedSequences(peakRequest.SequenceID);
+            var isRepeatableCutscene = peakRequest.SequenceID
+                is Constants.YinTigerChallengeSequenceId
+                or Constants.YinTigerChallengeFailedSequenceId
+                or Constants.YinTigerChallengeWinAgainSequenceId;
+
+            if (CutsceneUtils.CheckAllPlayersWaitingForCutscene(DI.Instance.State, DI.Instance.PlayerState, peakRequest.SequenceID) || !peakRequest.bDisablePlayerControl || (isMovieStartedByOthers && !isRepeatableCutscene))
             {
                 DI.Instance.WidgetManager.HideInfoMessage();
                 if (mainEntity != null)
@@ -326,7 +325,7 @@ internal static class PatchOnSkipCurrentCameraMovie
         var sequenceId = movieData.CameraMovieInstance?.SequenceId ?? 0;
 
         var areaEntity = DI.Instance.AreaState.CurrentArea;
-        if (areaEntity != null && areaEntity.Value.GetMovie().ContainsStartedSequences(sequenceId) && !areaEntity.Value.GetMovie().ContainsFinishedSequences(sequenceId))
+        if (areaEntity != null && areaEntity.Value.GetMovie().ContainsStartedSequences(sequenceId))
         {
             Logging.LogDebug("Sending skip movie for sequence with sequenceId {Id}", sequenceId);
             DI.Instance.MappedEvent.NotifyEcsIfApplicable(new SkipMovieEvent(sequenceId), default(EmptyContext));
