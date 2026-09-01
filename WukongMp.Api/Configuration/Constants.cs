@@ -8,6 +8,7 @@ namespace WukongMp.Api.Configuration;
 internal static class Constants
 {
     public const int ToleratedLatencyMs = 50;
+    public const int SeverePacketLossPercent = 5;
     public const float FloatComparisonTolerance = 0.1f;
     public const float MonsterSpawnSpread = 200f;
     public const float CameraArmLength = 720;

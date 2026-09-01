@@ -1,4 +1,4 @@
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer;
 using ReadyM.Api.Multiplayer.ECS.Components;
@@ -12,11 +12,6 @@ namespace WukongMp.Sdk.Serverside;
 [ServerRpcFor(typeof(SdkRpcContracts))]
 internal partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandlersBase
 {
-    partial void OnPing(RpcContext context, long timestamp)
-    {
-        SendPing(context.Sender, timestamp);
-    }
-
     private readonly Dictionary<int, HashSet<PlayerId>> _skipMovieRequests = new();
 
     partial void OnSkipMovie(RpcContext context, int sequenceId)

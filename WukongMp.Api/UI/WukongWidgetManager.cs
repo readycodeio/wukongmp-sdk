@@ -124,16 +124,18 @@ internal sealed class WukongWidgetManager(
         _debugViewWidget.Value.SetPlayerPosition(playerName, gameLocation, ecsLocation);
     }
 
-    public void UpdatePingIndicator(long pingMs)
+    public void UpdatePingIndicator(long pingMs, int packetLossPercent)
     {
         _pingIndicatorWidget.Value.SetPingValue(pingMs);
-        _pingIndicatorWidget.Value.HideInfoText();
-    }
 
-    public void SetPacketLossWarning()
-    {
-        _pingIndicatorWidget.Value.SetPingValue(999);
-        _pingIndicatorWidget.Value.SetInfoText(BuiltinTexts.SeverePacketLossDetected);
+        if (packetLossPercent >= WukongMp.Api.Configuration.Constants.SeverePacketLossPercent)
+        {
+            _pingIndicatorWidget.Value.SetInfoText(BuiltinTexts.SeverePacketLossDetected);
+        }
+        else
+        {
+            _pingIndicatorWidget.Value.HideInfoText();
+        }
     }
 
     private void OnFreeCameraModeChanged(bool enabled)
