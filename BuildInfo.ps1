@@ -1,12 +1,13 @@
-#!powershell.exe -ExecutionPolicy Bypass -File
+﻿#!powershell.exe -ExecutionPolicy Bypass -File
 
 # Static metadata
 $solutionName = "WukongMP.SDK"
 $zipName = "WukongMp"
 
 # Shared (variant-agnostic) file name lists
+$manifestFiles = @("manifest.json")
+
 $modFilesCore = @(
-    "manifest.json"
     "BouncyCastle.Cryptography.dll"
     "DryIoc.dll"
     "Friflo.Engine.ECS.Boost.dll"
@@ -50,9 +51,8 @@ $modFilesDebugCore = @(
     "Friflo.Engine.ECS.Boost.pdb"
 )
 
-# Copied into server_mods. Server mods have no folder of their own, every file sits next to
-# the mods' own server files, so only ship what the SDK owns. Everything else these assemblies
-# need (ReadyM.Api, Friflo, Yooni, the relay server SDK) is already part of the server host.
+# Copied into the mod's server folder. Everything else these assemblies need (ReadyM.Api, Friflo,
+# Yooni, the relay server SDK) is already part of the server host.
 $serverModFilesCore = @(
     "WukongMp.Sdk.Serverside.dll"
     "ReadyM.Wukong.Common.dll"
@@ -85,7 +85,10 @@ function Get-ModFiles
 {
     param(
         [Parameter(Mandatory = $true)][string]$Mod,
-        [Parameter(Mandatory = $true)][string]$Configuration
+        [Parameter(Mandatory = $true)][string]$Configuration,
+        # Package: mods/<mod>/{client,server} plus the manifest at the mod root, what a server drop expects.
+        # Flat: client files and the manifest together, what the game's Mods folder and the client ZIP expect.
+        [ValidateSet('Package', 'Flat')][string]$Layout = 'Package'
     )
 
     # Compute *per-variant* paths
@@ -95,19 +98,21 @@ function Get-ModFiles
     $binariesSourceDir = "Deployment"
 
     $modDestDir = "mods/WukongMp.$Mod"
-    $serverModDestDir = "server_mods"
+    $clientModDestDir = if ($Layout -eq 'Package') { "$modDestDir/client" } else { $modDestDir }
+    $serverModDestDir = "$modDestDir/server"
     $reflectionOnlyDestDir = "mods/ReflectionOnly"
     $overridesDestDir = "mods/Overrides"
 
     # Compose the triplets: @( <files>, <sourceDir>, <destDir> )
     $modFiles = @(
-        @($modFilesCore, $modSourceDir, $modDestDir),
-        @($cultureFolders, $modSourceDir, $modDestDir),
-        @($binaryFiles, $binariesSourceDir, $modDestDir)
+        @($manifestFiles, $modSourceDir, $modDestDir),
+        @($modFilesCore, $modSourceDir, $clientModDestDir),
+        @($cultureFolders, $modSourceDir, $clientModDestDir),
+        @($binaryFiles, $binariesSourceDir, $clientModDestDir)
     )
 
     $devFiles = $modFiles + @(
-        @($modFilesDebugCore, $modSourceDir, $modDestDir),
+        @($modFilesDebugCore, $modSourceDir, $clientModDestDir),
         @($reflectionOnlyFiles, $reflectionOnlySourceDir, $reflectionOnlyDestDir)
     )
 

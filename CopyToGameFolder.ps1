@@ -1,4 +1,4 @@
-#!powershell.exe -ExecutionPolicy Bypass -File
+﻿#!powershell.exe -ExecutionPolicy Bypass -File
 param (
     [string] $Configuration,
     [string] $Mode
@@ -23,7 +23,7 @@ $destRoot = Join-Path $env:APPDATA "ReadyM.Launcher/WukongMP/CSharpLoader"
 $allDevFiles = @()
 foreach ($p in $Mods)
 {
-    $lists = Get-ModFiles -Mod $p -Configuration $Configuration
+    $lists = Get-ModFiles -Mod $p -Configuration $Configuration -Layout Flat
     $allDevFiles += $lists.Dev
 }
 

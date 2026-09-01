@@ -1,4 +1,4 @@
-#!powershell.exe -ExecutionPolicy Bypass -File
+﻿#!powershell.exe -ExecutionPolicy Bypass -File
 param (
     [string] $Configuration
 )
@@ -29,8 +29,8 @@ if (-not (Test-Path $outputRoot))
 
 New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
 
-# 4. Build combined file list across variants. The client mod goes to Output/mods/WukongMp.Sdk,
-# the server mod to Output/server_mods, mirroring the layout a server drop expects.
+# 4. Build combined file list across variants. Everything lands in Output/mods/WukongMp.Sdk as a
+# mod package: client files under client/, server files under server/, manifest at the root.
 $allFiles = @()
 foreach ($p in $Mods)
 {
@@ -43,8 +43,8 @@ foreach ($p in $Mods)
 if ($Configuration -eq "Debug")
 {
     $allFiles += @(
-        @(@("WukongMp.Api.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "mods/WukongMp.Sdk"),
-        @(@("WukongMp.Sdk.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "mods/WukongMp.Sdk")
+        @(@("WukongMp.Api.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "mods/WukongMp.Sdk/client"),
+        @(@("WukongMp.Sdk.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "mods/WukongMp.Sdk/client")
     )
 }
 

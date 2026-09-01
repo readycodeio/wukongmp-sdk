@@ -16,9 +16,9 @@
     <Import Project="$(ParentBuildProps)" Condition="'$(ParentBuildProps)' != ''" />
 
     <PropertyGroup>
-        <FileVersion>0.3.1</FileVersion>
-        <Version>0.3.1</Version>
-        <InformationalVersion>0.3.1</InformationalVersion>
+        <FileVersion>0.4.0</FileVersion>
+        <Version>0.4.0</Version>
+        <InformationalVersion>0.4.0</InformationalVersion>
     </PropertyGroup>
     <PropertyGroup Condition="'$(UseBuildTimestamp)' == 'true'">
         <!-- Number of days since Dec 17, 2024 -->
@@ -28,7 +28,7 @@
         <!-- Date and time concatenated into one always-increasing build number, e.g. 6041416.
              HHmm is zero padded, so the concatenation keeps increasing across midnight. -->
         <BuildTimestamp>$(BuildValue)$(RevisionValue)</BuildTimestamp>
-        <InformationalVersion>0.3.1.$(BuildTimestamp)</InformationalVersion>
+        <InformationalVersion>0.4.0.$(BuildTimestamp)</InformationalVersion>
     </PropertyGroup>
     <PropertyGroup>
         <GenerateAssemblyInfo>true</GenerateAssemblyInfo>

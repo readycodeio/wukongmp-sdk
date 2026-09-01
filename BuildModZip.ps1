@@ -1,4 +1,4 @@
-#!powershell.exe -ExecutionPolicy Bypass -File
+﻿#!powershell.exe -ExecutionPolicy Bypass -File
 param (
     [string] $Mode,
     [string] $Configuration
@@ -67,7 +67,7 @@ New-Item -ItemType Directory -Path $destRoot -Force | Out-Null
 $allFiles = @()
 foreach ($p in $Mods)
 {
-    $lists = Get-ModFiles -Mod $p -Configuration $Configuration
+    $lists = Get-ModFiles -Mod $p -Configuration $Configuration -Layout Flat
     $allFiles += $lists.Mod
 }
 

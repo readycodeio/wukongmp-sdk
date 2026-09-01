@@ -1,4 +1,4 @@
-#!powershell.exe -ExecutionPolicy Bypass -File
+﻿#!powershell.exe -ExecutionPolicy Bypass -File
 
 <#
     Builds the WukongMP SDK NuGet packages.
@@ -18,7 +18,7 @@
     that list is generated from the projects whose assemblies each package ships rather than
     maintained by hand.
 
-      -PackageVersion      override the version, e.g. 0.3.1-preview.1
+      -PackageVersion      override the version, e.g. 0.4.0-preview.1
       -SyncDependencies    regenerate the dependency lists in the packaging projects
       -CheckDependencies   fail if a list has drifted, without changing anything
 #>
