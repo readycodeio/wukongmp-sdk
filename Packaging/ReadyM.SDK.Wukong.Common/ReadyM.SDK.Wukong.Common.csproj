@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <!--
         The shared surface, for a mod's common project: component types, RPC contracts and
@@ -39,7 +39,6 @@
         <SdkPackageAssembly Include="ReadyM.Api.Multiplayer" />
         <SdkPackageAssembly Include="Friflo.Engine.ECS" />
         <SdkPackageAssembly Include="Friflo.Engine.ECS.Boost" />
-        <SdkPackageAssembly Include="LiteNetLib" />
         <SdkPackageAssembly Include="Yooni.Native.Container" />
         <SdkPackageAssembly Include="Yooni.Native.LowLevel" />
         <SdkPackageAssembly Include="Yooni.Native.Serialization" />
@@ -53,6 +52,7 @@
         <PackageReference Include="Friflo.Json.Fliox" Version="1.0.4" />
         <PackageReference Include="Friflo.Json.Fliox.Annotation" Version="1.0.4" />
         <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
+        <PackageReference Include="LiteNetLib" Version="1.3.5" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
         <PackageReference Include="Superpower" Version="3.1.0" />
@@ -67,6 +67,7 @@
         <PackageReference Include="Friflo.Json.Fliox" Version="1.0.4" />
         <PackageReference Include="Friflo.Json.Fliox.Annotation" Version="1.0.4" />
         <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
+        <PackageReference Include="LiteNetLib" Version="1.3.5" />
         <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
         <PackageReference Include="Superpower" Version="3.1.0" />

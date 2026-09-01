@@ -68,8 +68,7 @@ $reflectionOnlyFiles = @("*")
 $overridesFilesDebug = @(
     "System.Text.Encodings.Web.pdb",
     "System.Text.Json.pdb",
-    "System.Numerics.Vectors.pdb",
-    "LiteNetLib.pdb"
+    "System.Numerics.Vectors.pdb"
 )
 
 $binaryFiles = @(

@@ -53,7 +53,6 @@ $sharedProjects = @(
     "$coreSdk\YooniCSharp\Native\Serialization\Yooni.Native.Serialization.csproj"
     "$coreSdk\Friflo.Engine.ECS\src\ECS\Friflo.Engine.ECS.csproj"
     "$coreSdk\Friflo.Engine.ECS\src\ECS.Boost\Friflo.Engine.ECS.Boost.csproj"
-    "$coreSdk\LiteNetLib\LiteNetLib\LiteNetLib.csproj"
 )
 
 # Packed in this order: Common first, so a feed is never left with a client or server
@@ -96,7 +95,7 @@ foreach ($p in $packages)
     $p.Project = Join-Path $packagingDir "$($p.Name)\$($p.Name).csproj"
 }
 
-# The forks multi-target below net10.0, so ask them about the framework they actually build.
+# Friflo multi-targets below net10.0, so ask it about the framework it actually builds.
 $forkTfm = @{ 'net10.0' = 'net8.0' }
 
 function Test-Excluded([string] $id)
@@ -104,7 +103,7 @@ function Test-Excluded([string] $id)
     if ($id -like 'Microsoft.CodeAnalysis*') { return $true }   # the generator's own, compiler supplied
     if ($id -like 'Microsoft.SourceLink*') { return $true }     # build time only
     if ($id -in @('Nullable', 'PolySharp')) { return $true }    # source only
-    if ($id -in @('Friflo.Engine.ECS', 'Friflo.Engine.ECS.Boost', 'LiteNetLib')) { return $true }  # bundled
+    if ($id -in @('Friflo.Engine.ECS', 'Friflo.Engine.ECS.Boost')) { return $true }  # bundled
     # our own assemblies are bundled, except the game reference assemblies
     if ($id -like 'ReadyM.*' -and $id -ne 'ReadyM.Wukong.GameRefs') { return $true }
     return $false
@@ -129,7 +128,7 @@ function Get-BucketDependencies([string] $tfm, [array] $projects)
         }
 
         $ask = $tfm
-        if ($proj -match 'Friflo\.Engine\.ECS|LiteNetLib' -and $forkTfm.ContainsKey($tfm))
+        if ($proj -match 'Friflo\.Engine\.ECS' -and $forkTfm.ContainsKey($tfm))
         {
             $ask = $forkTfm[$tfm]
         }
