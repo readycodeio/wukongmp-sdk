@@ -21,16 +21,11 @@ internal class WukongNetworkedComponentRegistration : INetworkedComponentRegistr
 
         // Main character (area-scoped)
         registry.RegisterComponent<MainCharacterComponent>();
-        registry.RegisterComponent<PvPComponent>(DeliveryMethod.ReliableOrdered); // TODO: Move to PvP mod (server-side)
 
         // Area (global, scope)
-        registry.RegisterComponent<RoomComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<MovieComponent>(DeliveryMethod.ReliableOrdered);
 
         // Player (global, scope)
         registry.RegisterComponent<PlayerComponent>(DeliveryMethod.ReliableOrdered);
-
-        // PvP State (global)
-        registry.RegisterComponent<PvpStateComponent>(DeliveryMethod.ReliableOrdered); // TODO: Move to PvP mod (server-side)
     }
 }

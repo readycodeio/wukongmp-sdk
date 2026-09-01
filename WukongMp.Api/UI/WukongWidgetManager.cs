@@ -219,8 +219,7 @@ internal sealed class WukongWidgetManager(
             _debugViewWidget.Value.AddPlayer(playerEntity.Value.GetState().Nickname.ToString());
         }
 
-        AreaEntity joinedAreaEntity = new(areaEntity);
-        var chatEnabled = joinedAreaEntity.GetRoom().ChatEnabled;
+        var chatEnabled = true; // TODO: Make this a setting
         _chatWidget.Value.SetWritingEnabled(chatEnabled);
         Logging.LogInformation("Chat enabled: {ChatEnabled}", chatEnabled);
     }

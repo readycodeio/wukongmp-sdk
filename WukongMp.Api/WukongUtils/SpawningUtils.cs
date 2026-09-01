@@ -25,7 +25,6 @@ internal static class SpawningUtils
         var mainComp = mainEntity.GetState();
         var hpComp = mainEntity.GetHp();
         var transComp = mainEntity.GetTransform();
-        var pvpComp = mainEntity.GetPvP();
         ref readonly var teamComp = ref mainEntity.GetTeam();
 
         var playerId = mainComp.PlayerId;
@@ -141,7 +140,6 @@ internal static class SpawningUtils
         Logging.LogDebug("Setting initial Nickname to {Nickname}", mainEntity.GetNickname().Nickname);
 
         // NOTE: Player properties already set in ECS. Therefore the following can be removed
-        Logging.LogDebug("Setting initial IsReadyForPvP to {IsReady}", pvpComp.IsReadyForPvP);
         Logging.LogDebug("Setting initial IsSpectator to {IsSpectator}", mainComp.IsSpectator);
 
         // FIXME: (refactor) Equipment should be synced on the actor here

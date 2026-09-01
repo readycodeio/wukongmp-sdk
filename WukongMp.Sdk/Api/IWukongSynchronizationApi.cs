@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using b1;
+using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
-using WukongMp.Sdk.Api.Implementation;
 using WukongMp.Sdk.Entities;
 using Constants = WukongMp.Api.Configuration.Constants;
 
@@ -25,6 +25,11 @@ public interface IWukongSynchronizationApi
     /// <param name="callback">The callback to invoke with the disconnect reason.</param>
     void GetDisconnectReasonAndInvoke(Action<DisconnectedReason> callback);
 
+    /// <summary>
+    /// Gets a reference to a component on the global entity.
+    /// </summary>
+    ref T GetGlobalComponent<T>() where T : struct, IComponent;
+    
     /// <summary>
     /// Gets a value indicating whether the player is in an area.
     /// </summary>

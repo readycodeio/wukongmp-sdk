@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Numerics;
 using b1;
 using Friflo.Engine.ECS;
@@ -9,6 +10,7 @@ using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Multiplayer.Client;
+using ReadyM.Api.Multiplayer.ECS.Archetypes;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Relay.Client.State;
@@ -43,10 +45,18 @@ internal sealed class WukongSynchronizationApi(
 
     public void GetDisconnectReasonAndInvoke(Action<DisconnectedReason> callback)
     {
-        relayClient.Scheduler.Schedule((ctx, call) =>
+        relayClient.Scheduler.Schedule((ctx, call) => { call(ctx.LastDisconnectedReason); }, callback);
+    }
+
+    public ref T GetGlobalComponent<T>() where T : struct, IComponent
+    {
+        var entity = DI.Instance.World.Query<MetadataComponent, T>().Entities.ToEntityList().SingleOrDefault();
+        if (entity.IsNull)
         {
-            call(ctx.LastDisconnectedReason);
-        }, callback);
+            throw new InvalidOperationException("World entity not found.");
+        }
+
+        return ref entity.GetComponent<T>();
     }
 
     public bool InArea
@@ -69,7 +79,7 @@ internal sealed class WukongSynchronizationApi(
 
     public IReadOnlyList<PlayerId> AllPlayers
         => state.AllPlayers;
-    
+
     public IReadOnlyList<PlayerId> AreaPlayers
         => state.AreaPlayers;
 

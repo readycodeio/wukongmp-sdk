@@ -11,10 +11,7 @@ namespace WukongMp.Api.Command;
 internal class WukongCommandConsole : IDisposable
 {
     private readonly ConsoleCommandMatcher _matcher;
-    private readonly WukongAreaState _areaState;
     private readonly WukongPlayerState _playerState;
-    private readonly WukongEventBus _eventBus;
-    private readonly WukongChatter _chatter;
     private readonly WukongWidgetManager _widgetManager;
 
     private bool UseDebugCommands
@@ -26,28 +23,18 @@ internal class WukongCommandConsole : IDisposable
 
     public WukongCommandConsole(
         ConsoleCommandMatcher matcher,
-        WukongAreaState areaState,
         WukongPlayerState playerState,
-        WukongEventBus eventBus,
-        WukongChatter chatter,
         WukongWidgetManager widgetManager)
     {
         Logging.LogDebug("Initializing WukongCommandConsole");
 
         _matcher = matcher;
-        _areaState = areaState;
         _playerState = playerState;
-        _eventBus = eventBus;
-        _chatter = chatter;
         _widgetManager = widgetManager;
-
-        _eventBus.OnLoadingScreenClose += OnLoadingScreenClose;
     }
 
     public void Dispose()
     {
-        _eventBus.OnLoadingScreenClose -= OnLoadingScreenClose;
-
         Logging.LogDebug("Disposing WukongCommandConsole");
     }
 
@@ -69,11 +56,6 @@ internal class WukongCommandConsole : IDisposable
     {
         var translatedMessage = string.Format(BuiltinTexts.ResourceManager.GetString(message, BuiltinTexts.Culture)!, [.. placeholders]);
         _widgetManager.AddMessageToConsole(translatedMessage);
-    }
-
-    public void Clear()
-    {
-        // TODO
     }
 
     private void AddLocalizedCommandError(CommandError error)
@@ -150,12 +132,4 @@ internal class WukongCommandConsole : IDisposable
 
     public List<string> GetAvailableFirstParams(string commandName)
         => _matcher.Registry.GetCommandAvailableFirstParams(commandName);
-
-    private void OnLoadingScreenClose()
-    {
-        if (_eventBus.IsGameplayLevel && _areaState.CurrentArea.HasValue && _areaState.CurrentArea.Value.Room.CheatsAllowed)
-        {
-            _chatter.AddLocalServerMessage("CheatsEnabled");
-        }
-    }
 }

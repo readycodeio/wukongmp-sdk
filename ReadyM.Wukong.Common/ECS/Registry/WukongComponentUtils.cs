@@ -29,10 +29,5 @@ internal static class WukongComponentUtils
                 HpMaxMulPercent = 100,
             })
             .Add<TransformComponent>()
-            .Add<TeamComponent>()
-            .Add<PvPComponent>();
-
-    public static ArchetypeBuilder GetServerPvpStateArchetype()
-        => new ArchetypeBuilder()
-            .Add(new PvpStateComponent());
+            .Add<TeamComponent>();
 }
