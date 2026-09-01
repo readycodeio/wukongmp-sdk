@@ -1,6 +1,7 @@
 ﻿#!powershell.exe -ExecutionPolicy Bypass -File
 param (
-    [string] $Configuration
+    [string] $Configuration,
+    [switch] $NoExplorer
 )
 
 $Mods = @('Sdk')
@@ -68,7 +69,11 @@ foreach ($item in $allFiles)
 }
 
 # 6. Open explorer to the output directory
-if ($PSVersionTable.PSEdition -eq 'Core')
+if ($NoExplorer)
+{
+    # nothing to open, this run is scripted
+}
+elseif ($PSVersionTable.PSEdition -eq 'Core')
 {
     Start-Process "explorer.exe" -ArgumentList $outputRoot
 }
