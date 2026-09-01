@@ -59,6 +59,18 @@ internal sealed class WukongSynchronizationApi(
         return ref entity.GetComponent<T>();
     }
 
+    public bool TryGetGlobalComponent<T>(out T value) where T : struct, IComponent
+    {
+        foreach (var entity in DI.Instance.World.Query<MetadataComponent, T>().Entities)
+        {
+            value = entity.GetComponent<T>();
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
+
     public bool InArea
         => areaState.InRoom;
 

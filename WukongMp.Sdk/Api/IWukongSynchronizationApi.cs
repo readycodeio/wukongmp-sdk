@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
@@ -26,9 +26,16 @@ public interface IWukongSynchronizationApi
     void GetDisconnectReasonAndInvoke(Action<DisconnectedReason> callback);
 
     /// <summary>
-    /// Gets a reference to a component on the global entity.
+    /// Gets a reference to a component on the global entity. Throws if there is no global entity, which is
+    /// the case whenever the client is not in an area.
     /// </summary>
     ref T GetGlobalComponent<T>() where T : struct, IComponent;
+
+    /// <summary>
+    /// Copies a component off the global entity, returning false if there is no global entity. Safe to call
+    /// from a system, which keeps ticking after a disconnect.
+    /// </summary>
+    bool TryGetGlobalComponent<T>(out T value) where T : struct, IComponent;
     
     /// <summary>
     /// Gets a value indicating whether the player is in an area.

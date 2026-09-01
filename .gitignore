@@ -1,4 +1,4 @@
-bin/
+﻿bin/
 obj/
 /packages/
 riderModule.iml
@@ -12,3 +12,7 @@ Mods/
 build.log
 Output/
 OblivionMp
+
+# Full game assemblies for local development. See Directory.Build.props in the workspace for the switch.
+/WukongMp.Api/Game/*
+!/WukongMp.Api/Game/.gitkeep

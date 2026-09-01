@@ -12,6 +12,7 @@ using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.FreeCamera;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.UI;
 
@@ -170,6 +171,8 @@ internal sealed class WukongWidgetManager(
 
     private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectedReason reason)
     {
+        HideOverlappingBanners();
+
         _infoMessageWidget.Value.SetVisibility(true);
         _lastDisconnectText = reason switch
         {
@@ -186,6 +189,14 @@ internal sealed class WukongWidgetManager(
             _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, null)
         };
         _infoMessageWidget.Value.SetText(_lastDisconnectText);
+    }
+
+    /// The disconnect message occupies the same part of the screen as these.
+    private void HideOverlappingBanners()
+    {
+        UiUtils.HideTip();
+        _freeCameraMessageWidget.Value.SetVisibility(false);
+        _timerWidget.Value.SetVisibility(false);
     }
 
     private void OnConnected(PlayerId playerId, Entity entity)
