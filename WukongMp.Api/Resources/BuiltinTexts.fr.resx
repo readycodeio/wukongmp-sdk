@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -285,12 +285,6 @@
   </data>
   <data name="ConnectionRejectedByServer" xml:space="preserve">
     <value>Connexion refusée par le serveur</value>
-  </data>
-  <data name="CheatsEnabled" xml:space="preserve">
-    <value>Triches activées</value>
-  </data>
-  <data name="CheatsDisabled" xml:space="preserve">
-    <value>Triches désactivées</value>
   </data>
   <data name="CheatsAreDisabled" xml:space="preserve">
     <value>Les triches sont désactivées</value>

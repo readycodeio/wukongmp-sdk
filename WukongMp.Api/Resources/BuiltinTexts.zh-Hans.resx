@@ -276,12 +276,6 @@
   <data name="SoftlockDetected" xml:space="preserve">
     <value>软锁。使用 /softlock 命令可以重新生成所有角色。</value>
   </data>
-  <data name="CheatsEnabled" xml:space="preserve">
-    <value>作弊功能已启用</value>
-  </data>
-  <data name="CheatsDisabled" xml:space="preserve">
-    <value>作弊功能已禁用</value>
-  </data>
   <data name="CheatsAreDisabled" xml:space="preserve">
     <value>作弊功能目前已禁用</value>
   </data>

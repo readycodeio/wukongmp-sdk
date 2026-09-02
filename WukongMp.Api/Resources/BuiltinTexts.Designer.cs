@@ -222,24 +222,6 @@ namespace WukongMp.Api.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cheats disabled.
-        /// </summary>
-        public static string CheatsDisabled {
-            get {
-                return ResourceManager.GetString("CheatsDisabled", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cheats enabled.
-        /// </summary>
-        public static string CheatsEnabled {
-            get {
-                return ResourceManager.GetString("CheatsEnabled", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to ENTER - Type   |   F1 - Hide/Show.
         /// </summary>
         public static string CommandHelperDescription {

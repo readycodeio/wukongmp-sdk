@@ -8,9 +8,6 @@ namespace ReadyM.Wukong.Common.Rpc;
 public static partial class SdkRpcContracts
 {
     [ClientToServer]
-    public static partial void EnableCheats(AreaId area, bool enabled);
-
-    [ClientToServer]
     public static partial void SkipMovie(int sequenceId);
 
     [ServerToClient]
