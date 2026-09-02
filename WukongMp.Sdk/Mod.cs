@@ -24,6 +24,7 @@ using WukongMp.Api;
 using WukongMp.Api.NameCompressors;
 using WukongMp.Api.Patches;
 using WukongMp.Api.Shim;
+using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk.Api;
 
@@ -68,6 +69,10 @@ internal class Mod : ModBase
 
         DI.Instance.Init();
         WukongApi.RegisterApis();
+
+        RegisterConfig<SdkSettings>();
+        var settings = services.Resolve<SdkSettings>();
+        services.RegisterSingleton<IChatSettings>(settings);
 
         // Start the relay client
 //         if (LaunchParameters.Instance.PlayShimOnStart)
@@ -216,7 +221,7 @@ internal class Mod : ModBase
         var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Server);
 
         var manifests = new List<(string Id, byte Count, PropertyInfo Offset)>();
-        
+
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(x => x.FullName))
         {
             var manifest = assembly
@@ -235,10 +240,10 @@ internal class Mod : ModBase
                 Logger.LogError("Assembly {Assembly} has ServerRpcManifest but is missing expected members - possible generator version mismatch.", assembly.GetName().Name);
                 continue;
             }
-            
+
             manifests.Add(((string)idField.GetValue(null)!, (byte)totalCountField.GetValue(null)!, offsetProperty));
         }
-        
+
         // Ordered by the manifest's stable Id, never by load order: the server assigns offsets the
         // same way, so both sides agree on the wire codes even if they load mods in a different order.
         foreach (var (id, count, offsetProperty) in manifests.OrderBy(x => x.Id, StringComparer.Ordinal))

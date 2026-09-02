@@ -6,6 +6,7 @@ $zipName = "WukongMp"
 
 # Shared (variant-agnostic) file name lists
 $manifestFiles = @("manifest.json")
+$contentFiles = @("config.json")
 
 $modFilesCore = @(
     "BouncyCastle.Cryptography.dll"
@@ -89,6 +90,7 @@ function Get-ModFiles
 
     # Compute *per-variant* paths
     $modSourceDir = "WukongMp.$Mod/bin/$Configuration/netstandard2.0"
+    $contentSourceDir = "WukongMp.$Mod/Content"
     $serverModSourceDir = "WukongMp.$Mod.Serverside/bin/$Configuration/net10.0"
     $reflectionOnlySourceDir = "WukongMp.Api/Game"
     $binariesSourceDir = "Deployment"
@@ -101,7 +103,8 @@ function Get-ModFiles
 
     # Compose the triplets: @( <files>, <sourceDir>, <destDir> )
     $modFiles = @(
-        @($manifestFiles, $modSourceDir, $modDestDir),
+        @($manifestFiles, $contentSourceDir, $modDestDir),
+        @($contentFiles, $contentSourceDir, $clientModDestDir),
         @($modFilesCore, $modSourceDir, $clientModDestDir),
         @($binaryFiles, $binariesSourceDir, $clientModDestDir)
     )

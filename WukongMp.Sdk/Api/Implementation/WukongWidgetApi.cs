@@ -6,6 +6,9 @@ namespace WukongMp.Sdk.Api.Implementation;
 internal sealed class WukongWidgetApi(WukongWidgetManager widgetManager) : IWukongWidgetApi
 {
     public void ToggleCommandVisibility()
+        => widgetManager.ToggleCommandVisibility();
+
+    public void ToggleChatVisibility() 
         => widgetManager.ToggleChatVisibility();
 
     public void AddMessageToConsole(string message)

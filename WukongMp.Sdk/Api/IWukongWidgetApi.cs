@@ -9,6 +9,11 @@ public interface IWukongWidgetApi
     /// Toggles the visibility of the command console.
     /// </summary>
     void ToggleCommandVisibility();
+    
+    /// <summary>
+    /// Toggles the visibility of the in-game chat.
+    /// </summary>
+    void ToggleChatVisibility();
 
     /// <summary>
     /// Adds a message to the in-game console.

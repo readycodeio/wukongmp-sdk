@@ -21,7 +21,8 @@ internal sealed class WukongWidgetManager(
     WukongPlayerState playerState,
     IRelayClient relayClient,
     WukongEventBus eventBus,
-    FreeCameraManager freeCameraManager
+    FreeCameraManager freeCameraManager,
+    IChatSettings chatSettings
 ) : IHostedService
 {
     private string _lastDisconnectText = BuiltinTexts.Disconnected;
@@ -232,9 +233,8 @@ internal sealed class WukongWidgetManager(
             _debugViewWidget.Value.AddPlayer(playerEntity.Value.GetState().Nickname.ToString());
         }
 
-        var chatEnabled = true; // TODO: Make this a setting
-        _chatWidget.Value.SetWritingEnabled(chatEnabled);
-        Logging.LogInformation("Chat enabled: {ChatEnabled}", chatEnabled);
+        _chatWidget.Value.SetWritingEnabled(chatSettings.ChatEnabled);
+        Logging.LogInformation("Chat enabled: {ChatEnabled}", chatSettings.ChatEnabled);
     }
 
     private void OnLeftArea(AreaId arg1, Entity arg2)
