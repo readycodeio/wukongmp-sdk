@@ -22,13 +22,18 @@ Write-Output "Building solution $solutionPath in configuration $Configuration...
 dotnet build $solutionPath -c $Configuration
 
 # 3. Prepare temporary output directory
+#
+# Emptied first, the same way the mods' MakeModFolder.ps1 does it. Copying into a kept folder leaves
+# artifacts from earlier builds behind, and whatever deploys from here cannot tell them apart.
 $outputRoot = Join-Path $scriptDir 'Output'
-if (-not (Test-Path $outputRoot))
+if (Test-Path $outputRoot)
+{
+    Get-ChildItem $outputRoot -Recurse | Remove-Item -Force -Recurse
+}
+else
 {
     New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
 }
-
-New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
 
 # 4. Build combined file list across variants. Everything lands in Output/mods/WukongMp.Sdk as a
 # mod package: client files under client/, server files under server/, manifest at the root.

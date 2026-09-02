@@ -117,12 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="BlueTeam" xml:space="preserve">
-    <value>Équipe Bleue</value>
-  </data>
-  <data name="BotName" xml:space="preserve">
-    <value>Bot</value>
-  </data>
   <data name="CameraDownControls" xml:space="preserve">
     <value>Q</value>
   </data>
@@ -159,18 +153,6 @@
   <data name="Connected" xml:space="preserve">
     <value>Joueurs dans la zone</value>
   </data>
-  <data name="InMultiplayer" xml:space="preserve">
-    <value>Dans le Lobby Multijoueur</value>
-  </data>
-  <data name="InvalidUnitName" xml:space="preserve">
-    <value>Nom d’unité invalide : {0}</value>
-  </data>
-  <data name="InvalidUnitsCount" xml:space="preserve">
-    <value>Nombre d’unités invalide : {0}</value>
-  </data>
-  <data name="More" xml:space="preserve">
-    <value>plus</value>
-  </data>
   <data name="Ping" xml:space="preserve">
     <value>Ping</value>
   </data>
@@ -180,77 +162,11 @@
   <data name="PlayerGaveUp" xml:space="preserve">
     <value>{0} a abandonné</value>
   </data>
-  <data name="PlayerIsNotReady" xml:space="preserve">
-    <value>{0} n'est pas prêt</value>
-  </data>
-  <data name="PlayerIsReady" xml:space="preserve">
-    <value>{0} est prêt</value>
-  </data>
-  <data name="PlayerJoined" xml:space="preserve">
-    <value>{0} a rejoint !</value>
-  </data>
-  <data name="PlayerKilledPlayer" xml:space="preserve">
-    <value>{0} a tué {1}</value>
-  </data>
   <data name="PlayerLeft" xml:space="preserve">
     <value>{0} est parti !</value>
   </data>
   <data name="PlayerRequestedRebirth" xml:space="preserve">
     <value>{0} a demandé une renaissance</value>
-  </data>
-  <data name="PlayerSpawned" xml:space="preserve">
-    <value>{0} a fait apparaître {1} {2}</value>
-  </data>
-  <data name="PressToBeNotReady" xml:space="preserve">
-    <value>Appuyez sur J pour ne pas être prêt</value>
-  </data>
-  <data name="PressToBeReady" xml:space="preserve">
-    <value>Appuyez sur J pour être prêt</value>
-  </data>
-  <data name="PressToCancelMatch" xml:space="preserve">
-    <value>Appuyez sur I pour annuler le match</value>
-  </data>
-  <data name="PressToPlayWithBots" xml:space="preserve">
-    <value>Appuyez sur I pour jouer avec des bots</value>
-  </data>
-  <data name="PressToSwitchTeam" xml:space="preserve">
-    <value>Appuyez sur L pour changer d'équipe</value>
-  </data>
-  <data name="Ready" xml:space="preserve">
-    <value>Prêt</value>
-  </data>
-  <data name="RedTeam" xml:space="preserve">
-    <value>Équipe Rouge</value>
-  </data>
-  <data name="RoundCount" xml:space="preserve">
-    <value>Manche {0} sur {1}</value>
-  </data>
-  <data name="RoundDraw" xml:space="preserve">
-    <value>Manche terminée. Égalité</value>
-  </data>
-  <data name="RoundEndedWinner" xml:space="preserve">
-    <value>Manche terminée. {0} a gagné</value>
-  </data>
-  <data name="Spectators" xml:space="preserve">
-    <value>Spectateurs</value>
-  </data>
-  <data name="StartingGame" xml:space="preserve">
-    <value>Démarrage du match PvP</value>
-  </data>
-  <data name="TournamentDraw" xml:space="preserve">
-    <value>Égalité</value>
-  </data>
-  <data name="TournamentEndedWinner" xml:space="preserve">
-    <value>Vainqueur : {0}</value>
-  </data>
-  <data name="WaitForEnd" xml:space="preserve">
-    <value>Attendez la fin du match</value>
-  </data>
-  <data name="YouAreReady" xml:space="preserve">
-    <value>Vous êtes prêt</value>
-  </data>
-  <data name="InvalidCommand" xml:space="preserve">
-    <value>Commande invalide : {0}</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="JoinOtherPlayersToProceed" xml:space="preserve">
@@ -274,68 +190,14 @@
   <data name="CameraSwitchControls" xml:space="preserve">
     <value>←/→</value>
   </data>
-  <data name="MasterClient" xml:space="preserve">
-    <value>Client maître : {0}</value>
-  </data>
-  <data name="AntiStallWarning" xml:space="preserve">
-    <value>À l’attaque !</value>
-  </data>
-  <data name="StallingMessage" xml:space="preserve">
-    <value>Inactivité – perte de HP</value>
-  </data>
   <data name="ConnectionRejectedByServer" xml:space="preserve">
     <value>Connexion refusée par le serveur</value>
-  </data>
-  <data name="CheatsAreDisabled" xml:space="preserve">
-    <value>Les triches sont désactivées</value>
-  </data>
-  <data name="PlayerCooldown" xml:space="preserve">
-    <value>{0} a réglé le multiplicateur de temps de recharge sur {1}</value>
-  </data>
-  <data name="InfVesselEnabled" xml:space="preserve">
-    <value>{0} a activé l'énergie de réceptacle infinie</value>
-  </data>
-  <data name="InfVesselDisabled" xml:space="preserve">
-    <value>{0} a désactivé l'énergie de réceptacle infinie</value>
-  </data>
-  <data name="InfSpiritEnabled" xml:space="preserve">
-    <value>{0} a activé l'énergie d'esprit infinie</value>
-  </data>
-  <data name="InfSpiritDisabled" xml:space="preserve">
-    <value>{0} a désactivé l'énergie d'esprit infinie</value>
-  </data>
-  <data name="InfManaDisabled" xml:space="preserve">
-    <value>{0} a désactivé le mana infini</value>
-  </data>
-  <data name="InfManaEnabled" xml:space="preserve">
-    <value>{0} a activé le mana infini</value>
-  </data>
-  <data name="InstantCooldownEnabled" xml:space="preserve">
-    <value>{0} a activé le temps de recharge instantané des compétences</value>
-  </data>
-  <data name="InstantCooldownDisabled" xml:space="preserve">
-    <value>{0} a désactivé le temps de recharge instantané des compétences</value>
-  </data>
-  <data name="InvalidCooldown" xml:space="preserve">
-    <value>Valeur de temps de recharge invalide</value>
-  </data>
-  <data name="CustomSpiritCooldown" xml:space="preserve">
-    <value>{0} a réglé le temps de recharge de l'esprit sur {1} s</value>
-  </data>
-  <data name="InfTransformDisabled" xml:space="preserve">
-    <value>{0} a désactivé l'énergie de transformation infinie</value>
-  </data>
-  <data name="InfTransformEnabled" xml:space="preserve">
-    <value>{0} a activé l'énergie de transformation infinie</value>
   </data>
   <data name="Disconnected" xml:space="preserve">
     <value>Déconnecté</value>
   </data>
   <data name="SeverePacketLossDetected" xml:space="preserve">
     <value>Perte de paquets importante détectée !</value>
-  </data>
-  <data name="SoftlockDetected" xml:space="preserve">
-    <value>Blocage. Utilisez la commande /softlock pour réapparaître</value>
   </data>
   <data name="ExecutionError" xml:space="preserve">
     <value>Erreur d'exécution : {0}</value>
@@ -378,5 +240,17 @@
   </data>
   <data name="ServerFull" xml:space="preserve">
     <value>Le serveur est plein, réessayez plus tard.</value>
+  </data>
+  <data name="CommandArgumentTypeInteger" xml:space="preserve">
+    <value>nombre entier</value>
+  </data>
+  <data name="CommandArgumentTypeNumber" xml:space="preserve">
+    <value>nombre</value>
+  </data>
+  <data name="CommandArgumentTypeText" xml:space="preserve">
+    <value>texte</value>
+  </data>
+  <data name="CommandArgumentTypeBoolean" xml:space="preserve">
+    <value>vrai ou faux</value>
   </data>
 </root>

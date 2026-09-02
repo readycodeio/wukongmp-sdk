@@ -157,8 +157,15 @@ internal class PatchSetCurrentCulture
             _ => Culture
         };
         Logging.LogInformation("Culture changed to: {Culture}", normalizedCulture);
-        BuiltinTexts.Culture = new CultureInfo(normalizedCulture);
-        DI.Instance.GameplayEventRouter.RaiseOnLanguageChanged(BuiltinTexts.Culture);
+        var culture = new CultureInfo(normalizedCulture);
+
+        // SDK and mod resources are generated code that reads CurrentUICulture, and they are read
+        // from the game, network and ECS threads. Threads that already exist keep their own value,
+        // so set the process-wide default for new ones and this thread explicitly.
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        CultureInfo.CurrentUICulture = culture;
+
+        DI.Instance.GameplayEventRouter.RaiseOnLanguageChanged(culture);
     }
 }
 

@@ -52,10 +52,9 @@ internal class WukongCommandConsole : IDisposable
         _widgetManager.AddMessageToConsole(message);
     }
 
-    public void AddLocalizedMessage(string message, params string[] placeholders)
+    private void AddFormattedMessage(string template, params string[] placeholders)
     {
-        var translatedMessage = string.Format(BuiltinTexts.ResourceManager.GetString(message, BuiltinTexts.Culture)!, [.. placeholders]);
-        _widgetManager.AddMessageToConsole(translatedMessage);
+        _widgetManager.AddMessageToConsole(string.Format(template, [.. placeholders]));
     }
 
     private void AddLocalizedCommandError(CommandError error)
@@ -63,33 +62,51 @@ internal class WukongCommandConsole : IDisposable
         switch (error)
         {
             case CommandError.InvalidCommandFormat(var input, _):
-                AddLocalizedMessage(nameof(CommandError.InvalidCommandFormat), input);
+                AddFormattedMessage(BuiltinTexts.InvalidCommandFormat, input);
                 break;
             case CommandError.InvalidArgumentFormat(var input, var argIndex, var position):
-                AddLocalizedMessage(nameof(CommandError.InvalidArgumentFormat), input, argIndex.ToString(), position.ToString());
+                AddFormattedMessage(BuiltinTexts.InvalidArgumentFormat, input, argIndex.ToString(), position.ToString());
                 break;
             case CommandError.UnrecognizedCommand(var commandName):
-                AddLocalizedMessage(nameof(CommandError.UnrecognizedCommand), commandName);
+                AddFormattedMessage(BuiltinTexts.UnrecognizedCommand, commandName);
                 break;
             case CommandError.TooFewArguments(var minCount, var actual):
-                AddLocalizedMessage(nameof(CommandError.TooFewArguments), minCount.ToString(), actual.ToString());
+                AddFormattedMessage(BuiltinTexts.TooFewArguments, minCount.ToString(), actual.ToString());
                 break;
             case CommandError.TooManyArguments(var maxCount, var actual):
-                AddLocalizedMessage(nameof(CommandError.TooManyArguments), maxCount.ToString(), actual.ToString());
+                AddFormattedMessage(BuiltinTexts.TooManyArguments, maxCount.ToString(), actual.ToString());
                 break;
             case CommandError.InvalidArgumentType(var argIndex, var expectedType, var actualType):
-            {
-                var expectedTypeName = BuiltinTexts.ResourceManager.GetString($"CommandArgumentType.{expectedType.Name}", BuiltinTexts.Culture)!;
-                var actualTypeName = BuiltinTexts.ResourceManager.GetString($"CommandArgumentType.{actualType.Name}", BuiltinTexts.Culture)!;
-                AddLocalizedMessage(nameof(CommandError.InvalidArgumentType), argIndex.ToString(), expectedTypeName, actualTypeName);
+                AddFormattedMessage(BuiltinTexts.InvalidArgumentType, argIndex.ToString(),
+                    ArgumentTypeName(expectedType), ArgumentTypeName(actualType));
                 break;
-            }
             case CommandError.ExecutionError(var exception):
-                AddLocalizedMessage(nameof(CommandError.ExecutionError), exception.Message);
+                AddFormattedMessage(BuiltinTexts.ExecutionError, exception.Message);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
+    }
+
+    /// <summary>
+    /// A reader-friendly name for a command argument type. Falls back to the CLR name, so a mod
+    /// declaring a parameter type we have no wording for still gets a usable message.
+    /// </summary>
+    private static string ArgumentTypeName(Type type)
+    {
+        if (type == typeof(int))
+            return BuiltinTexts.CommandArgumentTypeInteger;
+
+        if (type == typeof(float) || type == typeof(double) || type == typeof(decimal))
+            return BuiltinTexts.CommandArgumentTypeNumber;
+
+        if (type == typeof(string) || type == typeof(Ident))
+            return BuiltinTexts.CommandArgumentTypeText;
+
+        if (type == typeof(bool))
+            return BuiltinTexts.CommandArgumentTypeBoolean;
+
+        return type.Name;
     }
 
     private bool TryExecuteCommand(string message)

@@ -77,9 +77,6 @@ $binaryFiles = @(
     "WukongMp.pak"
 )
 
-# Culture folders (satellite assemblies)
-$cultureFolders = @("de", "es", "fr", "pl", "pt", "zh-Hans")
-
 function Get-ModFiles
 {
     param(
@@ -106,7 +103,6 @@ function Get-ModFiles
     $modFiles = @(
         @($manifestFiles, $modSourceDir, $modDestDir),
         @($modFilesCore, $modSourceDir, $clientModDestDir),
-        @($cultureFolders, $modSourceDir, $clientModDestDir),
         @($binaryFiles, $binariesSourceDir, $clientModDestDir)
     )
 

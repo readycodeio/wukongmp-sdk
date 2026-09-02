@@ -73,35 +73,37 @@
         <ProjectReference Include="..\ReadyM.Wukong.Common\ReadyM.Wukong.Common.csproj" />
     </ItemGroup>
 
+    <!--
+        Every language is inlined into the assembly, so the SDK ships no satellite assemblies and
+        there is no checked-in Designer.cs. Resolution is by CultureInfo.CurrentUICulture, which
+        PatchSetCurrentCulture sets from the game's language setting.
+    -->
+    <PropertyGroup>
+        <ResXGenerator_GenerationType>CodeGeneration</ResXGenerator_GenerationType>
+        <ResXGenerator_PublicClass>true</ResXGenerator_PublicClass>
+        <!-- So BuiltinTexts.ByName.cs can add GetByName to the generated class. -->
+        <ResXGenerator_PartialClass>true</ResXGenerator_PartialClass>
+        <ResXGenerator_NullForgivingOperators>true</ResXGenerator_NullForgivingOperators>
+    </PropertyGroup>
+
     <ItemGroup>
-        <Compile Update="Resources\BuiltinTexts.Designer.cs">
-            <DesignTime>True</DesignTime>
-            <AutoGen>True</AutoGen>
-            <DependentUpon>BuiltinTexts.resx</DependentUpon>
-        </Compile>
+        <PackageReference Include="Aigamo.ResXGenerator" Version="4.4.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Update="Resources\BuiltinTexts.resx">
-            <Generator>ResXFileCodeGenerator</Generator>
-            <LastGenOutput>BuiltinTexts.Designer.cs</LastGenOutput>
+        <EmbeddedResource Update="@(EmbeddedResource)">
+            <GenerateResource>false</GenerateResource>
         </EmbeddedResource>
     </ItemGroup>
 
-    <ItemGroup>
-        <Compile Update="Resources\BuiltinTexts.Designer.cs">
-            <DesignTime>True</DesignTime>
-            <AutoGen>True</AutoGen>
-            <DependentUpon>BuiltinTexts.resx</DependentUpon>
-        </Compile>
-    </ItemGroup>
-
-    <ItemGroup>
-        <EmbeddedResource Update="Resources\BuiltinTexts.resx">
-            <Generator>PublicResXFileCodeGenerator</Generator>
-            <LastGenOutput>BuiltinTexts.Designer.cs</LastGenOutput>
-        </EmbeddedResource>
-    </ItemGroup>
+    <Target Name="PreventMSB3030" DependsOnTargets="ComputeIntermediateSatelliteAssemblies" BeforeTargets="GenerateSatelliteAssemblies">
+        <ItemGroup>
+            <IntermediateSatelliteAssembliesWithTargetPath Remove="@(IntermediateSatelliteAssembliesWithTargetPath)"/>
+        </ItemGroup>
+    </Target>
 
 
     <ItemGroup>

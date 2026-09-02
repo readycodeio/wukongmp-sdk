@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <!--
         The client surface, for the mod that runs inside the game.
@@ -39,7 +39,6 @@
     <ItemGroup>
         <SdkPackageAssembly Include="WukongMp.Sdk" />
         <SdkPackageAssembly Include="WukongMp.Api" />
-        <SdkPackageAssembly Include="WukongMp.Api.resources" />
         <SdkPackageAssembly Include="ReadyM.Relay.Client" />
     </ItemGroup>
 
