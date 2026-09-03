@@ -41,8 +41,14 @@ $allFiles = @()
 foreach ($p in $Mods)
 {
     $lists = Get-ModFiles -Mod $p -Configuration $Configuration
+
+    # Pick the key, not the value: an `if` that returns a one-element collection unwraps it on the
+    # output stream, and `+=` then splices that triplet's members in as separate entries. The Server
+    # set holds exactly one triplet, so that only ever went wrong outside Debug.
+    $serverSet = if ($Configuration -eq "Debug") { "ServerDev" } else { "Server" }
+
     $allFiles += $lists.Mod
-    $allFiles += if ($Configuration -eq "Debug") { $lists.ServerDev } else { $lists.Server }
+    $allFiles += $lists.$serverSet
 }
 
 # Append PDB files in Debug configuration
