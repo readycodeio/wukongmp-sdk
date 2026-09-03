@@ -39,6 +39,7 @@
         <SdkPackageAssembly Include="ReadyM.Api.Multiplayer" />
         <SdkPackageAssembly Include="Friflo.Engine.ECS" />
         <SdkPackageAssembly Include="Friflo.Engine.ECS.Boost" />
+        <SdkPackageAssembly Include="Yooni.Native.Logging" />
         <SdkPackageAssembly Include="Yooni.Native.Container" />
         <SdkPackageAssembly Include="Yooni.Native.LowLevel" />
         <SdkPackageAssembly Include="Yooni.Native.Serialization" />

@@ -48,6 +48,7 @@ $sharedProjects = @(
     "$PSScriptRoot\ReadyM.Wukong.Common\ReadyM.Wukong.Common.csproj"
     "$coreSdk\ReadyM.Api\ReadyM.Api.csproj"
     "$coreSdk\ReadyM.Api.Multiplayer\ReadyM.Api.Multiplayer.csproj"
+    "$coreSdk\YooniCSharp\Native\Logging\Yooni.Native.Logging.csproj"
     "$coreSdk\YooniCSharp\Native\Container\Yooni.Native.Container.csproj"
     "$coreSdk\YooniCSharp\Native\LowLevel\Yooni.Native.LowLevel.csproj"
     "$coreSdk\YooniCSharp\Native\Serialization\Yooni.Native.Serialization.csproj"
@@ -133,7 +134,10 @@ function Get-BucketDependencies([string] $tfm, [array] $projects)
             $ask = $forkTfm[$tfm]
         }
 
-        $raw = & dotnet msbuild $proj -getItem:PackageReference "-p:TargetFramework=$ask" -nologo 2>$null
+        # UseFullGameAssemblies=false always. A checkout that has the real game DLLs in
+        # WukongMp.Api\Game gets its ReadyM.Wukong.GameRefs PackageReference stripped by
+        # Directory.Build.targets, and the published package has to declare that dependency either way.
+        $raw = & dotnet msbuild $proj -getItem:PackageReference "-p:TargetFramework=$ask" -p:UseFullGameAssemblies=false -nologo 2>$null
         if ($LASTEXITCODE -ne 0)
         {
             Write-Error "could not evaluate $proj for $ask"
@@ -231,7 +235,9 @@ if (-not (Test-Path $Output))
     New-Item -ItemType Directory -Force $Output | Out-Null
 }
 
-$packArgs = @()
+# Off here too, not just while syncing: the nuspec's dependency list is read from the project at
+# pack time, so a checkout with the game DLLs present would publish a package missing GameRefs.
+$packArgs = @('-p:UseFullGameAssemblies=false')
 if ($PackageVersion)
 {
     $packArgs += @("-p:PackageVersion=$PackageVersion", "-p:Version=$PackageVersion")
