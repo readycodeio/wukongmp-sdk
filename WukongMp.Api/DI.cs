@@ -188,6 +188,8 @@ internal sealed class DI : IDependencyContainer
         Container.RegisterMany<DefaultCellArchetypeRegistration>(nonPublicServiceTypes: true);
         Container.RegisterMany<DefaultWorldArchetypeRegistration>(nonPublicServiceTypes: true);
         Container.RegisterMany<ClientWukongArchetypeRegistration>(nonPublicServiceTypes: true);
+        
+        Container.Register<ICellComponentRegistry, CellComponentRegistry>();
 
         Container.Register<INetworkedComponentRegistration, DefaultNetworkedComponentRegistration>();
         Container.Register<INetworkedComponentRegistration, WukongNetworkedComponentRegistration>();
