@@ -1,4 +1,4 @@
-# ReadyM.SDK.Wukong.Common
+﻿# ReadyM.SDK.Wukong.Common
 
 Shared types for a [WukongMP](https://readym.io) mod: the ECS components and RPC contracts
 that the two halves of a mod have to agree on, plus the ReadyM source generator that turns
@@ -30,10 +30,12 @@ Add `--prerelease` while the version you want is a preview.
 ## What is in it
 
 The ReadyM core API and multiplayer layer, the Wukong component types, the Yooni native
-container and serialization assemblies, our fork of
-[Friflo.Engine.ECS](https://github.com/friflo/Friflo.Engine.ECS), and
-[LiteNetLib](https://github.com/RevenantX/LiteNetLib). The source generator ships as an
-analyzer, so it runs in every project that references this package.
+container and serialization assemblies, and our fork of
+[Friflo.Engine.ECS](https://github.com/friflo/Friflo.Engine.ECS). The source generator ships as
+an analyzer, so it runs in every project that references this package.
+
+[LiteNetLib](https://github.com/RevenantX/LiteNetLib) comes in as a package dependency rather
+than a bundled assembly.
 
 Multi-targeted on purpose, so a `net10.0` server mod gets the `net10.0` builds rather than
 falling back to `netstandard2.0`.

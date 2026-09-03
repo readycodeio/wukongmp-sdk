@@ -18,7 +18,6 @@ public class WukongArchetypes
     /// Global player entity archetype.
     /// Components:<br/>
     /// * <see cref="AreaScopeComponent"/><br/>
-    /// * <see cref="RoomComponent"/><br/>
     /// * <see cref="MovieComponent"/>
     public ArchetypeId AreaArchetype => new ArchetypeId(0);
 
@@ -29,6 +28,9 @@ public class WukongArchetypes
     /// * <see cref="PlayerComponent"/>
     /// </summary>
     public ArchetypeId GlobalPlayerArchetype => new ArchetypeId(1);
+    
+    /// Global world singleton archetype.
+    public ArchetypeId WorldArchetype => new ArchetypeId(3);
 
     /// <summary>
     /// Area-scoped tamer entity archetype.

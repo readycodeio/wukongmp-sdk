@@ -1,5 +1,6 @@
-using ReadyM.Api.Command;
+﻿using ReadyM.Api.Command;
 using WukongMp.Api.Chat;
+using WukongMp.Api.Resources;
 using WukongMp.Api.State;
 
 namespace WukongMp.Api.Command;
@@ -21,7 +22,7 @@ internal class ConnectionCommandRegistration(
     {
         if (areaState.InRoom)
         {
-            chatter.SendLocalizedServerMessage("PlayerLeft", playerState.Nickname);
+            chatter.SendLocalizedServerMessage(nameof(BuiltinTexts.PlayerLeft), playerState.Nickname);
             connection.Disconnect();
         }
     }

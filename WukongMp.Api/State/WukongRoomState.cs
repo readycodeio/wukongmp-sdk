@@ -1,16 +1,12 @@
-﻿using System;
-using System.Linq;
-using Friflo.Engine.ECS;
+﻿using Friflo.Engine.ECS;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Idents;
-using ReadyM.Api.Multiplayer.ECS.Components;
 using ReadyM.Relay.Client.State;
-using ReadyM.Wukong.Common.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 
 namespace WukongMp.Api.State;
 
-internal class WukongAreaState(ClientState state, Store world, ClientOwnershipManager clientOwnershipManager)
+internal class WukongAreaState(ClientState state, ClientOwnershipManager clientOwnershipManager)
 {
     public bool InRoom
         => state.CurrentAreaId != null;
@@ -44,35 +40,5 @@ internal class WukongAreaState(ClientState state, Store world, ClientOwnershipMa
         set;
     }
 
-    public PvpStateComponent? PvpState
-    {
-        get
-        {
-            if (!CurrentArea.HasValue)
-                PvpStateEntity = null;
-
-            if (!PvpStateEntity.HasValue && CurrentArea.HasValue)
-            {
-                PvpStateEntity = world
-                    .Query<PvpStateComponent>()
-                    .HasValue<InScopeComponent, Entity>(CurrentArea.Value.Entity)
-                    .Entities.FirstOrDefault();
-            }
-
-            return PvpStateEntity?.GetComponent<PvpStateComponent>();
-        }
-    }
-
     public bool OwnsPvpState => PvpStateEntity.HasValue && clientOwnershipManager.OwnsEntity(PvpStateEntity.Value);
-
-    public ref PvpStateComponent OwnedPvpStateRef()
-    {
-        if (!PvpStateEntity.HasValue)
-            throw new InvalidOperationException("No PvP state entity available.");
-
-        if (!clientOwnershipManager.OwnsEntity(PvpStateEntity.Value))
-            throw new InvalidOperationException("Client does not own the PvP state entity.");
-
-        return ref PvpStateEntity.Value.GetComponent<PvpStateComponent>();
-    }
 }

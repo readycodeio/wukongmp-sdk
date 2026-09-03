@@ -115,7 +115,6 @@ internal static class PatchHp
             return true;
 
         var owner = __instance.GetOwner();
-        var localPlayerState = DI.Instance.PlayerState.LocalMainCharacter?.GetLocalState();
         var isLocalPlayer = owner == DI.Instance.PlayerState.LocalMainCharacter?.Pawn;
 
         if (AttrID == EBGUAttrFloat.Hp)
@@ -127,52 +126,6 @@ internal static class PatchHp
             var netId = DI.Instance.PawnState.GetNetworkIdByActor(owner);
             if (netId.HasValue)
                 return DI.Instance.ClientOwnership.OwnsEntity(netId.Value);
-        }
-
-        var cheatsEnabled = DI.Instance.AreaState.CurrentArea.HasValue && DI.Instance.AreaState.CurrentArea.Value.Room.CheatsAllowed;
-        if (cheatsEnabled && localPlayerState.HasValue && isLocalPlayer)
-        {
-            if (AttrID == EBGUAttrFloat.VigorEnergy && localPlayerState.Value.SpiritCooldownEnabled && !localPlayerState.Value.ShouldSetSpiritCooldown)
-            {
-                var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.VigorEnergy);
-                var max = ___AttrContainer.GetFloatValue(EBGUAttrFloat.VigorEnergyMax);
-                if (NewValue.Equals(max, Constants.FloatComparisonTolerance))
-                {
-                    return true;
-                }
-
-                if (NewValue > current)
-                {
-                    return false;
-                }
-            }
-
-            if (AttrID == EBGUAttrFloat.FabaoEnergy && localPlayerState.Value.HasInfiniteVessel)
-            {
-                var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.FabaoEnergy);
-                if (NewValue < current)
-                {
-                    return false;
-                }
-            }
-
-            if (AttrID == EBGUAttrFloat.CurEnergy && localPlayerState.Value.HasInfiniteTransform)
-            {
-                var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.CurEnergy);
-                if (NewValue < current)
-                {
-                    return false;
-                }
-            }
-
-            if (AttrID == EBGUAttrFloat.Mp && localPlayerState.Value.HasInfiniteMana)
-            {
-                var current = ___AttrContainer.GetFloatValue(EBGUAttrFloat.Mp);
-                if (NewValue < current)
-                {
-                    return false;
-                }
-            }
         }
 
         return true;

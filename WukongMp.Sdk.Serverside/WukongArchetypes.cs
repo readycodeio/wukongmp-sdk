@@ -17,7 +17,6 @@ public static class WukongArchetypes
     /// Global player entity archetype.
     /// Components:<br/>
     /// * <see cref="AreaScopeComponent"/><br/>
-    /// * <see cref="RoomComponent"/><br/>
     /// * <see cref="MovieComponent"/>
     public static ArchetypeId AreaArchetype => new ArchetypeId(0);
 
@@ -28,6 +27,9 @@ public static class WukongArchetypes
     /// * <see cref="PlayerComponent"/>
     /// </summary>
     public static ArchetypeId GlobalPlayerArchetype => new ArchetypeId(1);
+    
+    /// Global singleton archetype.
+    public static ArchetypeId WorldArchetype => new ArchetypeId(3);
 
     /// <summary>
     /// Area-scoped tamer entity archetype.
@@ -50,15 +52,6 @@ public static class WukongArchetypes
     /// * <see cref="HpComponent"/><br/>
     /// * <see cref="NicknameComponent"/><br/>
     /// * <see cref="TeamComponent"/><br/>
-    /// * <see cref="PvPComponent"/><br/>
     /// </summary>
     public static ArchetypeId MainCharacterArchetype => new ArchetypeId(5);
-
-    /// <summary>
-    /// Global PvP state entity archetype. Used by the PvP mod.
-    /// Components:<br/>
-    /// * <see cref="PvpStateComponent"/>
-    /// </summary>
-    [Obsolete("Will be moved to the PvP mod in future refactoring.")]
-    public static ArchetypeId PvpStateArchetype => new ArchetypeId(6);
 }

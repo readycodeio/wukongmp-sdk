@@ -38,7 +38,7 @@ internal partial class WukongChatter(
             {
                 if (message.StartsWith("/"))
                 {
-                    AddLocalServerMessage("HintCommandsUse");
+                    AddLocalServerMessage(nameof(BuiltinTexts.HintCommandsUse));
                 }
 
                 SendChatMessage(playerState.LocalPlayerId.Value, NickName, message);
@@ -60,6 +60,7 @@ internal partial class WukongChatter(
         SendChatMessage(ChatMessage.CreateServerMessage(message));
     }
 
+    /// <param name="message">A <see cref="BuiltinTexts" /> resource name, so pass it with nameof.</param>
     public void SendLocalizedServerMessage(string message, params string[] args)
     {
         logger.LogDebug("Sending server message {Message}", message);
@@ -84,9 +85,10 @@ internal partial class WukongChatter(
         }
 
         var translatedMessage = message.Message;
-        if (message.Localized)
+        // An unknown name means a mod version that knows a string we do not, so show it as sent.
+        if (message.Localized && BuiltinTexts.GetByName(message.Message) is { } template)
         {
-            translatedMessage = string.Format(BuiltinTexts.ResourceManager.GetString(message.Message, BuiltinTexts.Culture)!, [.. message.Placeholders]);
+            translatedMessage = string.Format(template, [.. message.Placeholders]);
         }
 
         if (isServer)
@@ -101,9 +103,10 @@ internal partial class WukongChatter(
         logger.LogDebug("Message \"{Message}\" received from \"{Sender}\"", message.Message, isServer ? "Server" : message.Nickname!);
     }
 
+    /// <param name="message">A <see cref="BuiltinTexts" /> resource name, so pass it with nameof.</param>
     public void AddLocalServerMessage(string message, params string[] placeholders)
     {
-        var translatedMessage = string.Format(BuiltinTexts.ResourceManager.GetString(message, BuiltinTexts.Culture)!, [.. placeholders]);
-        widgetManager.AddSystemChatMessage(translatedMessage, Constants.ServerMessageColor);
+        var template = BuiltinTexts.GetByName(message) ?? message;
+        widgetManager.AddSystemChatMessage(string.Format(template, [.. placeholders]), Constants.ServerMessageColor);
     }
 }

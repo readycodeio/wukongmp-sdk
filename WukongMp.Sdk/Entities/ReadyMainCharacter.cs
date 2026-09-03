@@ -69,6 +69,7 @@ public readonly struct ReadyMainCharacter
     public bool IsRespawning => Entity.GetLocalState().IsRespawning;
     public bool IsTransformed => Entity.GetState().IsTransformed;
     public int RebirthPointId => Entity.GetState().RebirthPointId;
+    public SpectatorReason SpectatorReason => Entity.GetState().SpectatorReason;
 
     public string Nickname
     {
@@ -123,5 +124,10 @@ public readonly struct ReadyMainCharacter
     public void EnableInteraction(bool enabled)
     {
         PlayerUtils.SetPlayerInteractionEnabled(Entity, enabled);
+    }
+    
+    public ref T Get<T>() where T : struct, IComponent
+    {
+        return ref Entity.Entity.GetComponent<T>();
     }
 }

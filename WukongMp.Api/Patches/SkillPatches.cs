@@ -47,34 +47,6 @@ internal static class PatchTriggerItemSkill
     }
 }
 
-[HarmonyPatch]
-[HarmonyPatchCategory(PatchCategory.Connected)]
-internal static class PatchDoPoleDrink
-{
-    [HarmonyTargetMethodHint("b1.BUS_PoleDrinkComp", "DoPoleDrink")]
-    private static MethodBase TargetMethod()
-    {
-        return AccessTools.Method("b1.BUS_PoleDrinkComp:DoPoleDrink");
-    }
-
-    public static bool Prefix()
-    {
-        if (!DI.Instance.AreaState.InRoom)
-            return true;
-
-        var areaState = DI.Instance.AreaState;
-
-        // FIXME: We no longer need the `InRoom` check because this is the same as checking isf `areaState.CurrentArea` is not null
-        if (areaState.CurrentArea == null)
-            return true;
-
-        var areaEntity = areaState.CurrentArea;
-        ref var room = ref areaEntity.Value.GetRoom();
-
-        return room.GourdAllowed;
-    }
-}
-
 [HarmonyPatch(typeof(BUS_CastImmobilizeComp), "OnCastImmobilize")]
 [HarmonyPatchCategory(PatchCategory.Connected)]
 internal static class PatchOnCastImmobilize
@@ -295,13 +267,6 @@ internal static class PatchOnTriggerPhantomRush
         var areaEntity = areaState.CurrentArea;
         if (areaEntity == null)
             return true;
-
-        ref var room = ref areaEntity.Value.GetRoom();
-
-        if (!room.PhantomRushAllowed)
-        {
-            return false;
-        }
 
         var owner = __instance.GetOwner();
 

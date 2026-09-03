@@ -17,8 +17,6 @@ public static class WukongApi
         Services.RegisterSingleton<IWukongFileApi, WukongFileApi>();
         Services.RegisterSingleton<IWukongConsoleApi, WukongConsoleApi>();
         Services.RegisterSingleton<IWukongChatApi, WukongChatApi>();
-        Services.RegisterSingleton<IWukongPvpApi, WukongPvpApi>();
-        Services.RegisterSingleton<IWukongCheatsApi, WukongCheatsApi>();
         Services.RegisterSingleton<IWukongEventApi, WukongEventApi>();
         Services.RegisterSingleton<IWukongSynchronizationApi, WukongSynchronizationApi>();
         Services.RegisterSingleton<IWukongLocalApi, WukongLocalApi>();
@@ -46,12 +44,6 @@ public static class WukongApi
 
     /// <inheritdoc cref="IWukongChatApi"/>
     public static IWukongChatApi Chat => Services.Resolve<IWukongChatApi>();
-
-    /// <inheritdoc cref="IWukongPvpApi"/>
-    public static IWukongPvpApi PvP => Services.Resolve<IWukongPvpApi>();
-
-    /// <inheritdoc cref="IWukongCheatsApi"/>
-    public static IWukongCheatsApi Cheats => Services.Resolve<IWukongCheatsApi>();
 
     /// <inheritdoc cref="IWukongFileApi"/>
     public static IWukongFileApi Files => Services.Resolve<IWukongFileApi>();

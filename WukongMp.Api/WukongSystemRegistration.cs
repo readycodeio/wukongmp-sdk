@@ -54,7 +54,6 @@ internal sealed class WukongSystemRegistration(
         new SyncMainCharactersSystem(playerState, modeManager, eventBus, configuration, gameplayEventRouter, mappedField, logger),
         new EnableCollisionAfterCutsceneSystem(playerState),
         new UpdateMarkersSystem(),
-        new UpdateCooldownSystem(playerState, eventBus, areaState),
         new FreeCameraMovementSystem(eventBus, freeCameraManager, freeCameraController),
         new AfterMainCharacterDeathSystem(eventBus, playerState),
         new DebugViewSystem(eventBus, widgetManager)

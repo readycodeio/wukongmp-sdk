@@ -1,6 +1,5 @@
 ﻿using Friflo.Engine.ECS;
 using WukongMp.Sdk.Api;
-using WukongMp.Sdk.Api.Implementation;
 
 namespace WukongMp.Sdk.Entities;
 
@@ -9,7 +8,8 @@ public readonly struct ReadyObject : IReadyEntity<ReadyObject>, IReadyConvertabl
     internal IWukongSynchronizationApi Api { get; }
     internal Entity Entity { get; }
 
-    internal ReadyObject(IWukongSynchronizationApi api, Entity entity)
+    // TODO: Internal
+    public ReadyObject(IWukongSynchronizationApi api, Entity entity)
     {
         Api = api;
         Entity = entity;
@@ -21,5 +21,10 @@ public readonly struct ReadyObject : IReadyEntity<ReadyObject>, IReadyConvertabl
     {
         api = Api;
         entity = Entity;
+    }
+
+    public ref T Get<T>() where T : struct, IComponent
+    {
+        return ref Entity.GetComponent<T>();
     }
 }

@@ -1,6 +1,7 @@
-#!powershell.exe -ExecutionPolicy Bypass -File
+﻿#!powershell.exe -ExecutionPolicy Bypass -File
 param (
-    [string] $Configuration
+    [string] $Configuration,
+    [switch] $NoExplorer
 )
 
 $Mods = @('Sdk')
@@ -21,30 +22,41 @@ Write-Output "Building solution $solutionPath in configuration $Configuration...
 dotnet build $solutionPath -c $Configuration
 
 # 3. Prepare temporary output directory
+#
+# Emptied first, the same way the mods' MakeModFolder.ps1 does it. Copying into a kept folder leaves
+# artifacts from earlier builds behind, and whatever deploys from here cannot tell them apart.
 $outputRoot = Join-Path $scriptDir 'Output'
-if (-not (Test-Path $outputRoot))
+if (Test-Path $outputRoot)
+{
+    Get-ChildItem $outputRoot -Recurse | Remove-Item -Force -Recurse
+}
+else
 {
     New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
 }
 
-New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
-
-# 4. Build combined file list across variants. The client mod goes to Output/mods/WukongMp.Sdk,
-# the server mod to Output/server_mods, mirroring the layout a server drop expects.
+# 4. Build combined file list across variants. Everything lands in Output/mods/WukongMp.Sdk as a
+# mod package: client files under client/, server files under server/, manifest at the root.
 $allFiles = @()
 foreach ($p in $Mods)
 {
     $lists = Get-ModFiles -Mod $p -Configuration $Configuration
+
+    # Pick the key, not the value: an `if` that returns a one-element collection unwraps it on the
+    # output stream, and `+=` then splices that triplet's members in as separate entries. The Server
+    # set holds exactly one triplet, so that only ever went wrong outside Debug.
+    $serverSet = if ($Configuration -eq "Debug") { "ServerDev" } else { "Server" }
+
     $allFiles += $lists.Mod
-    $allFiles += if ($Configuration -eq "Debug") { $lists.ServerDev } else { $lists.Server }
+    $allFiles += $lists.$serverSet
 }
 
 # Append PDB files in Debug configuration
 if ($Configuration -eq "Debug")
 {
     $allFiles += @(
-        @(@("WukongMp.Api.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "mods/WukongMp.Sdk"),
-        @(@("WukongMp.Sdk.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "mods/WukongMp.Sdk")
+        @(@("WukongMp.Api.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "mods/WukongMp.Sdk/client"),
+        @(@("WukongMp.Sdk.pdb"), "WukongMp.Sdk/bin/Debug/netstandard2.0", "mods/WukongMp.Sdk/client")
     )
 }
 
@@ -68,7 +80,11 @@ foreach ($item in $allFiles)
 }
 
 # 6. Open explorer to the output directory
-if ($PSVersionTable.PSEdition -eq 'Core')
+if ($NoExplorer)
+{
+    # nothing to open, this run is scripted
+}
+elseif ($PSVersionTable.PSEdition -eq 'Core')
 {
     Start-Process "explorer.exe" -ArgumentList $outputRoot
 }

@@ -12,6 +12,7 @@ using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.FreeCamera;
 using WukongMp.Api.Resources;
 using WukongMp.Api.State;
+using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.UI;
 
@@ -20,7 +21,8 @@ internal sealed class WukongWidgetManager(
     WukongPlayerState playerState,
     IRelayClient relayClient,
     WukongEventBus eventBus,
-    FreeCameraManager freeCameraManager
+    FreeCameraManager freeCameraManager,
+    IChatSettings chatSettings
 ) : IHostedService
 {
     private string _lastDisconnectText = BuiltinTexts.Disconnected;
@@ -123,16 +125,18 @@ internal sealed class WukongWidgetManager(
         _debugViewWidget.Value.SetPlayerPosition(playerName, gameLocation, ecsLocation);
     }
 
-    public void UpdatePingIndicator(long pingMs)
+    public void UpdatePingIndicator(long pingMs, int packetLossPercent)
     {
         _pingIndicatorWidget.Value.SetPingValue(pingMs);
-        _pingIndicatorWidget.Value.HideInfoText();
-    }
 
-    public void SetPacketLossWarning()
-    {
-        _pingIndicatorWidget.Value.SetPingValue(999);
-        _pingIndicatorWidget.Value.SetInfoText(BuiltinTexts.SeverePacketLossDetected);
+        if (packetLossPercent >= WukongMp.Api.Configuration.Constants.SeverePacketLossPercent)
+        {
+            _pingIndicatorWidget.Value.SetInfoText(BuiltinTexts.SeverePacketLossDetected);
+        }
+        else
+        {
+            _pingIndicatorWidget.Value.HideInfoText();
+        }
     }
 
     private void OnFreeCameraModeChanged(bool enabled)
@@ -170,6 +174,8 @@ internal sealed class WukongWidgetManager(
 
     private void OnDisconnected(PlayerId playerId, Entity? entity, DisconnectedReason reason)
     {
+        HideOverlappingBanners();
+
         _infoMessageWidget.Value.SetVisibility(true);
         _lastDisconnectText = reason switch
         {
@@ -186,6 +192,14 @@ internal sealed class WukongWidgetManager(
             _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, null)
         };
         _infoMessageWidget.Value.SetText(_lastDisconnectText);
+    }
+
+    /// The disconnect message occupies the same part of the screen as these.
+    private void HideOverlappingBanners()
+    {
+        UiUtils.HideTip();
+        _freeCameraMessageWidget.Value.SetVisibility(false);
+        _timerWidget.Value.SetVisibility(false);
     }
 
     private void OnConnected(PlayerId playerId, Entity entity)
@@ -219,10 +233,8 @@ internal sealed class WukongWidgetManager(
             _debugViewWidget.Value.AddPlayer(playerEntity.Value.GetState().Nickname.ToString());
         }
 
-        AreaEntity joinedAreaEntity = new(areaEntity);
-        var chatEnabled = joinedAreaEntity.GetRoom().ChatEnabled;
-        _chatWidget.Value.SetWritingEnabled(chatEnabled);
-        Logging.LogInformation("Chat enabled: {ChatEnabled}", chatEnabled);
+        _chatWidget.Value.SetWritingEnabled(chatSettings.ChatEnabled);
+        Logging.LogInformation("Chat enabled: {ChatEnabled}", chatSettings.ChatEnabled);
     }
 
     private void OnLeftArea(AreaId arg1, Entity arg2)

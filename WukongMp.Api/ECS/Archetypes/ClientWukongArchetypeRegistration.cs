@@ -12,7 +12,6 @@ internal sealed class ClientWukongArchetypeRegistration : IArchetypeRegistration
 {
     public ArchetypeId TamerArchetype { get; private set; }
     public ArchetypeId MainCharacterArchetype { get; private set; }
-    public ArchetypeId PvPStateSingletonArchetype { get; private set; }
 
     public void Register(IArchetypeRegistry world)
     {
@@ -27,8 +26,5 @@ internal sealed class ClientWukongArchetypeRegistration : IArchetypeRegistration
                 .Add(new MappingComponent<AActor>(new AActor()))
                 .Add<LocalMainCharacterComponent>()
                 .Add<MarkerComponent>());
-
-        PvPStateSingletonArchetype = world.RegisterArchetype(
-            WukongComponentUtils.GetServerPvpStateArchetype());
     }
 }

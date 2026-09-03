@@ -7,12 +7,6 @@ namespace ReadyM.Wukong.Common.Rpc;
 [ServerRpcContracts]
 public static partial class SdkRpcContracts
 {
-    [ClientToServer, ServerToClient]
-    public static partial void Ping(long timestamp);
-
-    [ClientToServer]
-    public static partial void EnableCheats(AreaId area, bool enabled);
-
     [ClientToServer]
     public static partial void SkipMovie(int sequenceId);
 

@@ -68,9 +68,6 @@ internal sealed class DI : IDependencyContainer
     public IContainer Container { get; private set; } = new Container(rules =>
         rules.With(FactoryMethod.ConstructorWithResolvableArguments)
             .WithDefaultReuse(Reuse.Singleton)
-            // Additive by default, so mods contributing an IArchetypeRegistration or an
-            // INetworkedComponentRegistration do not wipe out the SDK's own registrations.
-            // Pass replace: true to deliberately take a service over.
             .WithDefaultIfAlreadyRegistered(IfAlreadyRegistered.AppendNewImplementation)
             .WithUnknownServiceHandler(req => { Logging.LogError("DI: Unknown service requested: {ServiceType}", req.ServiceType.FullName); })
             .WithUseInterpretation());
@@ -178,9 +175,6 @@ internal sealed class DI : IDependencyContainer
 
         Container.Register<IPlayerComponentRegistration, WukongPlayerRegistration>();
         Container.Register<IPlayerComponentRegistry, PlayerComponentRegistry>();
-
-        // Wukong contributes no world-scoped components, but the registry is still needed so the world
-        // archetype below can be registered.
         Container.Register<IWorldComponentRegistry, WorldComponentRegistry>();
 
         // TODO: the ArchetypeId on client and server are only in sync because the order of registration is the same
@@ -198,6 +192,7 @@ internal sealed class DI : IDependencyContainer
         Container.Register<INetworkedComponentRegistration, DefaultNetworkedComponentRegistration>();
         Container.Register<INetworkedComponentRegistration, WukongNetworkedComponentRegistration>();
         Container.Register<INetworkedComponentRegistry, NetworkedComponentRegistry>();
+        Container.RegisterMany<CustomComponentNetworkRegistry>(nonPublicServiceTypes: true);
 
         // TODO | WTF? - using Register<>, which does the same thing, but lazily,
         // TODO | causes the game to crash with a NullReferenceException in completely unrelated game code
@@ -289,7 +284,6 @@ internal sealed class DI : IDependencyContainer
 
         Container.Register<WukongChatter>();
 
-        Container.Register<IConsoleCommandRegistration, CheatCommandRegistration>();
         Container.Register<IConsoleCommandRegistration, ConnectionCommandRegistration>();
         Container.Register<IConsoleCommandRegistration, ExecuteWukongCommandRegistration>();
         Container.Register<IConsoleCommandRegistration, GiveUpCommandRegistration>();
