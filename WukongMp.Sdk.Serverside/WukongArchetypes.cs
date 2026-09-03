@@ -9,8 +9,7 @@ namespace WukongMp.Sdk.Serverside;
 /// </summary>
 /// <remarks>
 /// Ids are positional: they are handed out in the order archetypes are registered, and the client and the relay
-/// server have to agree. Ids 2 and 3 belong to the cell and world archetypes, which Wukong does not use but still
-/// registers on both sides so that everything after them lines up. Do not close the gap.
+/// server have to agree.
 /// </remarks>
 public static class WukongArchetypes
 {
@@ -18,7 +17,7 @@ public static class WukongArchetypes
     /// Components:<br/>
     /// * <see cref="AreaScopeComponent"/><br/>
     /// * <see cref="MovieComponent"/>
-    public static ArchetypeId AreaArchetype => new ArchetypeId(0);
+    public static ArchetypeId AreaArchetype => new(0);
 
     /// <summary>
     /// Global player entity archetype.
@@ -26,10 +25,10 @@ public static class WukongArchetypes
     /// * <see cref="PlayerScopeComponent"/><br/>
     /// * <see cref="PlayerComponent"/>
     /// </summary>
-    public static ArchetypeId GlobalPlayerArchetype => new ArchetypeId(1);
+    public static ArchetypeId GlobalPlayerArchetype => new(1);
     
     /// Global singleton archetype.
-    public static ArchetypeId WorldArchetype => new ArchetypeId(3);
+    public static ArchetypeId WorldArchetype => new(3);
 
     /// <summary>
     /// Area-scoped tamer entity archetype.
@@ -42,7 +41,7 @@ public static class WukongArchetypes
     /// * <see cref="AnimationComponent"/><br/>
     /// * <see cref="MonsterAnimationComponent"/>
     /// </summary>
-    public static ArchetypeId TamerArchetype => new ArchetypeId(4);
+    public static ArchetypeId TamerArchetype => new(4);
 
     /// <summary>
     /// Area-scoped main character entity archetype.
@@ -53,5 +52,5 @@ public static class WukongArchetypes
     /// * <see cref="NicknameComponent"/><br/>
     /// * <see cref="TeamComponent"/><br/>
     /// </summary>
-    public static ArchetypeId MainCharacterArchetype => new ArchetypeId(5);
+    public static ArchetypeId MainCharacterArchetype => new(5);
 }

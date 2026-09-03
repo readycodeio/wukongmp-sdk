@@ -21,7 +21,9 @@ public partial struct TamerComponent : IOwnershipBased, INativeInit
     private bool _hasFsmPaused;
     private bool _isBossOrElite;
 
-    public bool ForceKeepSpawned => _holdingPlayers.Count > 0;
+    // Guarded like the generated readers: a component that arrived over the wire has only the
+    // fields the sender sent, so reading Count on an unallocated list would throw.
+    public bool ForceKeepSpawned => _holdingPlayers.IsCreated && _holdingPlayers.Count > 0;
 
     public void Init(AllocatorKind allocatorKind)
     {
