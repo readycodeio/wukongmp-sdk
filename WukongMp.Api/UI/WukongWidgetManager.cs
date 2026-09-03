@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Friflo.Engine.ECS;
 using LiteNetLib;
 using ReadyM.Api.DI;
@@ -29,6 +30,13 @@ internal sealed class WukongWidgetManager(
 
     private bool _isInitialized;
 
+    /// Names currently shown in the player list, mirroring what was pushed into the widget.
+    private readonly HashSet<string> _listedPlayers = new(StringComparer.Ordinal);
+
+    /// Scratch sets for the reconcile, kept as fields so a sync per area event allocates nothing.
+    private readonly HashSet<string> _desiredPlayers = new(StringComparer.Ordinal);
+    private readonly List<string> _stalePlayers = [];
+
     private string _fullModVersion = "";
     private string _shortModVersion = "";
 
@@ -54,6 +62,10 @@ internal sealed class WukongWidgetManager(
         clientState.OnLeftArea += OnLeftArea;
         clientState.OnOtherPlayerInsideArea += OnOtherPlayerInsideArea;
         clientState.OnOtherPlayerOutsideArea += OnOtherPlayerOutsideArea;
+        // The inside-area event can beat the player entity, and so the nickname, so reconcile again
+        // once the entity exists.
+        clientState.OnOtherPlayerCreated += OnOtherPlayerCreated;
+        clientState.OnOtherPlayerDeleted += OnOtherPlayerDeleted;
         eventBus.OnLevelLoaded += OnLevelLoaded;
         eventBus.OnExitLevel += OnExitLevel;
         freeCameraManager.OnFreeCameraModeChanged += OnFreeCameraModeChanged;
@@ -67,6 +79,8 @@ internal sealed class WukongWidgetManager(
         clientState.OnLeftArea -= OnLeftArea;
         clientState.OnOtherPlayerInsideArea -= OnOtherPlayerInsideArea;
         clientState.OnOtherPlayerOutsideArea -= OnOtherPlayerOutsideArea;
+        clientState.OnOtherPlayerCreated -= OnOtherPlayerCreated;
+        clientState.OnOtherPlayerDeleted -= OnOtherPlayerDeleted;
         eventBus.OnLevelLoaded -= OnLevelLoaded;
         eventBus.OnExitLevel -= OnExitLevel;
         freeCameraManager.OnFreeCameraModeChanged -= OnFreeCameraModeChanged;
@@ -151,13 +165,29 @@ internal sealed class WukongWidgetManager(
         _chatWidget.Value.SetVisibility(false);
         SetModVersionText();
 
-        if (!clientState.IsConnected)
+        // The new widget starts empty, so drop what the old one was showing before reconciling.
+        _listedPlayers.Clear();
+        SyncPlayerList();
+
+        // Re-checked inside the scheduled action rather than here. A transition long enough to trip
+        // DisconnectTimeout reconnects about a second later, so testing connectivity before the
+        // scheduler hop would show the banner after the reconnect had already hidden it, and nothing
+        // would hide it again.
+        relayClient.Scheduler.Schedule(static (ctx, self) => self.RestoreConnectionBanner(ctx.LastDisconnectedReason), this);
+    }
+
+    /// <summary>
+    /// Reinstates the disconnect banner on a fresh set of widgets, but only while still disconnected.
+    /// </summary>
+    private void RestoreConnectionBanner(DisconnectedReason reason)
+    {
+        if (clientState.IsConnected)
         {
-            relayClient.Scheduler.Schedule(static (ctx, self) =>
-            {
-                self.OnDisconnected(default, null, ctx.LastDisconnectedReason);
-            }, this);
+            _infoMessageWidget.Value.SetVisibility(false);
+            return;
         }
+
+        OnDisconnected(default, null, reason);
     }
 
     private void SetModVersionText()
@@ -209,29 +239,27 @@ internal sealed class WukongWidgetManager(
 
     private void OnOtherPlayerInsideArea(PlayerId playerId, AreaId area, OtherPlayerInsideAreaReason reason)
     {
-        var player = playerState.GetPlayerById(playerId);
-        if (player.HasValue)
-        {
-            _debugViewWidget.Value.AddPlayer(player.Value.GetState().Nickname.ToString());
-        }
+        SyncPlayerList();
+    }
+
+    private void OnOtherPlayerCreated(PlayerId playerId, Entity entity, OtherPlayerCreatedReason reason)
+    {
+        SyncPlayerList();
+    }
+
+    private void OnOtherPlayerDeleted(PlayerId playerId, Entity entity, OtherPlayerDeletedReason reason)
+    {
+        SyncPlayerList();
     }
 
     private void OnOtherPlayerOutsideArea(PlayerId playerId, AreaId area, OtherPlayerOutsideAreaReason reason)
     {
-        var player = playerState.GetPlayerById(playerId);
-        if (player.HasValue)
-        {
-            _debugViewWidget.Value.RemovePlayer(player.Value.GetState().Nickname.ToString());
-        }
+        SyncPlayerList();
     }
 
     private void OnJoinedArea(AreaId area, Entity areaEntity)
     {
-        var playerEntity = playerState.LocalPlayerEntity;
-        if (playerEntity.HasValue)
-        {
-            _debugViewWidget.Value.AddPlayer(playerEntity.Value.GetState().Nickname.ToString());
-        }
+        SyncPlayerList();
 
         _chatWidget.Value.SetWritingEnabled(chatSettings.ChatEnabled);
         Logging.LogInformation("Chat enabled: {ChatEnabled}", chatSettings.ChatEnabled);
@@ -239,10 +267,51 @@ internal sealed class WukongWidgetManager(
 
     private void OnLeftArea(AreaId arg1, Entity arg2)
     {
-        var playerEntity = playerState.LocalPlayerEntity;
-        if (playerEntity.HasValue)
+        SyncPlayerList();
+    }
+
+    /// <summary>
+    /// Reconciles the player list against the players actually in the area.
+    /// </summary>
+    /// <remarks>
+    /// The widget only offers incremental add and remove, and drops calls while it is not ready, so
+    /// the listed names are tracked here and diffed rather than assumed. Accumulating add and remove
+    /// straight from the events lost a player for good whenever one arrived before their nickname had
+    /// synced, or while a level change was swapping the widget out.
+    /// </remarks>
+    private void SyncPlayerList()
+    {
+        _desiredPlayers.Clear();
+        foreach (var playerId in clientState.AreaPlayers)
         {
-            _debugViewWidget.Value.RemovePlayer(playerEntity.Value.GetState().Nickname.ToString());
+            var player = playerState.GetPlayerById(playerId);
+            if (player.HasValue)
+            {
+                _desiredPlayers.Add(player.Value.GetState().Nickname.ToString());
+            }
+        }
+
+        _stalePlayers.Clear();
+        foreach (var listed in _listedPlayers)
+        {
+            if (!_desiredPlayers.Contains(listed))
+            {
+                _stalePlayers.Add(listed);
+            }
+        }
+
+        foreach (var stale in _stalePlayers)
+        {
+            _debugViewWidget.Value.RemovePlayer(stale);
+            _listedPlayers.Remove(stale);
+        }
+
+        foreach (var desired in _desiredPlayers)
+        {
+            if (_listedPlayers.Add(desired))
+            {
+                _debugViewWidget.Value.AddPlayer(desired);
+            }
         }
     }
 
