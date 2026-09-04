@@ -27,7 +27,10 @@ internal class EnableCollisionAfterCutsceneSystem(WukongPlayerState playerState)
         {
             if (playerState.LocalPlayerId == main.PlayerId)
                 return;
-            
+
+            if (main.IsSpectator)
+                return;
+
             var mainEntity = new MainCharacterEntity(entity);
 
             if (mainEntity.Pawn == null)
