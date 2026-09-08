@@ -29,15 +29,17 @@ internal static class Constants
     public const string SupremeInspectorFirewallName = "BP_szlc_wanglingguan_mf_hq";
     public static readonly FVector SupremeInspectorFirewallLocation = new(107491.700, 92122.520, 15129.590);
 
-    public static readonly FLinearColor ServerMessageColor = new(0.3f, 0.3f, 0.3f, 1f);
-    public static readonly FLinearColor PlayerMessageColor = new(0.9f, 0.9f, 0.9f, 1f);
-    public static readonly FLinearColor EnemyPlayerMessageColor = new(1f, 0.3f, 0.3f, 1f);
+    public static readonly FLinearColor ServerMessageColor = new(0.3f, 0.3f, 0.3f);
+    public static readonly FLinearColor PlayerMessageColor = new(0.9f, 0.9f, 0.9f);
+    public static readonly FLinearColor EnemyPlayerMessageColor = new(1f, 0.3f, 0.3f);
 
     public static readonly HashSet<int> InstantTriggerSequences =
     [
         30105200, // act 3 boss transition to 2nd phase
         40104151, // phase 2 of Hundred-Eyed Daoist Master, sword-swallowing cutscene
-        62103371, 62103351, 62103321, 62103301 // 4 heavenly kings, lute guy
+        50107201, 50107301, // Keeper of the Flaming Mountains fight
+        62103371, 62103351, 62103321, 62103301, // 4 heavenly kings
+        // 62103251, 62103161, 62104101, 62104201, // Erlang Shen 3rd phase
     ];
 
     public static readonly HashSet<int> SoloPlaySequences =
