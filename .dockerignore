@@ -1,0 +1,34 @@
+﻿# Used when this repo is handed to a docker build as a named context, which
+# readym-gameserver/scripts/build-hosted-images.ps1 does for the hosted server images. Without it
+# the context is over 400 MB of build output and git history for a source-only compile.
+
+.git
+.gitignore
+.gitattributes
+.github
+.vs
+.vscode
+.idea
+
+**/bin
+**/obj
+**/out
+**/publish
+**/TestResults
+**/*.pdb
+
+# Packaged mod folders and archives produced by BuildSdk.ps1.
+Output
+
+**/packages
+**/*.nupkg
+**/.nuget
+
+# The core SDK is passed as its own build context, on the path the gameserver's
+# Directory.Build.props points CoreSdkRoot at. Shipping the nested copy too would put the same
+# sources in the image twice.
+readym-core-sdk
+
+.DS_Store
+Thumbs.db
+desktop.ini
