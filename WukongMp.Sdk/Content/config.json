@@ -1,4 +1,4 @@
 {
-  // Change this to true if you want to enable the in-game chat
-  "ChatEnabled": false
+  // Change this to false if you want to disable the in-game chat
+  "ChatEnabled": true
 }
