@@ -9,7 +9,6 @@ internal static class WukongComponentUtils
     public static ArchetypeBuilder GetServerMonsterArchetype()
         => new ArchetypeBuilder()
             .Add<TamerComponent>()
-            .Add<AnimationComponent>()
             .Add(new HpComponent
             {
                 HpMaxMulPercent = 100,
@@ -18,16 +17,19 @@ internal static class WukongComponentUtils
             .Add<NicknameComponent>()
             .Add<TeamComponent>()
             .Add<TransformComponent>()
+            .Add<VelocityComponent>()
             .AddTag<AllowOwnershipTransferOnScopeLeaveTag>();
 
     public static ArchetypeBuilder GetServerMainCharacterArchetype()
         => new ArchetypeBuilder()
             .Add(new MainCharacterComponent())
+            .Add<PlayerAnimationComponent>()
             .Add<NicknameComponent>()
             .Add(new HpComponent
             {
                 HpMaxMulPercent = 100,
             })
             .Add<TransformComponent>()
+            .Add<VelocityComponent>()
             .Add<TeamComponent>();
 }

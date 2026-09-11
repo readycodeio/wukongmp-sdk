@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Generators;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
@@ -8,8 +9,12 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 /// </summary>
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
-public partial struct MonsterAnimationComponent
+public partial struct MonsterAnimationComponent : IOwnershipBased
 {
     private byte _moveAiType;
     private float _animationPlayRate;
+    
+    private byte _moveSpeedLevel;
+    private byte _moveSpeedState;
+    private bool _shouldWaitRotateFinished;
 }

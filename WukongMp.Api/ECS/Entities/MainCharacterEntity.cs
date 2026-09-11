@@ -39,6 +39,9 @@ internal readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainCha
 
     public ref MainCharacterComponent GetState()
         => ref Entity.GetComponent<MainCharacterComponent>();
+    
+    public ref PlayerAnimationComponent GetAnimation()
+        => ref Entity.GetComponent<PlayerAnimationComponent>();
 
     public ref HpComponent GetHp()
         => ref Entity.GetComponent<HpComponent>();

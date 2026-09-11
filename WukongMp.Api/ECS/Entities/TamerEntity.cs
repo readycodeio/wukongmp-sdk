@@ -67,9 +67,6 @@ internal readonly struct TamerEntity(Entity entity) : IEquatable<TamerEntity>
     public ref HpComponent GetHp()
         => ref Entity.GetComponent<HpComponent>();
 
-    public ref AnimationComponent GetAnimation()
-        => ref Entity.GetComponent<AnimationComponent>();
-
     public ref MonsterAnimationComponent GetMonsterAnimation()
         => ref Entity.GetComponent<MonsterAnimationComponent>();
 

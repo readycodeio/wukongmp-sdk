@@ -210,22 +210,29 @@ internal class PatchCharacterAnimation
                 // update local player location
                 RestrictPlayerLocation(mainEntity.Value, __instance);
             }
-
-            if (DI.Instance.MappedField.CanLoadFromGame<MainCharacterComponent>(mainEntity.Value, out var load))
+            
+            if (DI.Instance.MappedField.CanLoadFromGame<VelocityComponent>(mainEntity.Value, out var velocity))
             {
-                load.SetFromGame(MainCharacterComponent.Fields.IsFlying, __instance.IsFlying);
-                load.SetFromGame(MainCharacterComponent.Fields.IsFalling, __instance.IsFalling);
-                load.SetFromGame(MainCharacterComponent.Fields.IsLandingMove, __instance.IsLandingMove);
-                load.SetFromGame(MainCharacterComponent.Fields.Velocity, __instance.Velocity.ToVector3());
-                load.SetFromGame(MainCharacterComponent.Fields.MoveAcceleration, __instance.MoveAcceleration.ToVector3());
+                velocity.SetFromGame(VelocityComponent.Fields.Velocity, __instance.Velocity.ToVector3());
+                velocity.SetFromGame(VelocityComponent.Fields.MoveAcceleration, __instance.MoveAcceleration.ToVector3());
             }
-            else if (DI.Instance.MappedField.CanSyncToGame<MainCharacterComponent>(mainEntity.Value, out var sync))
+            else if (DI.Instance.MappedField.CanSyncToGame<VelocityComponent>(mainEntity.Value, out var sync))
             {
-                sync.SyncToGame(MainCharacterComponent.Fields.IsFlying, static (x, c) => c.IsFlying = x, __instance);
-                sync.SyncToGame(MainCharacterComponent.Fields.IsFalling, static (x, c) => c.IsFalling = x, __instance);
-                sync.SyncToGame(MainCharacterComponent.Fields.IsLandingMove, static (x, c) => c.IsLandingMove = x, __instance);
-                sync.SyncToGame(MainCharacterComponent.Fields.Velocity.In<BUC_ABPCharacterData>(), __instance);
-                sync.SyncToGame(MainCharacterComponent.Fields.MoveAcceleration.In<BUC_ABPCharacterData>(), __instance);
+                sync.SyncToGame(VelocityComponent.Fields.Velocity.In<BUC_ABPCharacterData>(), __instance);
+                sync.SyncToGame(VelocityComponent.Fields.MoveAcceleration.In<BUC_ABPCharacterData>(), __instance);
+            }
+
+            if (DI.Instance.MappedField.CanLoadFromGame<PlayerAnimationComponent>(mainEntity.Value, out var animation))
+            {
+                animation.SetFromGame(PlayerAnimationComponent.Fields.IsFlying, __instance.IsFlying);
+                animation.SetFromGame(PlayerAnimationComponent.Fields.IsFalling, __instance.IsFalling);
+                animation.SetFromGame(PlayerAnimationComponent.Fields.IsLandingMove, __instance.IsLandingMove);
+            }
+            else if (DI.Instance.MappedField.CanSyncToGame<PlayerAnimationComponent>(mainEntity.Value, out var sync))
+            {
+                sync.SyncToGame(PlayerAnimationComponent.Fields.IsFlying, static (x, c) => c.IsFlying = x, __instance);
+                sync.SyncToGame(PlayerAnimationComponent.Fields.IsFalling, static (x, c) => c.IsFalling = x, __instance);
+                sync.SyncToGame(PlayerAnimationComponent.Fields.IsLandingMove, static (x, c) => c.IsLandingMove = x, __instance);
             }
 
             if (DI.Instance.MappedField.CanLoadFromGame<TransformComponent>(mainEntity.Value, out var loadTransform))
@@ -262,15 +269,15 @@ internal class PatchCharacterAnimation
             if (!localTamer.IsTamerSynced || !tamerEntity.Value.IsTamerValid || tamerEntity.Value.Pawn == null)
                 return;
 
-            if (DI.Instance.MappedField.CanLoadFromGame<AnimationComponent>(tamerEntity.Value, out var loadAnim))
+            if (DI.Instance.MappedField.CanLoadFromGame<VelocityComponent>(tamerEntity.Value, out var loadAnim))
             {
-                loadAnim.SetFromGame(AnimationComponent.Fields.Velocity, __instance.Velocity.ToVector3());
-                loadAnim.SetFromGame(AnimationComponent.Fields.MoveAcceleration, __instance.MoveAcceleration.ToVector3());
+                loadAnim.SetFromGame(VelocityComponent.Fields.Velocity, __instance.Velocity.ToVector3());
+                loadAnim.SetFromGame(VelocityComponent.Fields.MoveAcceleration, __instance.MoveAcceleration.ToVector3());
             }
-            else if (DI.Instance.MappedField.CanSyncToGame<AnimationComponent>(tamerEntity.Value, out var syncAnim))
+            else if (DI.Instance.MappedField.CanSyncToGame<VelocityComponent>(tamerEntity.Value, out var syncAnim))
             {
-                syncAnim.SyncToGame(AnimationComponent.Fields.Velocity.In<BUC_ABPCharacterData>(), __instance);
-                syncAnim.SyncToGame(AnimationComponent.Fields.MoveAcceleration.In<BUC_ABPCharacterData>(), __instance);
+                syncAnim.SyncToGame(VelocityComponent.Fields.Velocity.In<BUC_ABPCharacterData>(), __instance);
+                syncAnim.SyncToGame(VelocityComponent.Fields.MoveAcceleration.In<BUC_ABPCharacterData>(), __instance);
 
                 if (__instance.RealWorldVelocity.Equals(FVector.ZeroVector, Constants.FloatComparisonTolerance))
                 {
@@ -326,12 +333,12 @@ internal class PatchSpiderMove
             if (!localTamer.IsTamerSynced || !tamerEntity.Value.IsTamerValid || tamerEntity.Value.Pawn == null)
                 return;
 
-            if (DI.Instance.MappedField.CanLoadFromGame<AnimationComponent>(tamerEntity.Value, out var loadAnim))
+            if (DI.Instance.MappedField.CanLoadFromGame<VelocityComponent>(tamerEntity.Value, out var loadAnim))
             {
-                loadAnim.SetFromGame(AnimationComponent.Fields.Velocity, ___MovementComp.Velocity.ToVector3());
-                // loadAnim.SetFromGame(AnimationComponent.Fields.MoveAcceleration, moveComp.MoveAcceleration.ToVector3());
+                loadAnim.SetFromGame(VelocityComponent.Fields.Velocity, ___MovementComp.Velocity.ToVector3());
+                // loadAnim.SetFromGame(MonsterAnimationComponent.Fields.MoveAcceleration, ___MovementComp.MoveAcceleration.ToVector3());
             }
-            else if (DI.Instance.MappedField.CanSyncToGame<AnimationComponent>(tamerEntity.Value, out var syncAnim))
+            else if (DI.Instance.MappedField.CanSyncToGame<VelocityComponent>(tamerEntity.Value, out var syncAnim))
             {
                 syncAnim.SyncToGame(static (comp, move) => { move.Velocity = comp.Velocity.ToFVector(); }, ___MovementComp);
                 // TODO: Acceleration?

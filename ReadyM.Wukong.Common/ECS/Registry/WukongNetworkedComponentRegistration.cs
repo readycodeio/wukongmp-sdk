@@ -10,17 +10,18 @@ internal class WukongNetworkedComponentRegistration : INetworkedComponentRegistr
     {
         // Shared
         registry.RegisterComponent<TransformComponent>();
+        registry.RegisterComponent<VelocityComponent>();
         registry.RegisterComponent<HpComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<NicknameComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<TeamComponent>(DeliveryMethod.ReliableOrdered);
 
         // Tamer (area-scoped)
         registry.RegisterComponent<TamerComponent>(DeliveryMethod.ReliableOrdered);
-        registry.RegisterComponent<AnimationComponent>();
-        registry.RegisterComponent<MonsterAnimationComponent>();
+        registry.RegisterComponent<MonsterAnimationComponent>(DeliveryMethod.ReliableOrdered);
 
         // Main character (area-scoped)
-        registry.RegisterComponent<MainCharacterComponent>();
+        registry.RegisterComponent<MainCharacterComponent>(DeliveryMethod.ReliableOrdered);
+        registry.RegisterComponent<PlayerAnimationComponent>(DeliveryMethod.ReliableOrdered);
 
         // Area (global, scope)
         registry.RegisterComponent<MovieComponent>(DeliveryMethod.ReliableOrdered);

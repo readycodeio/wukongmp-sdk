@@ -16,9 +16,7 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IOwnershipBased
 {
     private PlayerId _playerId;
-    
-    private Vector3 _velocity;
-    private Vector3 _moveAcceleration;
+
     private MoveSpeedLevel _moveSpeedLevel = MoveSpeedLevel.Run;
     private MoveSpeedLevel _moveSpeedState = MoveSpeedLevel.Run;
 
@@ -31,21 +29,6 @@ public partial struct MainCharacterComponent() : IIndexedComponent<PlayerId>, IO
     private bool _isSpectator;
 
     private bool _beguilingChantEligible;
-
-    #region Animation
-
-    private bool _inJump;
-    private bool _isFlying;
-    private bool _isFalling;
-    private bool _isLandingMove;
-    private Vector3 _turnInplaceTargetRotation;
-    private bool _isStandRotate;
-    private float _turnInplaceRemainAngle;
-    private bool _isAttacking;
-    private bool _orientRotationToMovement;
-    private bool _shouldWaitRotateFinished;
-
-    #endregion
 
     private AttributesState _attributes = new();
     private EquipmentState _equipment = new();

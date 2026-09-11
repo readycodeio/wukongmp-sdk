@@ -56,31 +56,31 @@ internal class PatchBGUPlayerAnimation
         // FIXME: This should be the ownership test
         if (Owner == mainEntity?.Pawn)
         {
-            ref var mainComp = ref mainEntity.Value.GetState();
+            ref var animation = ref mainEntity.Value.GetAnimation();
 
-            if (mainComp.IsStandRotate != __instance.IsStandRotate)
+            if (animation.IsStandRotate != __instance.IsStandRotate)
             {
-                mainComp.IsStandRotate = __instance.IsStandRotate;
+                animation.IsStandRotate = __instance.IsStandRotate;
             }
 
-            if (mainComp.IsAttacking != __instance.IsAttacking)
+            if (animation.IsAttacking != __instance.IsAttacking)
             {
-                mainComp.IsAttacking = __instance.IsAttacking;
+                animation.IsAttacking = __instance.IsAttacking;
             }
 
-            if (!mainComp.TurnInplaceTargetRotation.ToFRotator().Equals(__instance.TurnInplaceTargetRotation, Constants.FloatComparisonTolerance))
+            if (!animation.TurnInplaceTargetRotation.ToFRotator().Equals(__instance.TurnInplaceTargetRotation, Constants.FloatComparisonTolerance))
             {
-                mainComp.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation.ToVector3();
+                animation.TurnInplaceTargetRotation = __instance.TurnInplaceTargetRotation.ToVector3();
             }
 
-            if (!mainComp.TurnInplaceRemainAngle.Equals(__instance.TurnInplaceRemainAngle, Constants.FloatComparisonTolerance))
+            if (!animation.TurnInplaceRemainAngle.Equals(__instance.TurnInplaceRemainAngle, Constants.FloatComparisonTolerance))
             {
-                mainComp.TurnInplaceRemainAngle = __instance.TurnInplaceRemainAngle;
+                animation.TurnInplaceRemainAngle = __instance.TurnInplaceRemainAngle;
             }
 
-            if (mainComp.OrientRotationToMovement != __instance.bOrientRotationToMovement)
+            if (animation.OrientRotationToMovement != __instance.bOrientRotationToMovement)
             {
-                mainComp.OrientRotationToMovement = __instance.bOrientRotationToMovement;
+                animation.OrientRotationToMovement = __instance.bOrientRotationToMovement;
             }
         }
         else
@@ -89,13 +89,13 @@ internal class PatchBGUPlayerAnimation
             if (!mainEntity.HasValue)
                 return;
 
-            ref var mainComp = ref mainEntity.Value.GetState();
+            ref var animation = ref mainEntity.Value.GetAnimation();
 
-            __instance.IsStandRotate = mainComp.IsStandRotate;
-            __instance.IsAttacking = mainComp.IsAttacking;
-            __instance.TurnInplaceTargetRotation = mainComp.TurnInplaceTargetRotation.ToFRotator();
-            __instance.TurnInplaceRemainAngle = mainComp.TurnInplaceRemainAngle;
-            __instance.bOrientRotationToMovement = mainComp.OrientRotationToMovement;
+            __instance.IsStandRotate = animation.IsStandRotate;
+            __instance.IsAttacking = animation.IsAttacking;
+            __instance.TurnInplaceTargetRotation = animation.TurnInplaceTargetRotation.ToFRotator();
+            __instance.TurnInplaceRemainAngle = animation.TurnInplaceRemainAngle;
+            __instance.bOrientRotationToMovement = animation.OrientRotationToMovement;
         }
     }
 }
@@ -134,10 +134,10 @@ internal class PatchPlayerLocomotion
         if (Owner == playerState.LocalMainCharacter?.Pawn)
         {
             var mainEntity = playerState.LocalMainCharacter;
-            ref var mainComp = ref mainEntity.Value.GetState();
-            if (mainComp.ShouldWaitRotateFinished != __instance.bShouldWaitRotateFinished)
+            ref var animation = ref mainEntity.Value.GetAnimation();
+            if (animation.ShouldWaitRotateFinished != __instance.bShouldWaitRotateFinished)
             {
-                mainComp.ShouldWaitRotateFinished = __instance.bShouldWaitRotateFinished;
+                animation.ShouldWaitRotateFinished = __instance.bShouldWaitRotateFinished;
             }
         }
         else
@@ -145,8 +145,8 @@ internal class PatchPlayerLocomotion
             var mainEntity = DI.Instance.PawnState.GetEntityByPlayerActor(Owner);
             if (mainEntity.HasValue)
             {
-                ref var mainComp = ref mainEntity.Value.GetState();
-                __instance.bShouldWaitRotateFinished = mainComp.ShouldWaitRotateFinished;
+                 var animation = mainEntity.Value.GetAnimation();
+                __instance.bShouldWaitRotateFinished = animation.ShouldWaitRotateFinished;
             }
             else
             {
@@ -162,12 +162,12 @@ internal class PatchPlayerLocomotion
 
                     if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                     {
-                        ref var anim = ref tamerEntity.Value.GetAnimation();
+                        ref var anim = ref tamerEntity.Value.GetMonsterAnimation();
                         anim.ShouldWaitRotateFinished = __instance.bShouldWaitRotateFinished;
                     }
                     else
                     {
-                        ref var anim = ref tamerEntity.Value.GetAnimation();
+                        ref var anim = ref tamerEntity.Value.GetMonsterAnimation();
                         __instance.bShouldWaitRotateFinished = anim.ShouldWaitRotateFinished;
                     }
                 }
@@ -231,7 +231,7 @@ internal class PatchBasicData
                 if (!tamerEntity.HasValue)
                     return; // unsynced entity
 
-                ref var anim = ref tamerEntity.Value.GetAnimation();
+                ref var anim = ref tamerEntity.Value.GetMonsterAnimation();
 
                 if (DI.Instance.ClientOwnership.OwnsEntity(tamerEntity.Value.Entity))
                 {
