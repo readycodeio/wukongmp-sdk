@@ -15,4 +15,12 @@ public static partial class SdkRpcContracts
 
     [ClientToServer]
     public static partial void MovieStarted(int sequenceId, AreaId areaId);
+
+#if DEBUG
+    [ClientToServer]
+    public static partial void SimulateLatency(int min, int max);
+
+    [ClientToServer]
+    public static partial void SimulatePacketLoss(int percent);
+#endif
 }

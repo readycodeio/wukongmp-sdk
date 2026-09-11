@@ -60,4 +60,22 @@ internal partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandle
             }
         });
     }
+
+#if DEBUG
+    partial void OnSimulateLatency(RpcContext context, int min, int max)
+    {
+        logger.LogDebug("Simulating latency for player {PlayerId}: {Min}-{Max} ms", context.Sender, min, max);
+        ecs.Query<NetworkSimulationComponent>((ref simulation) =>
+        {
+            simulation.MinLatency = min;
+            simulation.MaxLatency = max;
+        });
+    }
+
+    partial void OnSimulatePacketLoss(RpcContext context, int percent)
+    {
+        logger.LogDebug("Simulating packet loss for player {PlayerId}: {Percent}%", context.Sender, percent);
+        ecs.Query<NetworkSimulationComponent>((ref simulation) => { simulation.PacketLossPercent = percent; });
+    }
+#endif
 }

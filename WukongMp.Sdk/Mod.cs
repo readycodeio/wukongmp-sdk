@@ -132,6 +132,7 @@ internal class Mod : ModBase
             DebugUtils.LogUe4SsPresence();
             DetectSdkVersion();
             RegisterKeybinds(DI.Instance);
+            RegisterConsoleCommands(DI.Instance);
             DI.Instance.StartHostedServices();
             StartRelayClient();
         });
@@ -253,6 +254,15 @@ internal class Mod : ModBase
 
             Logger.LogInformation("Assigned server RPC offset {Offset} ({Count} events) to contract set {Id}", offset, count, id);
         }
+    }
+
+    private void RegisterConsoleCommands(DI di)
+    {
+#if DEBUG
+        WukongApi.Console.AddCommand("simulate_latency", ConsoleCommand.Create((int min, int max) => { di.Resolve<WukongServerRpcCallbacks>().SendSimulateLatency(min, max); }));
+
+        WukongApi.Console.AddCommand("simulate_packet_loss", ConsoleCommand.Create((int percent) => { di.Resolve<WukongServerRpcCallbacks>().SendSimulatePacketLoss(percent); }));
+#endif
     }
 
     private void RegisterKeybinds(DI di)
