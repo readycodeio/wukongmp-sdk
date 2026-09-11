@@ -10,7 +10,7 @@ internal class WukongNetworkedComponentRegistration : INetworkedComponentRegistr
     {
         // Shared
         registry.RegisterComponent<TransformComponent>();
-        registry.RegisterComponent<VelocityComponent>();
+        registry.RegisterComponent<VelocityComponent>(DeliveryMethod.ReliableOrdered); // unreliable might cause non-zero acceleration and running in place
         registry.RegisterComponent<HpComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<NicknameComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<TeamComponent>(DeliveryMethod.ReliableOrdered);
