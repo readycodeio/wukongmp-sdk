@@ -22,11 +22,15 @@ public static class WukongApi
         Services.RegisterSingleton<IWukongLocalApi, WukongLocalApi>();
         Services.RegisterSingleton<IWukongInputApi, WukongInputApi>();
         Services.RegisterSingleton<IWukongWidgetApi, WukongWidgetApi>();
+        Services.RegisterSingleton<IWukongEntityApi, WukongEntityApi>();
         Services.RegisterSingleton<IWukongConfigurationApi, WukongConfigurationApi>();
     }
 
     public static IDependencyContainer Services => DI.Instance;
 
+    /// <inheritdoc cref="IWukongEntityApi"/>
+    public static IWukongEntityApi Entities => Services.Resolve<IWukongEntityApi>();
+    
     /// <inheritdoc cref="WukongArchetypes"/>
     /// <remarks>
     /// Safe to use from an <see cref="ReadyM.Api.ECS.Registry.IArchetypeRegistration"/>,

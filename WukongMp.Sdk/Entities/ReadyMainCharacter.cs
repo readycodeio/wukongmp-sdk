@@ -17,6 +17,7 @@ namespace WukongMp.Sdk.Entities;
 /// <summary>
 /// Represents the player character entity in the game.
 /// </summary>
+[Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
 public readonly struct ReadyMainCharacter
     : IReadyEntity<ReadyMainCharacter>,
         IReadyConvertable<ReadyMainCharacter, ReadyCharacter>,

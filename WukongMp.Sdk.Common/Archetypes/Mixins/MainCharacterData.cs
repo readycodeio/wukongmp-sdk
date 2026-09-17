@@ -4,7 +4,7 @@ using ReadyM.SDK.Attributes;
 using ReadyM.Wukong.Common.ECS.Components;
 using ReadyM.Wukong.Common.ECS.Values;
 
-namespace WukongMp.Sdk.Common.Archetypes;
+namespace WukongMp.Sdk.Common.Archetypes.Mixins;
 
 [ArchetypeMixin]
 [ExplicitComponent(typeof(MainCharacterComponent))]

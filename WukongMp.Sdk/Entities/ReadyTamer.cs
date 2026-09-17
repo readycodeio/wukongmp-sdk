@@ -11,6 +11,7 @@ namespace WukongMp.Sdk.Entities;
 /// <summary>
 /// Represents a tamer (monster) entity in the Wukong multiplayer SDK.
 /// </summary>
+[Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
 public readonly struct ReadyTamer
     : IReadyEntity<ReadyTamer>,
         IReadyConvertable<ReadyTamer, ReadyCharacter>,
@@ -92,7 +93,7 @@ public readonly struct ReadyTamer
             return guid.Length == 0 ? null : guid;
         }
     }
-    
+
     public int HpScalingPercent
     {
         get
