@@ -1,8 +1,10 @@
-﻿using Friflo.Engine.ECS;
+﻿using System;
+using Friflo.Engine.ECS;
 using WukongMp.Sdk.Api;
 
 namespace WukongMp.Sdk.Entities;
 
+[Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
 public readonly struct ReadyObject : IReadyEntity<ReadyObject>, IReadyConvertable<ReadyObject, ReadyObject>
 {
     internal IWukongSynchronizationApi Api { get; }

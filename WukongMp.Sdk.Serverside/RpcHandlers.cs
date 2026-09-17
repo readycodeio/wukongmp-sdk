@@ -6,6 +6,7 @@ using ReadyM.SDK.Core;
 using ReadyM.SDK.Server.Entity;
 using ReadyM.Wukong.Common.Rpc;
 using WukongMp.Sdk.Common.Archetypes;
+using WukongMp.Sdk.Common.Archetypes.Mixins;
 
 namespace WukongMp.Sdk.Serverside;
 
@@ -59,10 +60,7 @@ internal partial class RpcHandlers(IEntities ecs, ILogger logger) : ServerRpcHan
         {
             if (areaId == area.AreaId)
             {
-                // TODO: Support for native collection accessors
-                // movie.AddStartedSequences(sequenceId);
-                // movie.StartedSequences.Add(sequenceId); // DOES NOT MARK DIRTY
-                
+                movie.AddStartedSequences(sequenceId);
                 logger.LogDebug("Marked movie {Id} as started in area {AreaId}", sequenceId, areaId);
             }
         }

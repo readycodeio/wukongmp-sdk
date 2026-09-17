@@ -12,12 +12,13 @@ namespace WukongMp.Sdk.Entities;
 public static class ReadyObjectExtensions
 {
     extension<TSelf>(TSelf obj)
-        where TSelf : struct, IReadyEntity<TSelf>, IReadyConvertable<TSelf, ReadyObject> 
+        where TSelf : struct, IReadyEntity<TSelf>, IReadyConvertable<TSelf, ReadyObject>
     {
         /// <summary>
         /// Gets the owner of the entity. This is usually the player that spawned the entity, or a player that was handled the ownership after the original owner disconnected.
         /// </summary>
         /// <exception cref="InvalidOperationException"></exception>
+        [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
         public PlayerId Owner
         {
             get
@@ -29,6 +30,7 @@ public static class ReadyObjectExtensions
             }
         }
 
+        [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
         public AreaId? AreaId
         {
             get
@@ -41,7 +43,8 @@ public static class ReadyObjectExtensions
                 return areaScopeEntity.AreaId;
             }
         }
-        
+
+        [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
         public Vector3 Location
         {
             get
@@ -63,6 +66,7 @@ public static class ReadyObjectExtensions
             }
         }
 
+        [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
         public Vector3 Rotation
         {
             get
@@ -84,6 +88,7 @@ public static class ReadyObjectExtensions
             }
         }
 
+        [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
         public void SetLocationRotation(Vector3 location, Vector3 rotation)
         {
             obj.Deconstruct(out _, out var entity);

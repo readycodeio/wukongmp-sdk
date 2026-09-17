@@ -10,6 +10,7 @@ public static class ReadyCharacterExtensions
     extension<TSelf>(TSelf obj)
         where TSelf : struct, IReadyEntity<TSelf>, IReadyConvertable<TSelf, ReadyCharacter>
     {
+        [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
         public float Hp
         {
             get
@@ -34,6 +35,7 @@ public static class ReadyCharacterExtensions
             }
         }
 
+        [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
         public float HpMaxBase
         {
             get
@@ -58,6 +60,7 @@ public static class ReadyCharacterExtensions
             }
         }
 
+        [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
         public int TeamId
         {
             get
@@ -87,6 +90,7 @@ public static class ReadyCharacterExtensions
             }
         }
 
+        [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
         public bool IsDead
         {
             get
@@ -111,12 +115,14 @@ public static class ReadyCharacterExtensions
             }
         }
 
+        [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
         public void SetMarkerMessage(string message, string color)
         {
             obj.Deconstruct(out _, out var entity);
             MarkerUtils.CreateMarkerForPlayer(entity, message, color);
         }
 
+        [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
         public void HideMarker()
         {
             obj.Deconstruct(out _, out var entity);

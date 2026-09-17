@@ -1,9 +1,10 @@
+using System;
 using Friflo.Engine.ECS;
 using WukongMp.Sdk.Api;
-using WukongMp.Sdk.Api.Implementation;
 
 namespace WukongMp.Sdk.Entities;
 
+[Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
 public readonly struct ReadyCharacter : IReadyEntity<ReadyCharacter>, 
     IReadyConvertable<ReadyCharacter, ReadyActor>,
     IReadyConvertable<ReadyCharacter, ReadyObject>
