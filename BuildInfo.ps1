@@ -35,6 +35,7 @@ $modFilesCore = @(
     "System.Reflection.Emit.dll",
     "WukongMp.Api.dll",
     "WukongMp.Sdk.dll",
+    "WukongMp.Sdk.Common.dll",
     "Yooni.Native.Logging.dll",
     "Yooni.Native.Container.dll",
     "Yooni.Native.LowLevel.dll",
@@ -48,6 +49,7 @@ $modFilesDebugCore = @(
     "ReadyM.Api.Multiplayer.pdb",
     "ReadyM.Relay.Client.pdb",
     "ReadyM.Wukong.Common.pdb",
+    "WukongMp.Sdk.Common.pdb",
     "Friflo.Engine.ECS.pdb",
     "Friflo.Engine.ECS.Boost.pdb"
 )
@@ -56,12 +58,14 @@ $modFilesDebugCore = @(
 # Yooni, the relay server SDK) is already part of the server host.
 $serverModFilesCore = @(
     "WukongMp.Sdk.Serverside.dll",
-    "ReadyM.Wukong.Common.dll"
+    "ReadyM.Wukong.Common.dll",
+    "WukongMp.Sdk.Common.dll"
 )
 
 $serverModFilesDebugCore = @(
     "WukongMp.Sdk.Serverside.pdb",
-    "ReadyM.Wukong.Common.pdb"
+    "ReadyM.Wukong.Common.pdb",
+    "WukongMp.Sdk.Common.pdb"
 )
 
 $reflectionOnlyFiles = @("*")

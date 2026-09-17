@@ -21,38 +21,37 @@
         <CoreSdkRoot Condition="'$(CoreSdkRoot)' == ''">$(MSBuildThisFileDirectory)..\readym-core-sdk</CoreSdkRoot>
     </PropertyGroup>
 
-<ItemGroup>
-        <ProjectReference Include="$(CoreSdkRoot)\src\Friflo.Engine.ECS\src\ECS\Friflo.Engine.ECS.csproj" />
-        <ProjectReference Include="$(CoreSdkRoot)\src\ReadyM.Api\ReadyM.Api.csproj" />
-        <ProjectReference Include="..\WukongMp.Api\WukongMp.Api.csproj" />
+    <ItemGroup>
+        <ProjectReference Include="$(CoreSdkRoot)\src\Friflo.Engine.ECS\src\ECS\Friflo.Engine.ECS.csproj"/>
+        <ProjectReference Include="$(CoreSdkRoot)\src\ReadyM.Api\ReadyM.Api.csproj"/>
+        <ProjectReference Include="..\WukongMp.Api\WukongMp.Api.csproj"/>
+        <ProjectReference Include="..\WukongMp.Sdk.Common\WukongMp.Sdk.Common.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
         <Reference Include="CSharpModBase">
-          <HintPath>..\WukongMp.Api\Core\CSharpModBase.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Core\CSharpModBase.dll</HintPath>
         </Reference>
         <Reference Include="CSharpModBaseV2">
-          <HintPath>..\WukongMp.Api\Core\CSharpModBaseV2.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Core\CSharpModBaseV2.dll</HintPath>
         </Reference>
         <Reference Include="PreludeLib">
-          <HintPath>..\WukongMp.Api\Core\PreludeLib.dll</HintPath>
+            <HintPath>..\WukongMp.Api\Core\PreludeLib.dll</HintPath>
         </Reference>
     </ItemGroup>
-
-
+    
     <ItemGroup>
         <!-- Reference-only assemblies for the game. Compile-time only, the real
              assemblies are already loaded in the game process at runtime. -->
-        <PackageReference Include="ReadyM.Wukong.GameRefs" Version="1.0.21.23831" />
+        <PackageReference Include="ReadyM.Wukong.GameRefs" Version="1.0.21.23831"/>
     </ItemGroup>
 
-
     <ItemGroup>
-      <None Update="Content\manifest.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="Content\config.json">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </None>
+        <None Update="Content\manifest.json">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
+        <None Update="Content\config.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 </Project>
