@@ -45,7 +45,13 @@ public readonly partial struct MonsterAnimation;
 
 [ArchetypeMixin]
 [ExplicitComponent(typeof(MovieComponent))]
-public readonly partial struct Movie;
+public readonly partial struct Movie
+{
+    // TODO: Native collections emit custom accessor methods
+    // This wouldn't work anyway since _startedSequences is private 
+    // [ExplicitMember("_startedSequences")]
+    // public partial NativeList<int> StartedSequences { get; }
+}
 
 // TODO: Move to Core
 [ArchetypeMixin]
