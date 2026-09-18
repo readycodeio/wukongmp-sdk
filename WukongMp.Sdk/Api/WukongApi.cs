@@ -1,4 +1,6 @@
 ﻿using ReadyM.Api.DI;
+using ReadyM.SDK.Client;
+using ReadyM.SDK.Client.Entities;
 using WukongMp.Api;
 using WukongMp.Sdk.Api.Implementation;
 
@@ -12,6 +14,8 @@ public static class WukongApi
 {
     internal static void RegisterApis()
     {
+        Services.RegisterReadyMSdk();
+        
         Services.RegisterSingleton<WukongArchetypes>();
         Services.RegisterSingleton<IWukongSaveApi, WukongSelfHostedSaveApi>();
         Services.RegisterSingleton<IWukongFileApi, WukongFileApi>();
