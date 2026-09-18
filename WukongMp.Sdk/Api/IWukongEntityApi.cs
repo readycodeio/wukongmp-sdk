@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using ReadyM.Api.Idents;
 using ReadyM.SDK.Archetypes;
+using ReadyM.SDK.Client.Entities;
+using ReadyM.SDK.Core;
+using UnrealEngine.Engine;
 using WukongMp.Sdk.Common.Archetypes;
 
 namespace WukongMp.Sdk.Api;
@@ -20,10 +23,14 @@ public interface IWukongEntityApi
     bool TryGetGlobalMixin<T>(out T value) where T : struct, IArchetypeMixin;
     
     /// <summary>
-    /// Gets the local main character.
+    /// Gets the current area entity if it exists.
     /// </summary>
-    /// <remarks>Use <see cref="MainCharacter.IsValid"/> to check if the entity exists.</remarks>
-    MainCharacter LocalMainCharacter { get; }
+    Area? CurrentArea { get; }
+    
+    /// <summary>
+    /// Gets the local main character entity if it exists.
+    /// </summary>
+    MainCharacter? LocalMainCharacter { get; }
     
     /// <summary>
     /// Gets a list of all players on the server.
@@ -38,10 +45,12 @@ public interface IWukongEntityApi
     /// <summary>
     /// Gets a list of all tamers (monsters).
     /// </summary>
-    IEnumerable<Tamer> AllTamers { get; }
+    EntityQuery<Tamer> AllTamers { get; }
 
     /// <summary>
     /// Gets a list of tamers (monsters) in the current area.
     /// </summary>
-    IEnumerable<Tamer> AreaTamers { get; }
+    ScopedQuery<Tamer> AreaTamers { get; }
+
+    MainCharacter? GetPlayerEntityByActor(AActor? actor);
 }

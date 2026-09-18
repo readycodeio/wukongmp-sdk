@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using ReadyM.Api.Idents;
 using ReadyM.Relay.Client.State;
 using ReadyM.SDK.Archetypes;
-using ReadyM.SDK.Client.Entity;
+using ReadyM.SDK.Client.Entities;
 using ReadyM.SDK.Core;
-using ReadyM.SDK.Entity;
+using ReadyM.SDK.Entities;
 using ReadyM.SDK.Exceptions;
+using UnrealEngine.Engine;
 using WukongMp.Api.State;
+using WukongMp.Sdk.Archetypes.Mixins;
 using WukongMp.Sdk.Common.Archetypes;
 using WukongMp.Sdk.Common.Archetypes.Mixins;
 
@@ -41,7 +43,20 @@ internal sealed class WukongEntityApi(IEntities entities, WukongPlayerState play
         return false;
     }
 
-    public MainCharacter LocalMainCharacter
+    public Area? CurrentArea
+    {
+        get
+        {
+            if (state.CurrentAreaId is { } id && entities.TryLookup(id, out Area area))
+            {
+                return area;
+            }
+
+            return null;
+        }
+    }
+
+    public MainCharacter? LocalMainCharacter
     {
         get
         {
@@ -50,7 +65,7 @@ internal sealed class WukongEntityApi(IEntities entities, WukongPlayerState play
                 return EntityHandle.Of(main).As<MainCharacter>();
             }
 
-            return default;
+            return null;
         }
     }
 
@@ -60,28 +75,23 @@ internal sealed class WukongEntityApi(IEntities entities, WukongPlayerState play
     public IReadOnlyList<PlayerId> AreaPlayers
         => state.AreaPlayers;
 
-    public IEnumerable<Tamer> AllTamers
-    {
-        get
-        {
-            foreach (var tamer in entities.Query<Tamer>())
-            {
-                yield return tamer;
-            }
-        }
-    }
+    public EntityQuery<Tamer> AllTamers => entities.Query<Tamer>();
 
-    public IEnumerable<Tamer> AreaTamers
+    public ScopedQuery<Tamer> AreaTamers
+        => state.CurrentAreaId is {} id && entities.TryLookup(id, out Area area)
+            ? entities.Query<Tamer>().InScope(area)
+            : default;
+
+    public MainCharacter? GetPlayerEntityByActor(AActor? actor)
     {
-        get
+        if (actor == null)
+            return null;
+        
+        if (entities.TryLookup(actor, out MappedActor mapped))
         {
-            if (state.CurrentAreaId is {} areaId && entities.TryLookup(areaId, out Area area))
-            {
-                foreach (var tamer in entities.Query<Tamer>())
-                {
-                    yield return tamer; // TODO: Filter
-                }
-            }
+            return EntityHandle.Of(mapped).As<MainCharacter>();
         }
+
+        return null;
     }
 }
