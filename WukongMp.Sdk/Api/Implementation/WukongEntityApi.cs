@@ -5,9 +5,11 @@ using ReadyM.Relay.Client.State;
 using ReadyM.SDK.Archetypes;
 using ReadyM.SDK.Client.Entity;
 using ReadyM.SDK.Core;
+using ReadyM.SDK.Entity;
 using ReadyM.SDK.Exceptions;
 using WukongMp.Api.State;
 using WukongMp.Sdk.Common.Archetypes;
+using WukongMp.Sdk.Common.Archetypes.Mixins;
 
 namespace WukongMp.Sdk.Api.Implementation;
 
@@ -43,13 +45,9 @@ internal sealed class WukongEntityApi(IEntities entities, WukongPlayerState play
     {
         get
         {
-            // TODO: indexed components
-            foreach (var main in entities.Query<MainCharacter>())
+            if (playerState.LocalPlayerId is { } id && entities.TryLookup(id, out MainCharacterData main))
             {
-                if (main.PlayerId == playerState.LocalPlayerId)
-                {
-                    return main;
-                }
+                return EntityHandle.Of(main).As<MainCharacter>();
             }
 
             return default;
@@ -77,9 +75,13 @@ internal sealed class WukongEntityApi(IEntities entities, WukongPlayerState play
     {
         get
         {
-            // TODO: Do an indexed-by-AreaId lookup of Area
-            // Then, use it to query Tamer by scope
-            throw new NotImplementedException();
+            if (state.CurrentAreaId is {} areaId && entities.TryLookup(areaId, out Area area))
+            {
+                foreach (var tamer in entities.Query<Tamer>())
+                {
+                    yield return tamer; // TODO: Filter
+                }
+            }
         }
     }
 }

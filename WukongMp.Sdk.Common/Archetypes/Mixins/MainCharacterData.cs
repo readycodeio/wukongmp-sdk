@@ -10,6 +10,7 @@ namespace WukongMp.Sdk.Common.Archetypes.Mixins;
 [ExplicitComponent(typeof(MainCharacterComponent))]
 public readonly partial struct MainCharacterData
 {
+    [Index]
     public partial PlayerId PlayerId { get; set; }
 
     public partial Vector3 Velocity { get; set; }

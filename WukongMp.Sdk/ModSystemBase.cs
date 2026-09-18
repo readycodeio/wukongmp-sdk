@@ -7,10 +7,10 @@ public abstract class ModSystemBase
 {
     protected readonly ref struct UpdateTick(float deltaTime, float time)
     {
-        /// <summary> The time in seconds since the last tick. </summary>
+        /// The time in seconds since the last tick. 
         public readonly float deltaTime = deltaTime;
 
-        /// <summary> The time at the beginning of the current frame since application start. </summary>
+        /// The time at the beginning of the current frame since application start. 
         public readonly float time = time;
     }
 
