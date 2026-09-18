@@ -106,11 +106,13 @@ public readonly struct ReadyMainCharacter
         ), default(EmptyContext));
     }
 
+    [Obsolete]
     public void RebirthInPlace()
     {
         DI.Instance.MappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(Entity, false), default(EmptyContext));
     }
 
+    [Obsolete]
     public void RebirthAtShrine(int shrineId)
     {
         ref var localMainComp = ref Entity.GetLocalState();

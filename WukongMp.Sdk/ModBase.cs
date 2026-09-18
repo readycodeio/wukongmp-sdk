@@ -1,13 +1,14 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
+using System;
 using CSharpModBase;
 using DryIoc;
 using Microsoft.Extensions.Logging;
-using ReadyM.Api;
 using ReadyM.Api.DI;
 using ReadyM.Api.ECS.Registry;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Loader;
+using ReadyM.Api;
+using ReadyM.SDK.Archetypes;
 using WukongMp.Api;
 using WukongMp.Sdk.Api;
 
@@ -50,9 +51,29 @@ public abstract class ModBase : ICSharpModExV2
     /// </summary>
     public void Init()
     {
+        RegisterGeneratedShapes();
+
         _services = WukongApi.Services;
         ScanForAndRegisterSystems();
         Initialize(_services);
+    }
+
+    private static bool _shapesRegistered;
+
+    /// Registers what every loaded assembly's shapes add to an archetype, and which component holds an index.
+    private void RegisterGeneratedShapes()
+    {
+        if (_shapesRegistered)
+            return;
+
+        _shapesRegistered = true;
+
+        var applied = GeneratedShapes.ApplyAll(
+            AppDomain.CurrentDomain.GetAssemblies(),
+            assembly => Logger?.LogDebug("Registered shapes from {Assembly}", assembly.GetName().Name),
+            (assembly, ex) => Logger?.LogError(ex, "Failed to register shapes from {Assembly}", assembly.GetName().Name));
+
+        Logger?.LogInformation("Registered shapes from {Count} assemblies", applied);
     }
 
     /// <summary>
