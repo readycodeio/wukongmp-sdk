@@ -193,6 +193,7 @@ internal sealed class DI : IDependencyContainer
 
         Container.Register<INetworkedComponentRegistration, DefaultNetworkedComponentRegistration>();
         Container.Register<INetworkedComponentRegistration, WukongNetworkedComponentRegistration>();
+        Container.Register<INetworkedComponentRegistration, ReplicatedShapeRegistration>();
         Container.Register<INetworkedComponentRegistry, NetworkedComponentRegistry>();
         Container.RegisterMany<CustomComponentNetworkRegistry>(nonPublicServiceTypes: true);
 

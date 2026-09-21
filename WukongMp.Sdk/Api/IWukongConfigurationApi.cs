@@ -16,7 +16,6 @@ public interface IWukongConfigurationApi
     bool DeleteDestroyedTamersFromEcs { get; set; }
     bool SyncTamerTeamFromGameToEcs { get; set; }
     bool DisableCutscenes { get; set; }
-    bool OverrideLocalPlayerTeamFromGlobalEntity { get; set; }
 
     string GetLaunchParameter(string key, string defaultValue);
     void SetDisableTamerAttackQuery(Func<bool> shouldDisableTamerAttack);

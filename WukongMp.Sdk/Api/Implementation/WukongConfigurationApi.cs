@@ -37,12 +37,6 @@ internal sealed class WukongConfigurationApi(GameplayConfiguration configuration
         set => configuration.SyncTamerTeamFromGameToEcs = value;
     }
 
-    public bool OverrideLocalPlayerTeamFromGlobalEntity
-    {
-        get => configuration.OverrideLocalPlayerTeamFromGlobalEntity;
-        set => configuration.OverrideLocalPlayerTeamFromGlobalEntity = value;
-    }
-
     public bool DisableCutscenes
     {
         get => configuration.DisableCutscenes;

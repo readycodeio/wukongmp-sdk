@@ -78,6 +78,19 @@ internal sealed class WukongEntityApi(
     public bool IsMasterClient
         => areaState.IsMasterClient;
 
+    public Player? LocalPlayer
+    {
+        get
+        {
+            if (state.LocalPlayerId is { } id && entities.TryLookup(id, out Player player))
+            {
+                return player;
+            }
+
+            return null;
+        }
+    }
+
     public MainCharacter? LocalMainCharacter
     {
         get
@@ -111,10 +124,12 @@ internal sealed class WukongEntityApi(
 
     public MainCharacter? GetPlayerEntityByActor(AActor? actor)
     {
-        if (actor as BGUCharacterCS is not {} character)
+        if (actor as BGUCharacterCS is not { } character)
             return null;
 
-        if (entities.TryLookup(character, out MappedCharacter mapped))
+        // One component maps every kind of actor, so the lookup is by actor and the cast above
+        // is what keeps this to player characters.
+        if (entities.TryLookup<MappedCharacter, AActor>(character, out var mapped))
         {
             return EntityHandle.Of(mapped).As<MainCharacter>();
         }
@@ -145,4 +160,6 @@ internal sealed class WukongEntityApi(
             mappedEvent.InvokeInGameAndNotifyEcs(new RequestSpawnUnitsEvent(entity, kind.Name, count, teamId, position.ToFVector()), entity);
         }
     }
+
+    public void SyncMonstersInArea() => TamerUtils.DiscoverTamers();
 }

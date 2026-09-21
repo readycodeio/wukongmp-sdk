@@ -8,7 +8,7 @@ namespace WukongMp.Sdk.Archetypes.Mixins;
 
 [ArchetypeMixin]
 [Extends(typeof(MainCharacter))]
-[ExplicitComponent(typeof(MappingComponent<BGUCharacterCS>))]
+[ExplicitComponent(typeof(MappingComponent<AActor>))]
 public readonly partial struct MappedCharacter
 {
     [ExplicitMember(nameof(MappingComponent<>.GameObject))]

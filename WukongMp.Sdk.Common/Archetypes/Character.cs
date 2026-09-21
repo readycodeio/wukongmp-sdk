@@ -6,6 +6,5 @@ namespace WukongMp.Sdk.Common.Archetypes;
 [Archetype]
 [Include(typeof(Transform))]
 [Include(typeof(Health))]
-[Include(typeof(Team))]
 [Include(typeof(DisplayedNickname))]
 public readonly partial struct Character;

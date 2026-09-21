@@ -1,9 +1,11 @@
 ﻿using System;
 using ReadyM.Api.DI;
+using ReadyM.Api.ECS.Registry;
 using ReadyM.SDK.Client;
 using ReadyM.SDK.Client.Entities;
 using WukongMp.Api;
 using WukongMp.Sdk.Api.Implementation;
+using WukongMp.Sdk.Archetypes;
 using WukongMp.Sdk.SDK;
 
 namespace WukongMp.Sdk.Api;
@@ -17,6 +19,9 @@ public static class WukongApi
     internal static void RegisterApis()
     {
         Services.RegisterReadyMSdk();
+
+        // After the game's own archetype registrations, whose ids it needs.
+        Services.RegisterSingleton<IArchetypeRegistration, SdkArchetypeExtensionRegistration>();
         
         Services.RegisterSingleton<WukongArchetypes>();
         Services.RegisterSingleton<IGameEvents, GameEvents>();

@@ -2,6 +2,7 @@
 using Friflo.Engine.ECS;
 using ReadyM.Api.Mapping.Tags;
 using ReadyM.SDK.Client.Entities;
+using ReadyM.SDK.Core;
 using ReadyM.SDK.Entities;
 using ReadyM.Wukong.Common.ECS.Values;
 using WukongMp.Api;
@@ -9,6 +10,7 @@ using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk.Archetypes.Mixins;
 using WukongMp.Sdk.Common.Archetypes;
+using WukongMp.Sdk.Common.Archetypes.Mixins;
 
 namespace WukongMp.Sdk.Archetypes.Extensions;
 
@@ -43,10 +45,35 @@ public static class MainCharacterExtensions
                 rotation: rotation.ToFRotator()
             ), default(EmptyContext));
         }
-        
+
         public void EnableInteraction(bool enabled)
         {
             PlayerUtils.SetPlayerInteractionEnabled(main.Pawn, enabled);
+        }
+
+        public int TeamId
+        {
+            get
+            {
+                if (DI.Instance.Resolve<IEntities>().TryLookup(main.PlayerId, out Player player))
+                {
+                    return player.TeamId;
+                }
+
+                Logging.LogWarning("Failed to get team ID for player {MainPlayerId}. Defaulting to 1.", main.PlayerId);
+                return 1;
+            }
+            set
+            {
+                if (DI.Instance.Resolve<IEntities>().TryLookup(main.PlayerId, out Player player))
+                {
+                    player.TeamId = value;
+                }
+                else
+                {
+                    Logging.LogWarning("Failed to set team ID for player {MainPlayerId}.", main.PlayerId);
+                }
+            }
         }
     }
 }

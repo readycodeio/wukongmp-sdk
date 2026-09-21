@@ -4,6 +4,9 @@ using System.Numerics;
 using b1;
 using b1.BGW;
 using BtlShare;
+using ReadyM.SDK.Client.Entities;
+using ReadyM.SDK.Core;
+using ReadyM.SDK.Entities;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -25,7 +28,8 @@ internal static class SpawningUtils
         var mainComp = mainEntity.GetState();
         var hpComp = mainEntity.GetHp();
         var transComp = mainEntity.GetTransform();
-        ref readonly var teamComp = ref mainEntity.GetTeam();
+        
+        var teamComp = playerState.GetPlayerById(mainComp.PlayerId)!.Value.GetState();
 
         var playerId = mainComp.PlayerId;
 
