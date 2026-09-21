@@ -28,6 +28,7 @@ using ReadyM.Api.Multiplayer.ECS.Archetypes;
 using ReadyM.Api.Multiplayer.ECS.Jobs;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
+using ReadyM.SDK.Client;
 using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Api.Multiplayer.Serialization;
