@@ -3,7 +3,7 @@ using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Server.Sdk.Rpc;
 using ReadyM.SDK.Core;
-using ReadyM.SDK.Server.Entity;
+using ReadyM.SDK.Server.Entities;
 using ReadyM.Wukong.Common.Rpc;
 using WukongMp.Sdk.Common.Archetypes;
 using WukongMp.Sdk.Common.Archetypes.Mixins;
@@ -56,11 +56,11 @@ internal partial class RpcHandlers(IEntities ecs, ILogger logger) : ServerRpcHan
 
     partial void OnMovieStarted(RpcContext context, int sequenceId, AreaId areaId)
     {
-        foreach (var (area, movie) in ecs.Query<Area, Movie>())
+        foreach (var area in ecs.Query<Area>())
         {
             if (areaId == area.AreaId)
             {
-                movie.AddStartedSequences(sequenceId);
+                area.AddStartedSequences(sequenceId);
                 logger.LogDebug("Marked movie {Id} as started in area {AreaId}", sequenceId, areaId);
             }
         }

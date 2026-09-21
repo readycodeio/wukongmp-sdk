@@ -2,15 +2,15 @@
 using System.Globalization;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Protocol;
+using WukongMp.Sdk.Common.Archetypes;
 using WukongMp.Sdk.Entities;
 
-namespace WukongMp.Sdk.Api;
+namespace WukongMp.Sdk.SDK;
 
 /// <summary>
 /// Provides events related to gameplay, player actions, and multiplayer interactions in Wukong Multiplayer.
 /// </summary>
-[Obsolete("Use IGameEvents instead.")]
-public interface IWukongEventApi
+public interface IGameEvents
 {
     /// <summary>
     /// Fired when the player enters a gameplay level.
@@ -52,18 +52,18 @@ public interface IWukongEventApi
     /// Fired when the player's pawn (the in-game character they control) is spawned.
     /// This can happen when you enter a new area, or when another player connects to the game and their pawn is spawned for you.
     /// </summary>
-    event Action<ReadyMainCharacter>? OnPlayerPawnSpawned;
+    event Action<MainCharacter>? OnPlayerPawnSpawned;
 
     /// <summary>
     /// Fired when the player's main character ECS entity is initialized and ready.
     /// This is fired before <see cref="OnPlayerPawnSpawned"/>, so it can be used to set up things that need to be ready before the pawn is spawned.
     /// </summary>
-    event Action<ReadyMainCharacter>? OnMainCharacterEntityInitialized;
+    event Action<MainCharacter>? OnMainCharacterEntityInitialized;
 
     /// <summary>
     /// Fired when the player changes team, either by rebirthing or by joining a game in progress.
     /// </summary>
-    event Action<ReadyMainCharacter>? OnPlayerChangedTeam;
+    event Action<MainCharacter>? OnPlayerChangedTeam;
 
     /// <summary>
     /// Fired when the local player's character is about to rebirth.
@@ -90,23 +90,23 @@ public interface IWukongEventApi
     /// Fired when any player disconnects from the server, either voluntarily or involuntarily.
     /// </summary>
     event Action<PlayerId, DisconnectedReason>? OnDisconnected;
-    
+
     /// <summary>
     /// Fired when any player dies.
     /// The first parameter is the player character that died, and the second parameter is the entity that killed them (if applicable).
     /// </summary>
-    event Action<ReadyMainCharacter, ReadyCharacter?>? OnPlayerDead;
+    event Action<MainCharacter, Character?>? OnPlayerDead;
 
     /// <summary>
     /// Fired when any monster dies.
     /// The first parameter is the monster that died, and the second parameter is the entity that killed it (if applicable).
     /// </summary>
-    event Action<ReadyTamer, ReadyCharacter?>? OnMonsterDead;
-    
+    event Action<Tamer, Character?>? OnMonsterDead;
+
     /// <summary>
     /// Fired when a monster is removed from the game world, either by dying or by being despawned for other reasons (e.g. the player leaving the area).
     /// </summary>
-    event Action<ReadyTamer>? OnMonsterDestroyed;
+    event Action<Tamer>? OnMonsterDestroyed;
 
     /// <summary>
     /// Fired when the local player changes spectator mode, either by entering or exiting spectator mode.
@@ -116,7 +116,7 @@ public interface IWukongEventApi
     /// <summary>
     /// Fired when a monster is spawned in the game world, either by being spawned by the player or by being spawned by the game itself.
     /// </summary>
-    event Action<ReadyTamer>? OnMonsterSpawned;
+    event Action<Tamer>? OnMonsterSpawned;
 
     /// <summary>
     /// Fired when the game's language is changed, either by the player changing it in the settings or by the game automatically setting it based on the player's system language.

@@ -1,21 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Numerics;
+using b1;
+using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
+using ReadyM.Api.Mapping.Events;
 using ReadyM.Relay.Client.State;
 using ReadyM.SDK.Archetypes;
 using ReadyM.SDK.Client.Entities;
 using ReadyM.SDK.Core;
 using ReadyM.SDK.Entities;
 using ReadyM.SDK.Exceptions;
+using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
+using WukongMp.Api;
+using WukongMp.Api.Configuration;
+using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.State;
+using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk.Archetypes.Mixins;
 using WukongMp.Sdk.Common.Archetypes;
 using WukongMp.Sdk.Common.Archetypes.Mixins;
 
 namespace WukongMp.Sdk.Api.Implementation;
 
-internal sealed class WukongEntityApi(IEntities entities, WukongPlayerState playerState, ClientState state) : IWukongEntityApi
+internal sealed class WukongEntityApi(
+    IEntities entities,
+    WukongPlayerState playerState,
+    WukongAreaState areaState,
+    ClientState state,
+    IMappedEventManager mappedEvent
+) : IWukongEntityApi
 {
     public T GetGlobalMixin<T>() where T : struct, IArchetypeMixin
     {
@@ -56,6 +70,14 @@ internal sealed class WukongEntityApi(IEntities entities, WukongPlayerState play
         }
     }
 
+    public bool InArea => state.CurrentAreaId is not null;
+
+    public bool IsConnected
+        => state.IsConnected;
+
+    public bool IsMasterClient
+        => areaState.IsMasterClient;
+
     public MainCharacter? LocalMainCharacter
     {
         get
@@ -78,20 +100,49 @@ internal sealed class WukongEntityApi(IEntities entities, WukongPlayerState play
     public EntityQuery<Tamer> AllTamers => entities.Query<Tamer>();
 
     public ScopedQuery<Tamer> AreaTamers
-        => state.CurrentAreaId is {} id && entities.TryLookup(id, out Area area)
+        => state.CurrentAreaId is { } id && entities.TryLookup(id, out Area area)
             ? entities.Query<Tamer>().InScope(area)
+            : default;
+
+    public ScopedQuery<MainCharacter> AreaMainCharacters
+        => state.CurrentAreaId is { } id && entities.TryLookup(id, out Area area)
+            ? entities.Query<MainCharacter>().InScope(area)
             : default;
 
     public MainCharacter? GetPlayerEntityByActor(AActor? actor)
     {
-        if (actor == null)
+        if (actor as BGUCharacterCS is not {} character)
             return null;
-        
-        if (entities.TryLookup(actor, out MappedActor mapped))
+
+        if (entities.TryLookup(character, out MappedCharacter mapped))
         {
             return EntityHandle.Of(mapped).As<MainCharacter>();
         }
 
         return null;
+    }
+
+    public void EnableSpectatorMode(MainCharacter character, SpectatorReason reason)
+    {
+        var rawEntity = EntityHandle.Of(character).RawEntity;
+        var entity = WukongApi.Services.Resolve<EntityStore>().GetEntityByRawEntity(rawEntity);
+        PlayerUtils.EnableSpectator(entity, reason);
+    }
+
+    public void DisableSpectatorMode(MainCharacter character)
+    {
+        var rawEntity = EntityHandle.Of(character).RawEntity;
+        var entity = WukongApi.Services.Resolve<EntityStore>().GetEntityByRawEntity(rawEntity);
+        PlayerUtils.DisableSpectator(entity);
+    }
+
+    public void SpawnEnemy(TamerKind kind, Vector3 position, int count, int teamId)
+    {
+        if (LocalMainCharacter.HasValue && kind.Name != null)
+        {
+            var rawEntity = EntityHandle.Of(LocalMainCharacter.Value).RawEntity;
+            var entity = WukongApi.Services.Resolve<EntityStore>().GetEntityByRawEntity(rawEntity);
+            mappedEvent.InvokeInGameAndNotifyEcs(new RequestSpawnUnitsEvent(entity, kind.Name, count, teamId, position.ToFVector()), entity);
+        }
     }
 }

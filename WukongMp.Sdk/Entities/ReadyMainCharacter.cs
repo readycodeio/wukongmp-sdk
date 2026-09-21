@@ -92,11 +92,15 @@ public readonly struct ReadyMainCharacter
         }
     }
 
+    [Obsolete]
     public bool IsObserver => Entity.GetState().IsSpectator && Entity.GetState().SpectatorReason == SpectatorReason.Api;
+
+    [Obsolete]
     public bool IsSpectator => Entity.GetState().IsSpectator;
 
     // ---
 
+    [Obsolete]
     public void Teleport(Vector3 location, Vector3 rotation)
     {
         DI.Instance.MappedEvent.InvokeInGameAndNotifyEcs(new RequestTeleportEvent(
@@ -126,9 +130,15 @@ public readonly struct ReadyMainCharacter
 
     public void EnableInteraction(bool enabled)
     {
-        PlayerUtils.SetPlayerInteractionEnabled(Entity, enabled);
+        if (Entity.Pawn == null)
+        {
+            Logging.LogError("Cannot enable/disable interaction: Player pawn is null.");
+            return;
+        }
+
+        PlayerUtils.SetPlayerInteractionEnabled(Entity.Pawn, enabled);
     }
-    
+
     public ref T Get<T>() where T : struct, IComponent
     {
         return ref Entity.Entity.GetComponent<T>();
