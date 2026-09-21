@@ -12,12 +12,12 @@ internal class WukongNetworkedComponentRegistration : INetworkedComponentRegistr
         registry.RegisterComponent<TransformComponent>();
         registry.RegisterComponent<HpComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<NicknameComponent>(DeliveryMethod.ReliableOrdered);
-        registry.RegisterComponent<TeamComponent>(DeliveryMethod.ReliableOrdered);
 
         // Tamer (area-scoped)
         registry.RegisterComponent<TamerComponent>(DeliveryMethod.ReliableOrdered);
         registry.RegisterComponent<AnimationComponent>();
         registry.RegisterComponent<MonsterAnimationComponent>();
+        registry.RegisterComponent<TeamComponent>(DeliveryMethod.ReliableOrdered);
 
         // Main character (area-scoped)
         registry.RegisterComponent<MainCharacterComponent>();

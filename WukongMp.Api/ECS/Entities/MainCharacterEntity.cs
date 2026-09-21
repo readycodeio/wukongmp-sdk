@@ -49,17 +49,11 @@ internal readonly struct MainCharacterEntity(Entity entity) : IEquatable<MainCha
     public ref LocalMainCharacterComponent GetLocalState()
         => ref Entity.GetComponent<LocalMainCharacterComponent>();
 
-    public ref TeamComponent GetTeam()
-        => ref Entity.GetComponent<TeamComponent>();
-
     public ref MarkerComponent GetMarker()
         => ref Entity.GetComponent<MarkerComponent>();
     
     public ref NicknameComponent GetNickname()
         => ref Entity.GetComponent<NicknameComponent>();
-
-    public void SetTeam(TeamComponent team)
-        => Entity.Set(team);
 
     public ref readonly MappingComponent<AActor> GetMappingComponent()
         => ref Entity.GetComponent<MappingComponent<AActor>>();

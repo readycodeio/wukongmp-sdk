@@ -67,6 +67,7 @@ public interface IWukongEntityApi
 
     bool IsMasterClient { get; }
     bool IsConnected { get; }
+    Player? LocalPlayer { get; }
 
     MainCharacter? GetPlayerEntityByActor(AActor? actor);
     
@@ -91,4 +92,10 @@ public interface IWukongEntityApi
     /// <param name="count">The number of enemies to spawn. Defaults to 1.</param>
     /// <param name="teamId">The team ID for the spawned enemies. Defaults to the default monster team ID (2).</param>
     void SpawnEnemy(TamerKind kind, Vector3 position, int count, int teamId);
+    
+    /// <summary>
+    /// Register all monsters in the current area to be synchronized over the network.
+    /// This should be called whenever the first player enters a new area.
+    /// </summary>
+    void SyncMonstersInArea();
 }

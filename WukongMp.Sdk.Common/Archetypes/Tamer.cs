@@ -7,5 +7,6 @@ namespace WukongMp.Sdk.Common.Archetypes;
 [Include(typeof(Character))]
 [Include(typeof(TamerData))]
 [Include(typeof(Animation))]
+[Include(typeof(Team))]
 [Include(typeof(MonsterAnimation))]
 public readonly partial struct Tamer;
