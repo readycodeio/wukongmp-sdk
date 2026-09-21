@@ -1,8 +1,10 @@
-﻿using ReadyM.Api.DI;
+﻿using System;
+using ReadyM.Api.DI;
 using ReadyM.SDK.Client;
 using ReadyM.SDK.Client.Entities;
 using WukongMp.Api;
 using WukongMp.Sdk.Api.Implementation;
+using WukongMp.Sdk.SDK;
 
 namespace WukongMp.Sdk.Api;
 
@@ -17,6 +19,7 @@ public static class WukongApi
         Services.RegisterReadyMSdk();
         
         Services.RegisterSingleton<WukongArchetypes>();
+        Services.RegisterSingleton<IGameEvents, GameEvents>();
         Services.RegisterSingleton<IWukongSaveApi, WukongSelfHostedSaveApi>();
         Services.RegisterSingleton<IWukongFileApi, WukongFileApi>();
         Services.RegisterSingleton<IWukongConsoleApi, WukongConsoleApi>();
@@ -60,9 +63,11 @@ public static class WukongApi
     public static IWukongSaveApi Saves => Services.Resolve<IWukongSaveApi>();
 
     /// <inheritdoc cref="IWukongEventApi"/>
+    [Obsolete("Use IGameEvents instead.")]
     public static IWukongEventApi Events => Services.Resolve<IWukongEventApi>();
 
     /// <inheritdoc cref="IWukongSynchronizationApi"/>
+    [Obsolete("Use IWukongEntityApi instead.")]
     public static IWukongSynchronizationApi Sync => Services.Resolve<IWukongSynchronizationApi>();
 
     /// <inheritdoc cref="IWukongWidgetApi"/>
