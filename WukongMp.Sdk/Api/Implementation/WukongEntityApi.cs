@@ -122,9 +122,6 @@ internal sealed class WukongEntityApi(
             ? entities.Query<MainCharacter>().InScope(area)
             : default;
 
-    public MainCharacter? GetPlayerEntityByActor(BGUCharacterCS? actor)
-        => TryGetByActor(actor, out MainCharacter main) ? main : null;
-
     public bool TryGetByActor<T>(AActor? actor, out T shape)
         where T : struct, IArchetypeQueryable
     {
