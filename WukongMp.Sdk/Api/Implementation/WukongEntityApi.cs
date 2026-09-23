@@ -122,19 +122,38 @@ internal sealed class WukongEntityApi(
             ? entities.Query<MainCharacter>().InScope(area)
             : default;
 
-    public MainCharacter? GetPlayerEntityByActor(AActor? actor)
-    {
-        if (actor as BGUCharacterCS is not { } character)
-            return null;
+    public MainCharacter? GetPlayerEntityByActor(BGUCharacterCS? actor)
+        => TryGetByActor(actor, out MainCharacter main) ? main : null;
 
-        // One component maps every kind of actor, so the lookup is by actor and the cast above
-        // is what keeps this to player characters.
-        if (entities.TryLookup<MappedCharacter, AActor>(character, out var mapped))
+    public bool TryGetByActor<T>(AActor? actor, out T shape)
+        where T : struct, IArchetypeQueryable
+    {
+        if (!actor.IsNullOrDestroyed())
         {
-            return EntityHandle.Of(mapped).As<MainCharacter>();
+            shape = default;
+            return false;
         }
 
-        return null;
+        switch (actor)
+        {
+            case ABGUTamerBase when entities.TryLookup<MappedTamer, AActor>(actor, out var mappedTamer):
+                return EntityHandle.Of(mappedTamer).TryAs(out shape);
+            case BGU_CharacterAI ai:
+            {
+                var tamerOwner = ai.GetTamerOwner();
+                if (entities.TryLookup<MappedTamer, AActor>(tamerOwner, out var mappedTamer))
+                {
+                    return EntityHandle.Of(mappedTamer).TryAs(out shape);
+                }
+
+                break;
+            }
+            case BGUCharacterCS when entities.TryLookup<MappedCharacter, AActor>(actor, out var mappedMain):
+                return EntityHandle.Of(mappedMain).TryAs(out shape);
+        }
+
+        shape = default;
+        return false;
     }
 
     public void EnableSpectatorMode(MainCharacter character, SpectatorReason reason)

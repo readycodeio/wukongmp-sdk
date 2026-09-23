@@ -9,7 +9,7 @@ namespace WukongMp.Sdk.Archetypes.Mixins;
 [ArchetypeMixin]
 [Extends(typeof(Tamer))]
 [ExplicitComponent(typeof(MappingComponent<AActor>))]
-public readonly partial struct MappedMonster
+public readonly partial struct MappedTamer
 {
     [ExplicitMember(nameof(MappingComponent<>.GameObject))]
     public partial BUTamerActor? TamerActor { get; }
