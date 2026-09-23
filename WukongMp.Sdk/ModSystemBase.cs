@@ -1,4 +1,6 @@
 ﻿using Friflo.Engine.ECS.Systems;
+using ReadyM.SDK.Client;
+using ReadyM.SDK.Client.Systems;
 
 namespace WukongMp.Sdk;
 
@@ -20,6 +22,9 @@ public abstract class ModSystemBase
 
         protected override void OnUpdateGroup()
         {
+            if (!ModSystems.Running)
+                return;
+
             modSystem.OnUpdate(new UpdateTick(Tick.deltaTime, Tick.time));
         }
     }

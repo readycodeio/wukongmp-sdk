@@ -27,6 +27,9 @@ using WukongMp.Api.Shim;
 using WukongMp.Api.UI;
 using WukongMp.Api.WukongUtils;
 using WukongMp.Sdk.Api;
+using ReadyM.SDK.Client;
+using ReadyM.SDK.Client.Entities;
+using ReadyM.SDK.Client.Systems;
 
 namespace WukongMp.Sdk;
 
@@ -69,6 +72,9 @@ internal class Mod : ModBase
 
         DI.Instance.Init();
         WukongApi.RegisterApis();
+
+        // After the mods, so a mod's own mappings are collected with the SDK's.
+        DI.Instance.ApplyShapeMappings();
 
         RegisterConfig<SdkSettings>();
         var settings = services.Resolve<SdkSettings>();
@@ -174,6 +180,9 @@ internal class Mod : ModBase
 
     private void AddModSystemsToEcs()
     {
+        // Before every other system
+        DI.Instance.World.SystemRoot.Add(new ModSystemGate(DI.Instance.Resolve<IEntities>()));
+
         var assemblySystems = DI.Instance.Container
             .ResolveMany<ModSystemBase>()
             .GroupBy(x => x.GetType().Assembly)
