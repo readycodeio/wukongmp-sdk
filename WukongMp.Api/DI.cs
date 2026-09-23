@@ -22,6 +22,7 @@ using ReadyM.Api.Mapping.Data;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Mapping.Policies.Data;
 using ReadyM.Api.Mapping.Policies.Event;
+using ReadyM.Api.Mapping.Policies.Data.Common;
 using ReadyM.Api.Mapping.Policies.Event.Common;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Archetypes;
@@ -247,6 +248,7 @@ internal sealed class DI : IDependencyContainer
         Container.Register<DataSideChannel>();
 
         Container.Register<IMappingDataPolicyFactory, OwnershipDataPolicyFactory>();
+        Container.Register<IMappingDataPolicyFactory, PropagationDataPolicyFactory>();
         Container.Register<IMappingEventPolicyFactory, OwnershipEventPolicyFactory>();
         Container.Register<IMappingEventPolicyFactory, MasterClientEventPolicyFactory>();
         Container.Register<IMappingEventPolicyFactory, RunOnMasterClientOnlyEventPolicyFactory>();
