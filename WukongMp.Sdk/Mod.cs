@@ -183,7 +183,7 @@ internal class Mod : ModBase
         // Before every other system
         DI.Instance.World.SystemRoot.Add(new ModSystemGate(DI.Instance.Resolve<IEntities>()));
 
-        // Everything a mod declared [System], which the SDK registered as this mod loaded.
+        // Everything a mod declared [Service], which the SDK registered as this mod loaded.
         DI.Instance.World.SystemRoot.Add(new ModSystemUpdates(DI.Instance));
 
         var assemblySystems = DI.Instance.Container
