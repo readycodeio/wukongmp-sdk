@@ -19,37 +19,28 @@ namespace WukongMp.Sdk.SDK;
 
 internal sealed class GameEvents : IDisposable, IGameEvents
 {
-    private readonly IEntities _entities;
     private readonly IEntityApi _internalEntityApi;
     private readonly ClientState _clientState;
     private readonly WukongPlayerPawnState _pawnState;
     private readonly WukongPlayerState _playerState;
     private readonly WukongEventBus _eventBus;
     private readonly GameplayEventRouter _eventRouter;
-    private readonly ArchetypeEventRouter _archetypeEventRouter;
-    private readonly ClientWukongArchetypeRegistration _archetypeRegistration;
 
     public GameEvents(
-        IEntities entities,
         IEntityApi internalEntityApi,
         ClientState clientState,
         WukongPlayerPawnState pawnState,
         WukongPlayerState playerState,
         WukongEventBus eventBus,
-        GameplayEventRouter eventRouter,
-        ArchetypeEventRouter archetypeEventRouter,
-        ClientWukongArchetypeRegistration archetypeRegistration
+        GameplayEventRouter eventRouter
     )
     {
-        _entities = entities;
         _internalEntityApi = internalEntityApi;
         _clientState = clientState;
         _pawnState = pawnState;
         _playerState = playerState;
         _eventBus = eventBus;
         _eventRouter = eventRouter;
-        _archetypeEventRouter = archetypeEventRouter;
-        _archetypeRegistration = archetypeRegistration;
 
         _clientState.OnJoinedArea += InvokeJoinedArea;
         _clientState.OnLeftArea += InvokeLeftArea;
@@ -70,7 +61,6 @@ internal sealed class GameEvents : IDisposable, IGameEvents
         _eventRouter.OnLocalPlayerChangedSpectator += InvokeOnLocalPlayerChangedSpectator;
         _eventRouter.OnMonsterSpawned += InvokeOnMonsterSpawned;
         _eventRouter.OnLanguageChanged += InvokeOnLanguageChanged;
-        _archetypeEventRouter[_archetypeRegistration.TamerArchetype].OnEntityDelete += InvokeOnMonsterDestroyed;
     }
 
     public void Dispose()
@@ -94,7 +84,6 @@ internal sealed class GameEvents : IDisposable, IGameEvents
         _eventRouter.OnLocalPlayerChangedSpectator -= InvokeOnLocalPlayerChangedSpectator;
         _eventRouter.OnMonsterSpawned -= InvokeOnMonsterSpawned;
         _eventRouter.OnLanguageChanged -= InvokeOnLanguageChanged;
-        _archetypeEventRouter[_archetypeRegistration.TamerArchetype].OnEntityDelete -= InvokeOnMonsterDestroyed;
     }
 
     public event Action? OnBeginPlayGameplayLevel;
@@ -114,7 +103,6 @@ internal sealed class GameEvents : IDisposable, IGameEvents
     public event Action<PlayerId, DisconnectedReason>? OnDisconnected;
     public event Action<MainCharacter, Character?>? OnPlayerDead;
     public event Action<Tamer, Character?>? OnMonsterDead;
-    public event Action<Tamer>? OnMonsterDestroyed;
     public event Action<Tamer>? OnMonsterSpawned;
     public event Action<bool>? OnLocalPlayerChangedSpectator;
     public event Action<CultureInfo>? OnLanguageChanged;
@@ -185,9 +173,6 @@ internal sealed class GameEvents : IDisposable, IGameEvents
             OnMonsterDead?.Invoke(new Tamer(handle), attackerCharacter);
         }
     }
-
-    private void InvokeOnMonsterDestroyed(EntityDelete evt)
-        => OnMonsterDestroyed?.Invoke(new Tamer(new EntityHandle(evt.Entity.RawEntity, _internalEntityApi)));
 
     private void InvokeOnMonsterSpawned(Entity entity)
         => OnMonsterSpawned?.Invoke(new Tamer(new EntityHandle(entity.RawEntity, _internalEntityApi)));
