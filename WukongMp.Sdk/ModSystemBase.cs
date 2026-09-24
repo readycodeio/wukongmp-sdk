@@ -1,10 +1,11 @@
-﻿using Friflo.Engine.ECS.Systems;
-using ReadyM.SDK.Client;
+﻿using System;
+using Friflo.Engine.ECS.Systems;
 using ReadyM.SDK.Client.Systems;
 
 namespace WukongMp.Sdk;
 
 /// Base class for plugin systems. Adds itself to the update loop on creation and removes itself on disposal.
+[Obsolete("Use [System] attribute instead.")]
 public abstract class ModSystemBase
 {
     protected readonly ref struct UpdateTick(float deltaTime, float time)

@@ -142,11 +142,8 @@ internal sealed class DI : IDependencyContainer
             return;
 
         Container.RegisterInstance(loggerFactory);
-        var loggerFactoryMethod = typeof(LoggerFactory).GetMethod("CreateLogger")!;
-
-        Container.Register(typeof(ILogger<>), made: Made.Of(
-            req => loggerFactoryMethod.MakeGenericMethod(req.Parent.ImplementationType),
-            ServiceInfo.Of<LoggerFactory>()));
+        
+        Container.Register(typeof(ILogger<>), typeof(Logger<>), ifAlreadyRegistered: IfAlreadyRegistered.Replace);
         Container.RegisterInstance(LoggerFactory.CreateLogger("Default"));
     }
 
