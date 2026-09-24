@@ -104,11 +104,6 @@ public interface IGameEvents
     event Action<Tamer, Character?>? OnMonsterDead;
 
     /// <summary>
-    /// Fired when a monster is removed from the game world, either by dying or by being despawned for other reasons (e.g. the player leaving the area).
-    /// </summary>
-    event Action<Tamer>? OnMonsterDestroyed;
-
-    /// <summary>
     /// Fired when the local player changes spectator mode, either by entering or exiting spectator mode.
     /// </summary>
     event Action<bool>? OnLocalPlayerChangedSpectator;
