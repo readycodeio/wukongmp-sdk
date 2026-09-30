@@ -181,7 +181,7 @@ internal class Mod : ModBase
     private void AddModSystemsToEcs()
     {
         // Before every other system
-        DI.Instance.World.SystemRoot.Add(new ModSystemGate(DI.Instance.Resolve<IEntities>()));
+        DI.Instance.World.SystemRoot.Add(new ModSystemGate(DI.Instance.Resolve<IEntities>(), DI.Instance.Resolve<ILogger>()));
 
         // Everything a mod declared [Service], which the SDK registered as this mod loaded.
         DI.Instance.World.SystemRoot.Add(new ModSystemUpdates(DI.Instance));
