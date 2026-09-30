@@ -1,13 +1,14 @@
 ﻿using System;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct UnitDespawnedEvent(
+[DeriveIGameEvent, AlwaysPropagates]
+internal readonly partial struct UnitDespawnedEvent(
     Entity entity,
-    PlayerId playerId) : IEquatable<UnitDespawnedEvent>, IAlwaysPropagates
+    PlayerId playerId) : IEquatable<UnitDespawnedEvent>
 {
     public readonly Entity Entity = entity;
     public readonly PlayerId PlayerId = playerId;

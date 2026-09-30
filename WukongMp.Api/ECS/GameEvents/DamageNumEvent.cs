@@ -1,19 +1,20 @@
 ﻿using System;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct DamageNumEvent(
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct DamageNumEvent(
     Entity entity,
     EDamageNumberType damageType,
     int damageNum,
     float amplitude,
     FVector realHitLocation,
     FVector realHitDir,
-    EDmgNumUITeamType attackerTeamType) : IEquatable<DamageNumEvent>, IOwnershipBased
+    EDmgNumUITeamType attackerTeamType) : IEquatable<DamageNumEvent>
 {
     public readonly Entity Entity = entity;
     public readonly EDamageNumberType DamageType = damageType;

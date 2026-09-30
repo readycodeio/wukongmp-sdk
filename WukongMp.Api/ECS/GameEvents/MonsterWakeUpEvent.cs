@@ -1,11 +1,12 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct MonsterWakeUpEvent(Entity entity)
-    : IEquatable<MonsterWakeUpEvent>, IOwnershipBased
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct MonsterWakeUpEvent(Entity entity)
+    : IEquatable<MonsterWakeUpEvent>
 {
     public readonly Entity Entity = entity;
 

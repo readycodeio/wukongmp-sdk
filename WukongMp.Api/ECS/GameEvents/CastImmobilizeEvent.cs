@@ -1,10 +1,11 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using WukongMp.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct CastImmobilizeEvent(Entity caster) : IEquatable<CastImmobilizeEvent>, IRunOnMasterClientOnly
+[DeriveIGameEvent, RunOnMasterClientOnly(nameof(Caster))]
+internal readonly partial struct CastImmobilizeEvent(Entity caster) : IEquatable<CastImmobilizeEvent>
 {
     public readonly Entity Caster = caster;
 

@@ -1,11 +1,12 @@
 ﻿using System;
 using b1;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
 // NOTE(api): Despite being related to movies, this is a client-RPC related event
-internal readonly struct PlayMovieRequestEvent(
+[DeriveIGameEvent, AlwaysPropagates]
+internal readonly partial struct PlayMovieRequestEvent(
     int sequenceId,
     bool disablePlayerControl,
     bool disableMovementInput,
@@ -13,7 +14,7 @@ internal readonly struct PlayMovieRequestEvent(
     bool hidePlayer,
     bool hideHud,
     string overlapBoxGuid,
-    ESequenceBlendInMatchPositionType matchType) : IEquatable<PlayMovieRequestEvent>, IAlwaysPropagates
+    ESequenceBlendInMatchPositionType matchType) : IEquatable<PlayMovieRequestEvent>
 {
     public readonly int SequenceId = sequenceId;
     public readonly bool DisablePlayerControl = disablePlayerControl;

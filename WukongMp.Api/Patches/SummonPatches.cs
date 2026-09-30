@@ -1,10 +1,10 @@
 ﻿using b1;
 using HarmonyLib;
+using ReadyM.Api.Mapping.Events;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.GameEvents;
-using WukongMp.Api.Mapping.Policies.Event;
 using WukongMp.Api.WukongUtils;
 
 namespace WukongMp.Api.Patches;
@@ -24,9 +24,7 @@ internal static class PatchRequestSpawnServant
         __result = null;
 
         _ = DI.Instance.MappingPolicyDir.IsCharacterMapped(InServantReq.Summoner, out var entity);
-        var ctx = new SpawnSummonContext(entity, InTransform.GetLocation());
-
-        if (DI.Instance.MappingPolicyDir.ForEvent<SpawnSummonEvent, SpawnSummonContext>().CanEcsInvokeGameEvent(ctx))
+        if (DI.Instance.MappedEvent.CanEcsInvokeGameEvent(new SpawnSummonEvent(entity, InTransform.GetLocation())).Runs())
         {
             // inlined original code
             var tamerActor = SpawningUtils.BeginDeferredSummonSpawn(World, TamerClass, InTransform, InServantReq.SummonID, SafeClampToLand);
@@ -51,7 +49,7 @@ internal static class PatchRequestSpawnServant
             var ev = InServantReq.FromGame(DI.Instance.PawnState);
             if (ev != null)
             {
-                DI.Instance.MappedEvent.NotifyEcsIfApplicable(ev.Value, ctx);
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(ev.Value);
             }
         }
 
@@ -77,7 +75,6 @@ internal class PatchRequestSummon
         // accept null if a BGU_QuestActor (act 6.)
         _ = DI.Instance.MappingPolicyDir.IsCharacterMapped(InSummonReq.Summoner, out var entity);
 
-        var ctx = new SpawnSummonContext(entity, InSummonReq.HitLocation);
-        return DI.Instance.MappingPolicyDir.ForEvent<SpawnSummonEvent, SpawnSummonContext>().CanGameEventRunLocally(ctx);
+        return DI.Instance.MappedEvent.CanGameEventRunLocally(new SpawnSummonEvent(entity, InSummonReq.HitLocation)).Runs();
     }
 }

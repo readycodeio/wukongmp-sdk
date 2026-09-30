@@ -1,13 +1,14 @@
 ﻿using System;
 using ReadyM.Api.Idents;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
 // NOTE(api): This is propagated to the server-side only
-internal readonly struct MovieStartedEvent(
+[DeriveIGameEvent, AlwaysPropagatesToEcsOnly]
+internal readonly partial struct MovieStartedEvent(
     int sequenceId,
-    AreaId areaId) : IEquatable<MovieStartedEvent>, IAlwaysPropagatesToEcsOnly
+    AreaId areaId) : IEquatable<MovieStartedEvent>
 {
     public readonly int SequenceId = sequenceId;
     public readonly AreaId AreaId = areaId;

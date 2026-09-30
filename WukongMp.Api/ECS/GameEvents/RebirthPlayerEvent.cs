@@ -1,11 +1,12 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct RebirthPlayerEvent(Entity entity, bool teleport) 
-    : IEquatable<RebirthPlayerEvent>, IAlwaysPropagates
+[DeriveIGameEvent, AlwaysPropagates]
+internal readonly partial struct RebirthPlayerEvent(Entity entity, bool teleport) 
+    : IEquatable<RebirthPlayerEvent>
 {
     public readonly Entity Entity = entity;
     public readonly bool Teleport = teleport;

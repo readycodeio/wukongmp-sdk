@@ -1,16 +1,17 @@
 ﻿using System;
 using Friflo.Engine.ECS;
+using ReadyM.Api.Mapping.Events;
 using UnrealEngine.Runtime;
-using WukongMp.Api.Mapping.Tags;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct RequestSpawnUnitsEvent(
+[DeriveIGameEvent, RunOnMasterClientOnly(nameof(Requester))]
+internal readonly partial struct RequestSpawnUnitsEvent(
     Entity requester,
     string unitName, 
     int count, 
     int teamId, 
-    FVector location) : IEquatable<RequestSpawnUnitsEvent>, IRunOnMasterClientOnly
+    FVector location) : IEquatable<RequestSpawnUnitsEvent>
 {
     public readonly Entity Requester = requester;
     public readonly string UnitName = unitName;

@@ -25,7 +25,7 @@ internal static class PatchOnMagicFieldDead
         if (className.Contains(Constants.SupremeInspectorFirewallName))
         {
             Logging.LogDebug("OnMagicFieldDead send for {Class}", className);
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MagicFieldDeadEvent(className, Reason), default(EmptyContext));
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MagicFieldDeadEvent(className, Reason));
         }
     }
 }

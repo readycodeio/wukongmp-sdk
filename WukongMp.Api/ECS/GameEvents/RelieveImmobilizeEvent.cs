@@ -1,11 +1,12 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using WukongMp.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct RelieveImmobilizeEvent(Entity affected)
-    : IEquatable<RelieveImmobilizeEvent>, IMasterClientManaged
+[DeriveIGameEvent, MasterClientManaged]
+internal readonly partial struct RelieveImmobilizeEvent(Entity affected)
+    : IEquatable<RelieveImmobilizeEvent>
 {
     public readonly Entity Affected = affected;
 

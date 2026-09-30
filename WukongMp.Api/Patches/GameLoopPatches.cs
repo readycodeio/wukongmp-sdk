@@ -2,6 +2,7 @@
 using Friflo.Engine.ECS;
 using HarmonyLib;
 using ReadyM.Api.ECS.Components;
+using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;
@@ -53,7 +54,7 @@ internal static class ReceiveTickPatch
         {
             var mainEntity = new MainCharacterEntity(entity);
 
-            if (DI.Instance.MappingPolicyDir.ForEvent<MontageCallbackEvent>().CanGameEventNotifyEcs(mainEntity))
+            if (DI.Instance.MappedEvent.CanGameEventNotifyEcs(new MontageCallbackEvent(mainEntity, "", 0, false)) == GameEventNotifyResult.Notify)
             {
                 SyncPlayerMontage(mainEntity);
             }
@@ -92,7 +93,7 @@ internal static class ReceiveTickPatch
             if (isNewMontage || hasMontageRewound || hasSkippedFrames)
             {
                 // TODO: Check was performed beforehand
-                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MontageCallbackEvent(mainEntity, currentMontage.PathName, currentPosition, hasMontageRewound), mainEntity.Entity);
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MontageCallbackEvent(mainEntity, currentMontage.PathName, currentPosition, hasMontageRewound));
             }
 
             montageState.LocalMontagePosition = currentPosition;
@@ -100,7 +101,7 @@ internal static class ReceiveTickPatch
         else if (montageState.LocalMontage != null)
         {
             // TODO: Check was performed beforehand
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MontageCancelEvent(mainEntity), mainEntity.Entity);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MontageCancelEvent(mainEntity));
         }
 
         montageState.LocalMontage = currentMontage;

@@ -102,12 +102,12 @@ public readonly struct ReadyMainCharacter
             entity: Entity,
             location: location.ToFVector(),
             rotation: rotation.ToFRotator()
-        ), default(EmptyContext));
+        ));
     }
 
     public void RebirthInPlace()
     {
-        DI.Instance.MappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(Entity, false), default(EmptyContext));
+        DI.Instance.MappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(Entity, false));
     }
 
     public void RebirthAtShrine(int shrineId)
@@ -118,7 +118,7 @@ public readonly struct ReadyMainCharacter
         DI.Instance.MappedEvent.InvokeInGameAndNotifyEcs(new PartyRespawnEvent(
             entity: Entity,
             birthShrineId: shrineId
-        ), default(EmptyContext));
+        ));
     }
 
     public void EnableInteraction(bool enabled)

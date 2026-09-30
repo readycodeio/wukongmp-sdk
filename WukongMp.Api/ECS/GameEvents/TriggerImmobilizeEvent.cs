@@ -1,13 +1,14 @@
 using System;
 using Friflo.Engine.ECS;
-using WukongMp.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct TriggerImmobilizeEvent(
+[DeriveIGameEvent, MasterClientManaged]
+internal readonly partial struct TriggerImmobilizeEvent(
     Entity target,
     Entity caster,
-    bool greatSageTalentActiveBuff) : IEquatable<TriggerImmobilizeEvent>, IMasterClientManaged
+    bool greatSageTalentActiveBuff) : IEquatable<TriggerImmobilizeEvent>
 {
     public readonly Entity Target = target;
     public readonly Entity Caster = caster;

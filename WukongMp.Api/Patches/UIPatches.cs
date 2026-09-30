@@ -12,6 +12,7 @@ using Friflo.Engine.ECS;
 using GSE.GSUI;
 using HarmonyLib;
 using PreludeLib.Attributes;
+using ReadyM.Api.Mapping.Events;
 using UnrealEngine.Runtime;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.GameEvents;
@@ -50,7 +51,7 @@ internal static class PatchDamageNumberDisplayCheck
 
         if (DI.Instance.MappingPolicyDir.IsCharacterMapped(owner, out var entity))
         {
-            if (DI.Instance.MappingPolicyDir.ForEvent<DamageNumEvent, Entity>().CanGameEventNotifyEcs(entity.Value))
+            if (DI.Instance.MappedEvent.CanGameEventNotifyEcs(new DamageNumEvent(entity.Value, default, 0, 0, default, default, default)) == GameEventNotifyResult.Notify)
             {
                 return; // allow to continue to PatchSendDamageNumbers
             }
@@ -77,7 +78,7 @@ internal static class PatchSendDamageNumbers
         
         // we already checked in PatchDamageNumberDisplayCheck if the event can be sent, so we can refer to local player entity here which would always pass
         var entity = DI.Instance.PlayerState.LocalMainCharacter.Value;
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new DamageNumEvent(entity, Param.DamageType, Param.DamageNum, Param.Amplitude, Param.RealHitLocation, Param.RealHitDir, Param.AttackerTeamType), entity.Entity);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new DamageNumEvent(entity, Param.DamageType, Param.DamageNum, Param.Amplitude, Param.RealHitLocation, Param.RealHitDir, Param.AttackerTeamType));
     }
 }
 

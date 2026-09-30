@@ -1,14 +1,15 @@
 ﻿using System;
 using b1;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct MagicFieldDeadEvent(
+[DeriveIGameEvent, AlwaysPropagates]
+internal readonly partial struct MagicFieldDeadEvent(
     string className,
     EBGUBulletDestroyReason reason
 )
-    : IEquatable<MagicFieldDeadEvent>, IAlwaysPropagates
+    : IEquatable<MagicFieldDeadEvent>
 {
     public readonly string ClassName = className;
     public readonly EBGUBulletDestroyReason Reason = reason;

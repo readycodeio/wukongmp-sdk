@@ -1,16 +1,17 @@
 ﻿using System;
 using BtlShare;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct RemoveBuffEvent(
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct RemoveBuffEvent(
     Entity entity,
     int buffId,
     EBuffEffectTriggerType triggerType,
     int layer,
-    bool withTriggerRemoveEffect) : IEquatable<RemoveBuffEvent>, IOwnershipBased
+    bool withTriggerRemoveEffect) : IEquatable<RemoveBuffEvent>
 {
     public readonly Entity Entity = entity;
     public readonly int BuffId = buffId;

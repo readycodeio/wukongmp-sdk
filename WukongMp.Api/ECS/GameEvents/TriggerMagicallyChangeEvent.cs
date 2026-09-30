@@ -1,17 +1,18 @@
 ﻿using System;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct TriggerMagicallyChangeEvent(
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct TriggerMagicallyChangeEvent(
     Entity entity,
     string configPathName,
     int skillId,
     int recoverSkillId,
     int curVigorSkillId,
-    ECastReason_MagicallyChange castReason) : IEquatable<TriggerMagicallyChangeEvent>, IOwnershipBased
+    ECastReason_MagicallyChange castReason) : IEquatable<TriggerMagicallyChangeEvent>
 {
     public readonly Entity Entity = entity;
     public readonly string ConfigPathName = configPathName;

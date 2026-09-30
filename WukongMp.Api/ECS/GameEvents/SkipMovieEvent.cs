@@ -1,13 +1,14 @@
 ﻿using System;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
 // NOTE(api): This is propagated to the server-side only
-internal readonly struct SkipMovieEvent(
+[DeriveIGameEvent, AlwaysPropagates]
+internal readonly partial struct SkipMovieEvent(
     int sequenceId,
     int waitingPlayers = 0,
-    int allPlayers = 0) : IEquatable<SkipMovieEvent>, IAlwaysPropagates
+    int allPlayers = 0) : IEquatable<SkipMovieEvent>
 {
     public readonly int SequenceId = sequenceId;
     public readonly int WaitingPlayers = waitingPlayers;

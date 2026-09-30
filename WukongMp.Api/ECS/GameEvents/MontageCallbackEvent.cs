@@ -1,14 +1,15 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct MontageCallbackEvent(
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct MontageCallbackEvent(
     Entity entity,
     string fullMontagePath,
     float position,
-    bool reset) : IEquatable<MontageCallbackEvent>, IOwnershipBased
+    bool reset) : IEquatable<MontageCallbackEvent>
 {
     public readonly Entity Entity = entity;
     public readonly string FullMontagePath = fullMontagePath;

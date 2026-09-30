@@ -1,12 +1,13 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct PartyRespawnEvent(
+[DeriveIGameEvent, AlwaysPropagates]
+internal readonly partial struct PartyRespawnEvent(
     Entity entity,
-    int birthShrineId) : IEquatable<PartyRespawnEvent>, IAlwaysPropagates
+    int birthShrineId) : IEquatable<PartyRespawnEvent>
 {
     public readonly Entity Entity = entity;
     public readonly int BirthShrineId = birthShrineId;

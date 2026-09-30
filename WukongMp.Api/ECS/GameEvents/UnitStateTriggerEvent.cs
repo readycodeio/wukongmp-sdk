@@ -1,15 +1,16 @@
 ﻿using System;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct UnitStateTriggerEvent(
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct UnitStateTriggerEvent(
     Entity entity,
     EBUStateTrigger trigger,
     float time,
-    bool needForceUpdate) : IEquatable<UnitStateTriggerEvent>, IOwnershipBased
+    bool needForceUpdate) : IEquatable<UnitStateTriggerEvent>
 {
     public readonly Entity Entity = entity;
     public readonly EBUStateTrigger Trigger = trigger;

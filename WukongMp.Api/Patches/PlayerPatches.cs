@@ -9,6 +9,7 @@ using Friflo.Engine.ECS;
 using HarmonyLib;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Attributes;
+using ReadyM.Api.Mapping.Events;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
@@ -366,7 +367,7 @@ internal class PatchOnUnitDead
         }
 
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(ownerCharacter, out var entity) &&
-            DI.Instance.MappingPolicyDir.ForEvent<UnitDeadEvent>().CanGameEventNotifyEcs(entity.Value))
+            DI.Instance.MappedEvent.CanGameEventNotifyEcs(new UnitDeadEvent(entity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType)) == GameEventNotifyResult.Notify)
         {
             var state = entity.Value.GetState();
             if (!state.IsTransformed)
@@ -391,7 +392,7 @@ internal class PatchOnUnitDead
                 }
 
                 // TODO: Check required before call to this
-                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new UnitDeadEvent(entity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType), entity.Value.Entity);
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new UnitDeadEvent(entity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType));
                 DI.Instance.GameplayEventRouter.RaiseOnUnitDead(entity.Value, attackerEntity);
                 Logging.LogDebug("Player {PlayerId} died, sending UnitDead event", state.PlayerId);
             }
@@ -412,7 +413,7 @@ internal class PatchOnUnitDead
             }
 
             var payload = new UnitDeadEvent(tamerEntity.Value, DeadReason, DmgID, StiffLevel, bIsDotDmg, AbnormalType);
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(payload, tamerEntity.Value.Entity);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(payload);
             DI.Instance.GameplayEventRouter.RaiseOnUnitDead(tamerEntity.Value, attackerEntity);
             Logging.LogDebug("Entity {Entity} died, sending UnitDead event", tamerEntity.Value.GetNetId());
         }
@@ -556,7 +557,7 @@ internal static class PatchSetTargetToData
         if (DI.Instance.MappingPolicyDir.IsCharacterMapped(owner, out var entity))
         {
             Logging.LogDebug("New target sent for {Subject} as: {Target}", owner.GetName(), name);
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new SetTargetEvent(entity.Value, newTarget, clearTarget), entity.Value);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new SetTargetEvent(entity.Value, newTarget, clearTarget));
             return true;
         }
 
@@ -776,7 +777,7 @@ internal class PatchOnRebirthPointRest
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var mainEntity))
         {
             var rebirthPointData = BGU_DataUtil.GetReadOnlyData<BPC_RebirthPointData>(GameUtils.GetPlayerController());
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RestAtShrineEvent(mainEntity.Value, rebirthPointData.CurrentBirthPoint.PointID), mainEntity.Value.Entity);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RestAtShrineEvent(mainEntity.Value, rebirthPointData.CurrentBirthPoint.PointID));
         }
 
         return true;
@@ -862,7 +863,7 @@ internal class PatchTriggerJumpSkill
 
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var mainEntity))
         {
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new StartJumpEvent(mainEntity.Value, StartJumpDir, CurrentInputVector), mainEntity.Value.Entity);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new StartJumpEvent(mainEntity.Value, StartJumpDir, CurrentInputVector));
         }
     }
 }
@@ -880,7 +881,7 @@ internal class PatchJumpOnReleased
 
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var mainEntity))
         {
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new StopJumpEvent(mainEntity.Value), mainEntity.Value.Entity);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new StopJumpEvent(mainEntity.Value));
         }
     }
 }
@@ -993,7 +994,7 @@ internal class PatchOnRebirthFinished
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
             entity.Value.GetLocalState().IsRespawning = false;
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new AfterRebirthEvent(entity.Value), entity.Value.Entity);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new AfterRebirthEvent(entity.Value));
         }
     }
 }

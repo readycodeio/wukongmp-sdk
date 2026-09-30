@@ -1,12 +1,13 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct RestAtShrineEvent(
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct RestAtShrineEvent(
     Entity entity,
-    int rebirthPointId) : IEquatable<RestAtShrineEvent>, IOwnershipBased
+    int rebirthPointId) : IEquatable<RestAtShrineEvent>
 {
     public readonly Entity Entity = entity;
     public readonly int RebirthPointId = rebirthPointId;

@@ -1,14 +1,15 @@
 ﻿using System;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct UnitSimpleStateEvent(
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct UnitSimpleStateEvent(
     Entity entity,
     EBGUSimpleState simpleState,
-    bool isRemove) : IEquatable<UnitSimpleStateEvent>, IOwnershipBased
+    bool isRemove) : IEquatable<UnitSimpleStateEvent>
 {
     public readonly Entity Entity = entity;
     public readonly EBGUSimpleState SimpleState = simpleState;

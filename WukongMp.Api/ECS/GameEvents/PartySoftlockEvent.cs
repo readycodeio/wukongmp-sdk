@@ -1,11 +1,12 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct PartySoftlockEvent(Entity entity, int birthPointId) 
-    : IEquatable<PartySoftlockEvent>, IAlwaysPropagates
+[DeriveIGameEvent, AlwaysPropagates]
+internal readonly partial struct PartySoftlockEvent(Entity entity, int birthPointId) 
+    : IEquatable<PartySoftlockEvent>
 {
     public readonly Entity Entity = entity;
     public readonly int BirthPointId = birthPointId;

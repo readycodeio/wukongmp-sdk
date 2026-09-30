@@ -1,15 +1,16 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct BroadcastUnitSpawnEvent(
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct BroadcastUnitSpawnEvent(
     Entity entity,
     string? unitName,
     string guid,
-    FVector location) : IEquatable<BroadcastUnitSpawnEvent>, IOwnershipBased
+    FVector location) : IEquatable<BroadcastUnitSpawnEvent>
 {
     public readonly Entity Entity = entity;
     public readonly string? UnitName = unitName;

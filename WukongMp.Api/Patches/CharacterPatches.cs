@@ -402,7 +402,7 @@ internal class PatchOnUnitSimpleStateSet
         if (SimpleState is EBGUSimpleState.Immobilizing or EBGUSimpleState.InAnimationSyncing or EBGUSimpleState.PreAnimationSyncing)
             return;
 
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new UnitSimpleStateEvent(entity.Value, SimpleState, IsRemove), entity.Value);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new UnitSimpleStateEvent(entity.Value, SimpleState, IsRemove));
     }
 }
 
@@ -423,7 +423,7 @@ internal class PatchOnUnitStateTrigger
         if (!DI.Instance.MappedEntity.IsMapped(owner, out var entity))
             return;
 
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new UnitStateTriggerEvent(entity.Value, Trigger, Time, NeedForceUpdate), entity.Value);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new UnitStateTriggerEvent(entity.Value, Trigger, Time, NeedForceUpdate));
     }
 }
 
@@ -441,7 +441,7 @@ internal class PatchOnChangeMotionMatchingState
         if (!DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(owner as BGUCharacterCS, out var entity))
             return;
 
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MotionMatchingStateEvent(entity.Value, MMState), entity.Value.Entity);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MotionMatchingStateEvent(entity.Value, MMState));
     }
 }
 
@@ -468,7 +468,7 @@ internal class PatchBuffBegin
         if (!DI.Instance.MappedEntity.IsMapped(owner, out var entity))
             return;
 
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new AddBuffEvent(entity.Value, BuffID, Duration), entity.Value);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new AddBuffEvent(entity.Value, BuffID, Duration));
     }
 }
 
@@ -495,7 +495,7 @@ internal class PatchBuffRemove
         if (!DI.Instance.MappedEntity.IsMapped(owner, out var entity))
             return;
 
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RemoveBuffEvent(entity.Value, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect), entity.Value);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RemoveBuffEvent(entity.Value, BuffID, RemoveTriggerType, InLayer, WithTriggerRemoveEffect));
     }
 }
 
@@ -522,7 +522,7 @@ internal class PatchBuffRemoveImmediately
         if (!DI.Instance.MappedEntity.IsMapped(owner, out var entity))
             return;
 
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RemoveBuffEvent(entity.Value, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect), entity.Value);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RemoveBuffEvent(entity.Value, BuffID, RemoveTriggerType, -1, WithTriggerRemoveEffect));
     }
 }
 
@@ -546,7 +546,7 @@ internal class PatchBuffAllRemove
         if (!DI.Instance.MappedEntity.IsMapped(owner, out var entity))
             return;
 
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RemoveAllBuffsEvent(entity.Value, RemoveTriggerType, WithTriggerRemoveEffect), entity.Value);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RemoveAllBuffsEvent(entity.Value, RemoveTriggerType, WithTriggerRemoveEffect));
     }
 }
 
@@ -676,7 +676,7 @@ internal class PatchPlayDBC_ByType
         if (!DI.Instance.MappedEntity.IsMapped(___OwnerChr, out var entity))
             return;
 
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayBaneEffectEvent(entity.Value, ___AbnormalType, ActionType), entity.Value);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayBaneEffectEvent(entity.Value, ___AbnormalType, ActionType));
     }
 }
 
@@ -692,6 +692,6 @@ internal class PatchEndAllDBC
         if (!DI.Instance.MappedEntity.IsMapped(___OwnerChr, out var entity))
             return;
 
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new StopBaneEffectEvent(entity.Value, ___AbnormalType), entity.Value);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new StopBaneEffectEvent(entity.Value, ___AbnormalType));
     }
 }

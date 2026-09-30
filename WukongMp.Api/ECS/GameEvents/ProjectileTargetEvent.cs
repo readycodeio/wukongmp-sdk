@@ -1,14 +1,15 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct ProjectileTargetEvent(
+[DeriveIGameEvent, OwnershipBased(nameof(Character))]
+internal readonly partial struct ProjectileTargetEvent(
     Entity character,
     string projectileName,
     Entity target,
-    string socketName) : IEquatable<ProjectileTargetEvent>, IOwnershipBased
+    string socketName) : IEquatable<ProjectileTargetEvent>
 {
     public readonly Entity Character = character;
     public readonly string ProjectileName = projectileName;

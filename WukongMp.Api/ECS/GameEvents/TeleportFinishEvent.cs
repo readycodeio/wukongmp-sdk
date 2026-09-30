@@ -1,11 +1,12 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct TeleportFinishEvent(Entity entity) 
-    : IEquatable<TeleportFinishEvent>, IAlwaysPropagates
+[DeriveIGameEvent, AlwaysPropagates]
+internal readonly partial struct TeleportFinishEvent(Entity entity) 
+    : IEquatable<TeleportFinishEvent>
 {
     public readonly Entity Entity = entity;
 

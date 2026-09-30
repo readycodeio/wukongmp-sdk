@@ -33,8 +33,7 @@ internal partial class WukongServerRpcCallbacks(IMappedEventManager mappedEvent)
                     sequenceId: data.SequenceId,
                     waitingPlayers: data.WaitingPlayers,
                     allPlayers: data.AllPlayers
-                ), default(EmptyContext)
-            );
+                ));
         });
     }
 }

@@ -1,14 +1,15 @@
 ﻿using System;
 using BtlShare;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct ProjectileMoveModeEvent(
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct ProjectileMoveModeEvent(
     Entity entity,
     string projectileClassName,
-    EBulletOrMagicFieldMoveModeType moveMode) : IEquatable<ProjectileMoveModeEvent>, IOwnershipBased
+    EBulletOrMagicFieldMoveModeType moveMode) : IEquatable<ProjectileMoveModeEvent>
 {
     public readonly Entity Entity = entity;
     public readonly string ProjectileClassName = projectileClassName;

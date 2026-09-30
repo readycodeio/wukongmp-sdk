@@ -188,7 +188,7 @@ namespace WukongMp.Api.WukongUtils
             mappedEvent.InvokeInGameAndNotifyEcs(new PartySoftlockEvent(
                 entity: mainEntity.Entity,
                 birthPointId: maxComp
-            ), default(EmptyContext));
+            ));
         }
 
         public static void DisableOtherPlayersCollision(ClientState clientState, WukongPlayerState playerState)

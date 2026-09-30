@@ -218,7 +218,7 @@ internal sealed class WukongSynchronizationApi(
     {
         if (LocalMainCharacter.HasValue && kind.Name != null)
         {
-            mappedEvent.InvokeInGameAndNotifyEcs(new RequestSpawnUnitsEvent(LocalMainCharacter.Value.Entity, kind.Name, count, teamId, position.ToFVector()), LocalMainCharacter.Value.Entity.Entity);
+            mappedEvent.InvokeInGameAndNotifyEcs(new RequestSpawnUnitsEvent(LocalMainCharacter.Value.Entity, kind.Name, count, teamId, position.ToFVector()));
         }
     }
 

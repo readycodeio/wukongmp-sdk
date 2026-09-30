@@ -1,10 +1,11 @@
 using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct StopJumpEvent(Entity entity) : IEquatable<StopJumpEvent>, IOwnershipBased
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct StopJumpEvent(Entity entity) : IEquatable<StopJumpEvent>
 {
     public readonly Entity Entity = entity;
 

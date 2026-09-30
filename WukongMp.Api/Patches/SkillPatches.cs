@@ -8,6 +8,7 @@ using BtlB1;
 using BtlShare;
 using HarmonyLib;
 using PreludeLib.Attributes;
+using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Mapping.Tags;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
@@ -77,8 +78,9 @@ internal static class PatchOnCastImmobilize
         if (!DI.Instance.MappingPolicyDir.IsMainCharacterMapped(castingCharacter, out var castingMainEntity))
             return false;
 
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new CastImmobilizeEvent(castingMainEntity.Value), castingMainEntity.Value.Entity);
-        if (!DI.Instance.MappingPolicyDir.ForEvent<CastImmobilizeEvent>().CanGameEventRunLocally(castingMainEntity.Value.Entity))
+        var castImmobilize = new CastImmobilizeEvent(castingMainEntity.Value);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(castImmobilize);
+        if (!DI.Instance.MappedEvent.CanGameEventRunLocally(castImmobilize).Runs())
             return false;
 
         Debug.Assert(DI.Instance.AreaState.IsMasterClient, "DI.Instance.AreaState.IsMasterClient");
@@ -165,7 +167,7 @@ internal static class PatchOnCastImmobilize
             // broadcast trigger immobilize on targets
             if (DI.Instance.MappingPolicyDir.IsCharacterMapped(item, out var entity))
             {
-                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerImmobilizeEvent(entity.Value, castingMainEntity.Value, hasBuff), default(EmptyContext));
+                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerImmobilizeEvent(entity.Value, castingMainEntity.Value, hasBuff));
                 if (sent)
                     Logging.LogDebug("Broadcasting trigger immobilize for target {Target}", item.GetName());
             }
@@ -213,9 +215,10 @@ internal static class PatchRelieveImmobilized
         if (!DI.Instance.MappingPolicyDir.IsCharacterMapped(owner, out var entity))
             return true;
 
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RelieveImmobilizeEvent(entity.Value), default(EmptyContext));
+        var relieveImmobilize = new RelieveImmobilizeEvent(entity.Value);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(relieveImmobilize);
 
-        return DI.Instance.MappingPolicyDir.ForEvent<RelieveImmobilizeEvent, EmptyContext>().CanGameEventRunLocally(default);
+        return DI.Instance.MappedEvent.CanGameEventRunLocally(relieveImmobilize).Runs();
     }
 }
 
@@ -239,10 +242,10 @@ internal static class PatchOnTriggerImmobilizedBreak
         // TODO: This used to be forcibly replaced by RelieveImmobilize, find out why
         if (DI.Instance.MappingPolicyDir.IsCharacterMapped(owner, out var entity))
         {
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RelieveImmobilizeEvent(entity.Value), default(EmptyContext));
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new RelieveImmobilizeEvent(entity.Value));
         }
         
-        return DI.Instance.MappingPolicyDir.ForEvent<RelieveImmobilizeEvent, EmptyContext>().CanGameEventRunLocally(default);
+        return DI.Instance.MappedEvent.CanGameEventRunLocally(new RelieveImmobilizeEvent(entity ?? default)).Runs();
     }
 }
 
@@ -417,7 +420,7 @@ internal static class PatchOnUnitCastSkillTry
         {
             if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
             {
-                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PhantomRushEvent(entity.Value, CSI.SkillDirection), entity.Value.Entity);
+                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PhantomRushEvent(entity.Value, CSI.SkillDirection));
                 if (sent)
                     Logging.LogDebug("Sending phantom rush with direction: {Direction}", CSI.SkillDirection);
             }
@@ -426,7 +429,7 @@ internal static class PatchOnUnitCastSkillTry
         {
             if (DI.Instance.MappingPolicyDir.IsMonsterTamerMapped(owner as BGUCharacterCS, out var entity))
             {
-                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new CastSkillEvent(entity.Value, CSI.SkillID, CSI.SourceType), entity.Value.Entity);
+                var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new CastSkillEvent(entity.Value, CSI.SkillID, CSI.SourceType));
                 if (sent)
                     Logging.LogDebug("Sent CBG skill cast for skill {SkillId}", CSI.SkillID);
             }
@@ -457,7 +460,7 @@ internal static class PatchExitPhantomRush
 
         var main = mainEntity.Value.GetState();
 
-        var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ExitPhantomRushEvent(mainEntity.Value), mainEntity.Value.Entity);
+        var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ExitPhantomRushEvent(mainEntity.Value));
         if (sent)
             Logging.LogDebug("Broadcasting phantom rush exit for player {Nickname}", mainEntity.Value.GetNickname().Nickname);
 
@@ -587,7 +590,7 @@ internal class PatchOnTransBeginSpawnNewOne
         var pawn = __instance.GetOwner();
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(pawn, out var mainEntity))
         {
-            var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayerTransBeginEvent(mainEntity.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType), mainEntity.Value.Entity);
+            var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayerTransBeginEvent(mainEntity.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransBeginType));
             if (sent)
             {
                 Logging.LogDebug("OnTransBeginSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", playerState.LocalMainCharacter?.GetNickname().Nickname, ToReplaceUnitResID);
@@ -628,7 +631,7 @@ internal class PatchOnTransBackSpawnNewOne
 
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(pawn, out var mainEntity))
         {
-            var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayerTransEndEvent(mainEntity.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType), mainEntity.Value.Entity);
+            var sent = DI.Instance.MappedEvent.NotifyEcsIfApplicable(new PlayerTransEndEvent(mainEntity.Value, ToReplaceUnitResID, ToReplaceUnitBornSkillID, EnableBlendViewTarget, TransEndType));
             if (sent)
                 Logging.LogDebug("OnTransBackSpawnNewOne: Sending transform for player {Name} to unit with id {UnitId}", mainEntity.Value.GetNickname().Nickname, ToReplaceUnitResID);
         }
@@ -824,7 +827,7 @@ internal static class PatchOnIronBodyStart
 
         if (DI.Instance.MappingPolicyDir.IsCharacterMapped(owner, out var entity))
         {
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new IronBodyStartEvent(entity.Value), entity.Value);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new IronBodyStartEvent(entity.Value));
         }
     }
 }
@@ -897,7 +900,7 @@ internal static class PatchDoCastMagicallyChangeSkill_PendingCast
         var owner = __instance.GetOwner();
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerMagicallyChangeEvent(entity.Value, _Config.PathName, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID, ___MagicallyChangeData.CastReason), entity.Value.Entity);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerMagicallyChangeEvent(entity.Value, _Config.PathName, _SkillID, _RecoverSkillID, ___MagicallyChangeData.CurVigorSkillID, ___MagicallyChangeData.CastReason));
         }
     }
 }
@@ -916,7 +919,7 @@ internal static class PatchPendingReset
         var owner = __instance.GetOwner();
         if (DI.Instance.MappingPolicyDir.IsMainCharacterMapped(owner, out var entity))
         {
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ResetMagicallyChangeEvent(entity.Value, Reason), entity.Value.Entity);
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new ResetMagicallyChangeEvent(entity.Value, Reason));
         }
     }
 }

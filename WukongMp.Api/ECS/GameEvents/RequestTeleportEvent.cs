@@ -1,15 +1,16 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct RequestTeleportEvent(
+[DeriveIGameEvent, AlwaysPropagates]
+internal readonly partial struct RequestTeleportEvent(
     Entity entity,
     FVector location,
     FRotator rotation
-) : IEquatable<RequestTeleportEvent>, IAlwaysPropagates
+) : IEquatable<RequestTeleportEvent>
 {
     public readonly Entity Entity = entity;
     public readonly FVector Location = location;

@@ -1,14 +1,15 @@
 ﻿using System;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct PlayBaneEffectEvent(
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct PlayBaneEffectEvent(
     Entity entity,
     EAbnormalStateType stateType,
-    EAbnromalDispActionType actionType) : IEquatable<PlayBaneEffectEvent>, IOwnershipBased
+    EAbnromalDispActionType actionType) : IEquatable<PlayBaneEffectEvent>
 {
     public readonly Entity Entity = entity;
     public readonly EAbnormalStateType StateType = stateType;

@@ -15,7 +15,6 @@ using UnrealEngine.Engine;
 using WukongMp.Api.DTO;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
-using WukongMp.Api.Mapping.Policies.Event;
 using WukongMp.Api.NameCompressors;
 using WukongMp.Api.State;
 using INetworkedEntityManager = ReadyM.Api.Multiplayer.ECS.Managers.INetworkedEntityManager;
@@ -508,7 +507,7 @@ internal partial class WukongClientRpcCallbacks(
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
                 return;
 
-            self._mappedEvent.InvokeInGameIfApplicable(new ExitPhantomRushEvent(mainEntity.Entity), mainEntity.Entity);
+            self._mappedEvent.InvokeInGameIfApplicable(new ExitPhantomRushEvent(mainEntity.Entity));
         }, this, netId);
     }
 
@@ -524,7 +523,7 @@ internal partial class WukongClientRpcCallbacks(
                 entity: mainEntity.Entity,
                 buffId: data0.BuffId,
                 duration: data0.Duration
-            ), mainEntity.Entity);
+            ));
         }, this, data);
     }
 
@@ -542,7 +541,7 @@ internal partial class WukongClientRpcCallbacks(
                 triggerType: data0.TriggerType,
                 layer: data0.Layer,
                 withTriggerRemoveEffect: data0.WithTriggerRemoveEffect
-            ), entity.Value);
+            ));
         }, this, data);
     }
 
@@ -558,7 +557,7 @@ internal partial class WukongClientRpcCallbacks(
                 entity: entity.Value,
                 triggerType: data0.TriggerType,
                 withTriggerRemoveEffect: data0.WithTriggerRemoveEffect
-            ), entity.Value);
+            ));
         }, this, data);
     }
 
@@ -575,7 +574,7 @@ internal partial class WukongClientRpcCallbacks(
                 trigger: data0.Trigger,
                 time: data0.Time,
                 needForceUpdate: data0.NeedForceUpdate
-            ), entity.Value);
+            ));
         }, this, data);
     }
 
@@ -591,7 +590,7 @@ internal partial class WukongClientRpcCallbacks(
                 entity: entity.Value,
                 simpleState: data0.SimpleState,
                 isRemove: data0.IsRemove
-            ), entity.Value);
+            ));
         }, this, data);
     }
 
@@ -606,7 +605,7 @@ internal partial class WukongClientRpcCallbacks(
             self._mappedEvent.InvokeInGameIfApplicable(new TriggerFsmStateEvent(
                 entity: entity.Value,
                 fsmStateName: data0.FsmStateName
-            ), entity.Value);
+            ));
         }, this, data);
     }
 
@@ -621,7 +620,7 @@ internal partial class WukongClientRpcCallbacks(
             self._mappedEvent.InvokeInGameIfApplicable(new MotionMatchingStateEvent(
                 entity: entity.Value,
                 state: data0.State
-            ), entity.Value);
+            ));
         }, this, data);
     }
 
@@ -633,7 +632,6 @@ internal partial class WukongClientRpcCallbacks(
             self._netEntity.TryGetEntityByNetworkId(data0.SummonerNetId, out var summoner);
             self._netEntity.TryGetEntityByNetworkId(data0.CatchTargetNetId, out var catchTarget);
 
-            var context = new SpawnSummonContext(summoner, data0.Location);
             self._mappedEvent.InvokeInGameIfApplicable(new SpawnSummonEvent(
                 summoner: summoner,
                 summonGuid: data0.SummonGuid,
@@ -659,7 +657,7 @@ internal partial class WukongClientRpcCallbacks(
                 bornEffectPath: data0.BornEffectPath,
                 disappearMontagePathList: data0.DisappearMontagePathList,
                 destroyDelayTime: data0.DestroyDelayTime
-            ), context);
+            ));
         }, this, data);
     }
 
@@ -680,7 +678,7 @@ internal partial class WukongClientRpcCallbacks(
                 count: data0.Count,
                 teamId: data0.TeamId,
                 location: data0.Location
-            ), entity.Value);
+            ));
         }, this, data);
     }
 
@@ -700,7 +698,7 @@ internal partial class WukongClientRpcCallbacks(
                 unitName: data0.UnitName,
                 guid: data0.Guid,
                 location: data0.Location
-            ), entity.Value);
+            ));
         }, this, data);
     }
 
@@ -718,7 +716,7 @@ internal partial class WukongClientRpcCallbacks(
                 unitBornSkillId: data0.UnitBornSkillId,
                 enableBlendViewTarget: data0.EnableBlendViewTarget,
                 transBeginType: data0.TransBeginType
-            ), mainEntity.Entity);
+            ));
         }, this, data);
     }
 
@@ -736,7 +734,7 @@ internal partial class WukongClientRpcCallbacks(
                 unitBornSkillId: data0.UnitBornSkillId,
                 enableBlendViewTarget: data0.EnableBlendViewTarget,
                 transEndType: data0.TransEndType
-            ), mainEntity.Entity);
+            ));
         }, this, data);
     }
 
@@ -754,7 +752,7 @@ internal partial class WukongClientRpcCallbacks(
                 hideHud: data0.HideHud,
                 overlapBoxGuid: data0.OverlapBoxGuid,
                 matchType: data0.MatchType
-            ), default(EmptyContext));
+            ));
         }, this, requestData, __sender);
     }
 
@@ -775,7 +773,7 @@ internal partial class WukongClientRpcCallbacks(
                     character: character.Value,
                     target: default,
                     clearTarget: true
-                ), character.Value);
+                ));
                 return;
             }
 
@@ -789,7 +787,7 @@ internal partial class WukongClientRpcCallbacks(
                 character: character.Value,
                 target: target.Value,
                 clearTarget: false
-            ), character.Value);
+            ));
         }, this, data);
     }
 
@@ -808,7 +806,7 @@ internal partial class WukongClientRpcCallbacks(
                 return;
             }
 
-            self._mappedEvent.InvokeInGameIfApplicable(new CastImmobilizeEvent(casterEntity.Value), casterEntity.Value);
+            self._mappedEvent.InvokeInGameIfApplicable(new CastImmobilizeEvent(casterEntity.Value));
         }, this, caster);
     }
 
@@ -833,7 +831,7 @@ internal partial class WukongClientRpcCallbacks(
                 target: caster.Value,
                 caster: target.Value,
                 greatSageTalentActiveBuff: data0.GreatSageTalentActiveBuff
-            ), default(EmptyContext));
+            ));
         }, this, data);
     }
 
@@ -848,7 +846,7 @@ internal partial class WukongClientRpcCallbacks(
                 return;
             }
 
-            self._mappedEvent.InvokeInGameIfApplicable(new RelieveImmobilizeEvent(affectedEntity.Value), default(EmptyContext));
+            self._mappedEvent.InvokeInGameIfApplicable(new RelieveImmobilizeEvent(affectedEntity.Value));
         }, this, affected);
     }
 
@@ -860,7 +858,7 @@ internal partial class WukongClientRpcCallbacks(
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
                 return;
 
-            self._mappedEvent.InvokeInGameIfApplicable(new PhantomRushEvent(mainEntity.Entity, direction0), mainEntity.Entity);
+            self._mappedEvent.InvokeInGameIfApplicable(new PhantomRushEvent(mainEntity.Entity, direction0));
         }, this, netId, direction);
     }
 
@@ -880,7 +878,7 @@ internal partial class WukongClientRpcCallbacks(
                 entity: entity.Value,
                 location: data.Location,
                 rotation: data.Rotation
-            ), default(EmptyContext));
+            ));
         }, this, data);
     }
 
@@ -898,7 +896,7 @@ internal partial class WukongClientRpcCallbacks(
             self._mappedEvent.InvokeInGameIfApplicable(new RebirthPlayerEvent(
                 entity: mainEntity.Entity,
                 teleport: isTeleport0
-            ), default(EmptyContext));
+            ));
         }, this, netId, isTeleport);
     }
 
@@ -921,7 +919,7 @@ internal partial class WukongClientRpcCallbacks(
                 realHitLocation: damageNum0.RealHitLocation,
                 realHitDir: damageNum0.RealHitDir,
                 attackerTeamType: damageNum0.AttackerTeamType
-            ), entity.Value);
+            ));
         }, this, damageNum, netId);
     }
 
@@ -937,7 +935,7 @@ internal partial class WukongClientRpcCallbacks(
                 return;
             }
 
-            self._mappedEvent.InvokeInGameIfApplicable(new TeleportFinishEvent(mainEntity.Entity), default(EmptyContext));
+            self._mappedEvent.InvokeInGameIfApplicable(new TeleportFinishEvent(mainEntity.Entity));
         }, this, netId);
     }
 
@@ -960,7 +958,7 @@ internal partial class WukongClientRpcCallbacks(
                 fullMontagePath: fullMontagePath,
                 position: data0.Position,
                 reset: data0.Reset
-            ), entity.Value);
+            ));
         }, this, data);
     }
 
@@ -982,7 +980,7 @@ internal partial class WukongClientRpcCallbacks(
                 stiffLevel: data0.StiffLevel,
                 isDotDmg: data0.IsDotDmg,
                 abnormalType: data0.AbnormalType
-            ), entity.Value);
+            ));
         }, this, data);
     }
 
@@ -994,7 +992,7 @@ internal partial class WukongClientRpcCallbacks(
             self._mappedEvent.InvokeInGameIfApplicable(new WaitingForSequenceEvent(
                 sequenceId: data0.SequenceID,
                 sequenceLocation: data0.SequenceLocation
-            ), default(EmptyContext));
+            ));
         }, this, data);
     }
 
@@ -1009,7 +1007,7 @@ internal partial class WukongClientRpcCallbacks(
                 return;
             }
 
-            self._mappedEvent.InvokeInGameIfApplicable(new IronBodyStartEvent(mainEntity.Entity), mainEntity.Entity);
+            self._mappedEvent.InvokeInGameIfApplicable(new IronBodyStartEvent(mainEntity.Entity));
         }, this, netId);
     }
 
@@ -1026,7 +1024,7 @@ internal partial class WukongClientRpcCallbacks(
             self._mappedEvent.InvokeInGameIfApplicable(new UnitSpawnedEvent(
                 entity: entity.Value,
                 playerId: sender
-            ), default(EmptyContext));
+            ));
         }, this, __sender, netId);
     }
 
@@ -1043,7 +1041,7 @@ internal partial class WukongClientRpcCallbacks(
             self._mappedEvent.InvokeInGameIfApplicable(new UnitDespawnedEvent(
                 entity: entity.Value,
                 playerId: sender
-            ), default(EmptyContext));
+            ));
         }, this, __sender, netId);
     }
 
@@ -1058,7 +1056,7 @@ internal partial class WukongClientRpcCallbacks(
             self._mappedEvent.InvokeInGameIfApplicable(new TamerSkillInteractEvent(
                 entity: entity.Value,
                 skillId: interactData0.SkillId
-            ), default(EmptyContext));
+            ));
         }, this, interactData);
     }
 
@@ -1081,7 +1079,7 @@ internal partial class WukongClientRpcCallbacks(
                 recoverSkillId: data0.RecoverSkillID,
                 curVigorSkillId: data0.CurVigorSkillID,
                 castReason: data0.CastReason
-            ), mainEntity.Entity);
+            ));
         }, this, data);
     }
 
@@ -1099,7 +1097,7 @@ internal partial class WukongClientRpcCallbacks(
             self._mappedEvent.InvokeInGameIfApplicable(new ResetMagicallyChangeEvent(
                 entity: mainEntity.Entity,
                 reason: reason0
-            ), mainEntity.Entity);
+            ));
         }, this, netId, reason);
     }
 
@@ -1125,7 +1123,7 @@ internal partial class WukongClientRpcCallbacks(
                 projectileName: targetData0.ProjectileName,
                 target: target.Value,
                 socketName: targetData0.SocketName
-            ), mainEntity.Entity);
+            ));
         }, this, targetData);
     }
 
@@ -1145,7 +1143,7 @@ internal partial class WukongClientRpcCallbacks(
                 projectileClassName: switchData0.ProjectileClassName,
                 bulletSwitchId: switchData0.BulletSwitchID,
                 switchIdx: switchData0.SwitchIdx
-            ), mainEntity.Entity);
+            ));
         }, this, switchData);
     }
 
@@ -1164,7 +1162,7 @@ internal partial class WukongClientRpcCallbacks(
                 entity: mainEntity.Entity,
                 projectileClassName: data0.ProjectileClassName,
                 reason: data0.Reason
-            ), mainEntity.Entity);
+            ));
         }, this, data);
     }
 
@@ -1176,7 +1174,7 @@ internal partial class WukongClientRpcCallbacks(
             self._mappedEvent.InvokeInGameIfApplicable(new MagicFieldDeadEvent(
                 className: magicFieldClassName0,
                 reason: reason0
-            ), default(EmptyContext));
+            ));
         }, this, magicFieldClassName, reason);
     }
 
@@ -1195,7 +1193,7 @@ internal partial class WukongClientRpcCallbacks(
                 entity: mainEntity.Entity,
                 projectileClassName: data0.ProjectileClassName,
                 moveMode: data0.MoveMode
-            ), mainEntity.Entity);
+            ));
         }, this, data);
     }
 
@@ -1214,7 +1212,7 @@ internal partial class WukongClientRpcCallbacks(
             self._mappedEvent.InvokeInGameIfApplicable(new PartyRespawnEvent(
                 entity: entity.Value,
                 birthShrineId: shrineId
-            ), default(EmptyContext));
+            ));
         }, this, birthPointId, netId);
     }
 
@@ -1226,7 +1224,7 @@ internal partial class WukongClientRpcCallbacks(
             if (self._playerState.GetMainCharacterById(netId0) is not { } mainEntity)
                 return;
 
-            self._mappedEvent.InvokeInGameIfApplicable(new AfterRebirthEvent(mainEntity.Entity), mainEntity.Entity);
+            self._mappedEvent.InvokeInGameIfApplicable(new AfterRebirthEvent(mainEntity.Entity));
         }, this, netId);
     }
 
@@ -1244,7 +1242,7 @@ internal partial class WukongClientRpcCallbacks(
             self._mappedEvent.InvokeInGameIfApplicable(new RestAtShrineEvent(
                 entity: entity.Value,
                 rebirthPointId: shrineId
-            ), entity.Value);
+            ));
         }, this, birthPointId, netId);
     }
 
@@ -1263,7 +1261,7 @@ internal partial class WukongClientRpcCallbacks(
             self._mappedEvent.InvokeInGameIfApplicable(new PartySoftlockEvent(
                 entity: entity.Value,
                 birthPointId: shrineId
-            ), default(EmptyContext));
+            ));
         }, this, birthPointId, netId);
     }
 
@@ -1282,7 +1280,7 @@ internal partial class WukongClientRpcCallbacks(
                 entity: mainEntity.Entity,
                 startJumpDir: jumpData0.StartJumpDir,
                 inputVector: jumpData0.InputVector
-            ), mainEntity.Entity);
+            ));
         }, this, jumpData);
     }
 
@@ -1297,7 +1295,7 @@ internal partial class WukongClientRpcCallbacks(
                 return;
             }
 
-            self._mappedEvent.InvokeInGameIfApplicable(new StopJumpEvent(mainEntity.Entity), mainEntity.Entity);
+            self._mappedEvent.InvokeInGameIfApplicable(new StopJumpEvent(mainEntity.Entity));
         }, this, netId);
     }
 
@@ -1312,7 +1310,7 @@ internal partial class WukongClientRpcCallbacks(
                 return;
             }
 
-            self._mappedEvent.InvokeInGameIfApplicable(new MonsterWakeUpEvent(entity.Value), entity.Value);
+            self._mappedEvent.InvokeInGameIfApplicable(new MonsterWakeUpEvent(entity.Value));
         }, this, netId);
     }
 
@@ -1331,7 +1329,7 @@ internal partial class WukongClientRpcCallbacks(
                 entity: entity.Value,
                 stateType: data0.StateType,
                 actionType: data0.ActionType
-            ), entity.Value);
+            ));
         }, this, data);
     }
 
@@ -1349,7 +1347,7 @@ internal partial class WukongClientRpcCallbacks(
             self._mappedEvent.InvokeInGameIfApplicable(new StopBaneEffectEvent(
                 entity: entity.Value,
                 stateType: data0.StateType
-            ), entity.Value);
+            ));
         }, this, data);
     }
 
@@ -1368,7 +1366,7 @@ internal partial class WukongClientRpcCallbacks(
                 entity: casterEntity.Value,
                 skillId: skillId0,
                 skillType: skillType0
-            ), casterEntity.Value);
+            ));
         }, this, casterNetId, skillId, skillType);
     }
 }

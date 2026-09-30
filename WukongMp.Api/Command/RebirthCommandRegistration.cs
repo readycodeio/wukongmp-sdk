@@ -28,7 +28,7 @@ internal class RebirthCommandRegistration(
         mappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(
             entity: mainEntity.Entity,
             teleport: false
-        ), default(EmptyContext));
+        ));
         chatter.SendLocalizedServerMessage(nameof(BuiltinTexts.PlayerRequestedRebirth), playerState.Nickname);
     }
 
@@ -40,7 +40,7 @@ internal class RebirthCommandRegistration(
         mappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(
             entity: mainEntity.Entity,
             teleport: true
-        ), default(EmptyContext));
+        ));
 
         chatter.SendLocalizedServerMessage(nameof(BuiltinTexts.PlayerRequestedRebirth), playerState.Nickname);
     }

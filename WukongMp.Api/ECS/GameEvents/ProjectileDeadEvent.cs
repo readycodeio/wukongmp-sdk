@@ -1,14 +1,15 @@
 ﻿using System;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct ProjectileDeadEvent(
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct ProjectileDeadEvent(
     Entity entity,
     string projectileClassName,
-    EBGUBulletDestroyReason reason) : IEquatable<ProjectileDeadEvent>, IOwnershipBased
+    EBGUBulletDestroyReason reason) : IEquatable<ProjectileDeadEvent>
 {
     public readonly Entity Entity = entity;
     public readonly string ProjectileClassName = projectileClassName;

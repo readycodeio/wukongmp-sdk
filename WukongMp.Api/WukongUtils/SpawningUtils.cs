@@ -227,7 +227,7 @@ internal static class SpawningUtils
                 unitName: tamerKind.Name,
                 guid: guid,
                 location: location
-            ), tamerEntity.Entity);
+            ));
         }
     }
 

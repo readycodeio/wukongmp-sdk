@@ -1,10 +1,11 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct IronBodyStartEvent(Entity entity) : IEquatable<IronBodyStartEvent>, IOwnershipBased
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct IronBodyStartEvent(Entity entity) : IEquatable<IronBodyStartEvent>
 {
     public readonly Entity Entity = entity;
 

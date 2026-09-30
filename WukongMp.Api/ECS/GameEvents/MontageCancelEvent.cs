@@ -1,10 +1,11 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct MontageCancelEvent(Entity entity) : IEquatable<MontageCancelEvent>, IOwnershipBased
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct MontageCancelEvent(Entity entity) : IEquatable<MontageCancelEvent>
 {
     public readonly Entity Entity = entity;
 

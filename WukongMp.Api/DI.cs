@@ -21,8 +21,6 @@ using ReadyM.Api.Mapping;
 using ReadyM.Api.Mapping.Data;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Mapping.Policies.Data;
-using ReadyM.Api.Mapping.Policies.Event;
-using ReadyM.Api.Mapping.Policies.Event.Common;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Archetypes;
 using ReadyM.Api.Multiplayer.ECS.Jobs;
@@ -34,6 +32,7 @@ using ReadyM.Api.Multiplayer.Serialization;
 using ReadyM.Api.State;
 using ReadyM.Relay.Client;
 using ReadyM.Relay.Client.ConflictResolution;
+using ReadyM.Relay.Client.GameEvents;
 using ReadyM.Relay.Client.Mapping.Policies;
 using ReadyM.Relay.Client.Serialization;
 using ReadyM.Relay.Client.State;
@@ -48,9 +47,9 @@ using WukongMp.Api.Command;
 using WukongMp.Api.Configuration;
 using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.FreeCamera;
+using WukongMp.Api.GameEvents;
 using WukongMp.Api.Input;
 using WukongMp.Api.Mapping;
-using WukongMp.Api.Mapping.Policies.Event;
 using WukongMp.Api.Serialization;
 using WukongMp.Api.State;
 using WukongMp.Api.Tests;
@@ -245,11 +244,6 @@ internal sealed class DI : IDependencyContainer
         Container.Register<DataSideChannel>();
 
         Container.Register<IMappingDataPolicyFactory, OwnershipDataPolicyFactory>();
-        Container.Register<IMappingEventPolicyFactory, OwnershipEventPolicyFactory>();
-        Container.Register<IMappingEventPolicyFactory, MasterClientEventPolicyFactory>();
-        Container.Register<IMappingEventPolicyFactory, RunOnMasterClientOnlyEventPolicyFactory>();
-        Container.Register<IMappingEventPolicyFactory, SpawnSummonEventEventPolicyFactory>();
-        Container.Register<IMappingEventPolicyFactory, AlwaysPropagatesEventPolicyFactory>();
 
         Container.RegisterMany<MappingPolicyDirectory>(serviceTypeCondition: type => type.IsInterface, nonPublicServiceTypes: true);
         Container.RegisterInitializer<IMappingPolicyDirectory>((iface, s) =>
@@ -267,12 +261,11 @@ internal sealed class DI : IDependencyContainer
             {
                 mapping.RegisterDefaultData(factory);
             }
-
-            foreach (var factory in s.ResolveMany<IMappingEventPolicyFactory>())
-            {
-                mapping.RegisterDefaultEvent(factory);
-            }
         });
+
+        Container.Register<IGameEventContextRegistration, ClientGameEventContextRegistration>();
+        Container.Register<IGameEventContextRegistration, WukongGameEventContextRegistration>();
+        Container.Register<GameEventContextRegistry>();
 
         Container.Register<IMappedEventManager, MappedEventManager>();
         Container.Register<WukongMappingPolicyDirectory>();

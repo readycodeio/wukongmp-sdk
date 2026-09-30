@@ -1,14 +1,15 @@
 ﻿using System;
 using b1;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct CastSkillEvent(
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct CastSkillEvent(
     Entity entity,
     int skillId,
-    ECastSkillSourceType skillType) : IEquatable<CastSkillEvent>, IOwnershipBased
+    ECastSkillSourceType skillType) : IEquatable<CastSkillEvent>
 {
     public readonly Entity Entity = entity;
     public readonly int SkillId = skillId;

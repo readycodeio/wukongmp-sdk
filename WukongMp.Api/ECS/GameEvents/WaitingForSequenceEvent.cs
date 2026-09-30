@@ -1,12 +1,13 @@
 ﻿using System;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 using UnrealEngine.Runtime;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct WaitingForSequenceEvent(
+[DeriveIGameEvent, AlwaysPropagates]
+internal readonly partial struct WaitingForSequenceEvent(
     int sequenceId,
-    FVector sequenceLocation) : IEquatable<WaitingForSequenceEvent>, IAlwaysPropagates
+    FVector sequenceLocation) : IEquatable<WaitingForSequenceEvent>
 {
     public readonly int SequenceId = sequenceId;
     public readonly FVector SequenceLocation = sequenceLocation;

@@ -1,13 +1,14 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct TamerSkillInteractEvent(
+[DeriveIGameEvent, AlwaysPropagates]
+internal readonly partial struct TamerSkillInteractEvent(
     Entity entity,
     int skillId
-) : IEquatable<TamerSkillInteractEvent>, IAlwaysPropagates
+) : IEquatable<TamerSkillInteractEvent>
 {
     public readonly Entity Entity = entity;
     public readonly int SkillId = skillId;

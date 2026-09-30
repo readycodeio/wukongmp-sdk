@@ -36,7 +36,7 @@ internal static class PatchComplexSkillDoInteractAction
             }
 
             Logging.LogDebug("Sending skill interact for {Name} with ID {Id}.", character.GetName(), entity.Value.Entity.GetNetId());
-            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TamerSkillInteractEvent(entity.Value, Action.ParamsInt[1]), default(EmptyContext));
+            DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TamerSkillInteractEvent(entity.Value, Action.ParamsInt[1]));
         }
     }
 }

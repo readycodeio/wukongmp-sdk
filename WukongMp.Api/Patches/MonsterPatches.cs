@@ -474,7 +474,7 @@ internal class PatchOnTriggerFsmEvent
             Debug.Assert(owner == entity.Value.Pawn, "owner == tamerEntity.Pawn");
             if (!BGU_CommonUtil.IsInFsmState(owner, EventTag))
             {
-                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerFsmStateEvent(entity.Value, EventTag.TagName.ToString()), entity.Value.Entity);
+                DI.Instance.MappedEvent.NotifyEcsIfApplicable(new TriggerFsmStateEvent(entity.Value, EventTag.TagName.ToString()));
             }
         }
 
@@ -616,7 +616,7 @@ internal class PatchTriggerWakeupActivated
         if (tamerEntity is not { IsTamerValid: true })
             return;
 
-        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MonsterWakeUpEvent(tamerEntity.Value), tamerEntity.Value.Entity);
+        DI.Instance.MappedEvent.NotifyEcsIfApplicable(new MonsterWakeUpEvent(tamerEntity.Value));
     }
 }
 

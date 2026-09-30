@@ -6,7 +6,6 @@ using ReadyM.Api.Idents;
 using ReadyM.Api.Mapping;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Mapping.Policies.Data;
-using ReadyM.Api.Mapping.Policies.Event;
 using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer.ECS.Components;
 using UnrealEngine.Engine;
@@ -194,13 +193,4 @@ internal class WukongMappingPolicyDirectory(
     public IMappingDataPolicy<TContext> ForData<TComponent, TContext>()
         where TComponent : struct, IMappingContext<TContext>
         => policyDir.ForData<TComponent, TContext>();
-
-    public IMappingEventPolicy<Entity> ForEvent<TEvent>()
-        where TEvent : struct, IEquatable<TEvent>, IMappingContext<Entity>
-        => policyDir.ForEvent<TEvent>();
-
-    public IMappingEventPolicy<TContext> ForEvent<TEvent, TContext>()
-        where TEvent : struct, IEquatable<TEvent>, IMappingContext<TContext>
-        where TContext : struct
-        => policyDir.ForEvent<TEvent, TContext>();
 }

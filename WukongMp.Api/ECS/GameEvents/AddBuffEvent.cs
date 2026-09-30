@@ -1,11 +1,12 @@
 ﻿using System;
 using Friflo.Engine.ECS;
-using ReadyM.Api.Mapping.Tags;
+using ReadyM.Api.Mapping.Events;
 
 namespace WukongMp.Api.ECS.GameEvents;
 
-internal readonly struct AddBuffEvent(Entity entity, int buffId, float duration)
-    : IEquatable<AddBuffEvent>, IOwnershipBased
+[DeriveIGameEvent, OwnershipBased(nameof(Entity))]
+internal readonly partial struct AddBuffEvent(Entity entity, int buffId, float duration)
+    : IEquatable<AddBuffEvent>
 {
     public readonly Entity Entity = entity;
     public readonly int BuffId = buffId;
