@@ -10,6 +10,7 @@ using CSharpModBase;
 using CSharpModBase.Input;
 using DryIoc;
 using Friflo.Engine.ECS.Systems;
+using ReadyM.SDK.Mods;
 using Microsoft.Extensions.Logging;
 using PreludeLib.Compat;
 using ReadyM.Api;
@@ -34,7 +35,7 @@ using ReadyM.SDK.Client.Systems;
 namespace WukongMp.Sdk;
 
 // ReSharper disable once UnusedType.Global
-internal class Mod : ModBase
+internal class Mod : ModHostBase
 {
     public override string Name => "WukongMp.Sdk";
 
@@ -72,9 +73,6 @@ internal class Mod : ModBase
 
         DI.Instance.Init();
         WukongApi.RegisterApis();
-
-        // After the mods, so a mod's own mappings are collected with the SDK's.
-        DI.Instance.ApplyShapeMappings();
 
         RegisterConfig<SdkSettings>();
         var settings = services.Resolve<SdkSettings>();
@@ -133,6 +131,10 @@ internal class Mod : ModBase
         Utils.TryRunOnGameThread(() =>
         {
             AddModSystemsToEcs();
+            StartModEntryPoints();
+
+            // After the entry points, because a mod registers its mappings in Start.
+            Logger.LogInformation("Applied {Count} set(s) of shape mappings", DI.Instance.ApplyShapeMappings());
             SetUpClientRpcOffsets();
             SetUpServerRpcOffsets();
             DebugUtils.LogUe4SsPresence();
@@ -176,6 +178,32 @@ internal class Mod : ModBase
                 DI.Instance.Connection.Connect();
             }
         });
+    }
+
+    /// Builds and starts the entry point of every mod that declares one, in load order.
+    private void StartModEntryPoints()
+    {
+        var started = ModEntryRegistry.StartAll(
+            LoadedMods.All.Select(loaded => (loaded.Assembly, loaded.Directory)),
+            DI.Instance,
+            PatchMod,
+            (assembly, ex) => Logger.LogError(ex, "Failed to start the mod in {Assembly}", assembly.GetName().Name));
+
+        Logger.LogInformation("Started {Count} mod entry point(s)", started);
+    }
+
+    /// <summary>Applies the Prelude patches a mod's assembly declares.</summary>
+    /// <remarks>
+    /// Done here because a mod entered through [ModEntry] has no LateInit.
+    /// </remarks>
+    private void PatchMod(Assembly assembly)
+    {
+        var name = assembly.GetName().Name ?? assembly.FullName ?? "mod";
+        var patcher = new WukongPatcher(assembly, name, DI.Instance.Prelude);
+
+        patcher.Patch();
+
+        Logger.LogInformation("Patched {Assembly}", name);
     }
 
     private void AddModSystemsToEcs()

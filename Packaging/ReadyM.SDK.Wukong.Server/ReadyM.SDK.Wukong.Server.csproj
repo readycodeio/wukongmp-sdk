@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <!--
         The server surface, for the half of a mod that runs on the relay server.
@@ -41,7 +41,6 @@
 
     <!-- BEGIN GENERATED DEPENDENCIES -->
     <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
-        <PackageReference Include="JetBrains.Annotations" Version="2025.2.4" />
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8" />
     </ItemGroup>
     <!-- END GENERATED DEPENDENCIES -->

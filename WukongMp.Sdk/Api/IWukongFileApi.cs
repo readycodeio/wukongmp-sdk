@@ -1,8 +1,11 @@
+using System;
+
 namespace WukongMp.Sdk.Api;
 
 /// <summary>
 /// Provides methods related to manipulating files for Wukong mods, such as save files.
 /// </summary>
+[Obsolete("Use the ModDirectory property on your [ModEntry] class instead.")]
 public interface IWukongFileApi
 {
     /// <summary>
@@ -11,5 +14,6 @@ public interface IWukongFileApi
     /// </summary>
     /// <typeparam name="T">Pass the type of your mod's entry point. Used to find the mod's assembly and thus its directory.</typeparam>
     /// <returns>The absolute path to the mod's directory.</returns>
+    [Obsolete("Use the ModDirectory property on your [ModEntry] class instead.")]
     string GetModDirectory<T>() where T : ModBase;
 }
