@@ -4,18 +4,15 @@ using b1;
 using Friflo.Engine.ECS;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Common;
-using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.Protocol;
 using ReadyM.Relay.Client.State;
-using ReadyM.SDK.Client.Entities;
 using ReadyM.SDK.Entities;
 using WukongMp.Api;
-using WukongMp.Api.ECS.Archetypes;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.State;
 using WukongMp.Sdk.Common.Archetypes;
 
-namespace WukongMp.Sdk.SDK;
+namespace WukongMp.Sdk.Events;
 
 internal sealed class GameEvents : IDisposable, IGameEvents
 {

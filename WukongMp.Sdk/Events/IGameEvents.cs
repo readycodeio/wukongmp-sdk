@@ -3,9 +3,8 @@ using System.Globalization;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Protocol;
 using WukongMp.Sdk.Common.Archetypes;
-using WukongMp.Sdk.Entities;
 
-namespace WukongMp.Sdk.SDK;
+namespace WukongMp.Sdk.Events;
 
 /// <summary>
 /// Provides events related to gameplay, player actions, and multiplayer interactions in Wukong Multiplayer.

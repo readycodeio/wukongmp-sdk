@@ -2,7 +2,7 @@
 using Friflo.Engine.ECS;
 using ReadyM.Api.Mapping.Tags;
 using ReadyM.SDK.Client.Entities;
-using ReadyM.SDK.Core;
+using ReadyM.SDK.Archetypes.Core;
 using ReadyM.SDK.Client;
 using ReadyM.SDK.Entities;
 using ReadyM.Wukong.Common.ECS.Values;

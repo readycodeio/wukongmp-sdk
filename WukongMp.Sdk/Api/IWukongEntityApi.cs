@@ -3,7 +3,7 @@ using System.Numerics;
 using ReadyM.Api.Idents;
 using ReadyM.SDK.Archetypes;
 using ReadyM.SDK.Client.Entities;
-using ReadyM.SDK.Core;
+using ReadyM.SDK.Archetypes.Core;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using WukongMp.Api.Configuration;

@@ -1,5 +1,5 @@
 ﻿using ReadyM.SDK.Attributes;
-using ReadyM.SDK.Core;
+using ReadyM.SDK.Archetypes.Core;
 using ReadyM.Wukong.Common.ECS.Components;
 
 namespace WukongMp.Sdk.Common.Archetypes.Mixins;

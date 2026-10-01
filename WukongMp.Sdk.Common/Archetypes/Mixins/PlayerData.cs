@@ -1,5 +1,5 @@
 ﻿using ReadyM.SDK.Attributes;
-using ReadyM.SDK.Core;
+using ReadyM.SDK.Archetypes.Core;
 using ReadyM.Wukong.Common.ECS.Components;
 using Yooni.Native.Container;
 

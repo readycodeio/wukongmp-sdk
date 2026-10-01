@@ -7,7 +7,7 @@ using ReadyM.SDK.Client.Entities;
 using WukongMp.Api;
 using WukongMp.Sdk.Api.Implementation;
 using ReadyM.SDK.Client.Archetypes;
-using WukongMp.Sdk.SDK;
+using WukongMp.Sdk.Events;
 
 namespace WukongMp.Sdk.Api;
 

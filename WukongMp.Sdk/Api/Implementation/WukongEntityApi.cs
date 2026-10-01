@@ -7,7 +7,7 @@ using ReadyM.Api.Mapping.Events;
 using ReadyM.Relay.Client.State;
 using ReadyM.SDK.Archetypes;
 using ReadyM.SDK.Client.Entities;
-using ReadyM.SDK.Core;
+using ReadyM.SDK.Archetypes.Core;
 using ReadyM.SDK.Entities;
 using ReadyM.SDK.Exceptions;
 using ReadyM.Wukong.Common.ECS.Values;

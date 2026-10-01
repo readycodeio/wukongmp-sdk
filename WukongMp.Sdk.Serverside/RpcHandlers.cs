@@ -2,7 +2,8 @@
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer;
 using ReadyM.Relay.Server.Sdk.Rpc;
-using ReadyM.SDK.Core;
+using ReadyM.SDK.Archetypes.Core;
+using ReadyM.SDK.Archetypes.Core;
 using ReadyM.SDK.Server.Entities;
 using ReadyM.Wukong.Common.Rpc;
 using WukongMp.Sdk.Common.Archetypes;

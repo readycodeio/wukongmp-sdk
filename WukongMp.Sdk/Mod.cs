@@ -19,6 +19,7 @@ using ReadyM.SDK.Client;
 using ReadyM.SDK.Client.Entities;
 using ReadyM.SDK.Client.Systems;
 using ReadyM.SDK.Mods;
+
 using UnrealEngine.Engine;
 using WukongMp.Api;
 using WukongMp.Api.NameCompressors;
@@ -131,6 +132,10 @@ internal class Mod : ModHostBase
 
             // After the entry points, because a mod registers its mappings in Start.
             Logger.LogInformation("Applied {Count} set(s) of shape mappings", DI.Instance.ApplyShapeMappings());
+            // Again here, because a mod's classes are only declared once its assembly is loaded,
+            // which is later than the SDK first registers what it knows about.
+            RpcHandlerRegistry.RegisterAll(DI.Instance, RpcSide.Client);
+
             SetUpClientRpcOffsets();
             SetUpServerRpcOffsets();
             DebugUtils.LogUe4SsPresence();
@@ -234,6 +239,17 @@ internal class Mod : ModHostBase
 
     private void SetUpClientRpcOffsets()
     {
+        var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Client);
+
+        // Contract sets go first, in Id order, so their codes are the same on every client whatever
+        // order it loaded its mods in. The classes below are the 0.x way and cannot say that, so
+        // they take what is left. A set with no [ClientToClients] reserves nothing and moves nothing.
+        AssignManifestOffsets(offsetProvider, "TotalClientEventCount", "ClientOffset", "client");
+        AssignLegacyClientRpcOffsets(offsetProvider);
+    }
+
+    private void AssignLegacyClientRpcOffsets(RpcOffsetProvider offsetProvider)
+    {
         var rpcClasses = DI.Instance.Container.GetServiceRegistrations()
             .Where(r => typeof(ClientRpcHandler).IsAssignableFrom(r.Factory.ImplementationType ?? r.ServiceType))
             .Where(r => r.Factory.Reuse is null or SingletonReuse)
@@ -241,7 +257,6 @@ internal class Mod : ModHostBase
             .ToList();
 
         Logger.LogDebug("Found {RpcCount} RPC classes", rpcClasses.Count);
-        var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Client);
 
         foreach (var rpcClassRegistration in rpcClasses)
         {
@@ -256,6 +271,15 @@ internal class Mod : ModHostBase
     {
         var offsetProvider = DI.Instance.Container.Resolve<RpcOffsetProvider>(serviceKey: OffsetProviderKey.Server);
 
+        AssignManifestOffsets(offsetProvider, "TotalEventCount", "Offset", "server");
+    }
+
+    /// <summary>
+    /// Hands every contract set a slice of one code space, naming the members that hold its size and
+    /// its offset. The two spaces are numbered separately, so each has its own provider and pair.
+    /// </summary>
+    private void AssignManifestOffsets(RpcOffsetProvider offsetProvider, string countFieldName, string offsetPropertyName, string space)
+    {
         var manifests = new List<(string Id, byte Count, PropertyInfo Offset)>();
 
         foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(x => x.FullName))
@@ -267,13 +291,23 @@ internal class Mod : ModHostBase
             if (manifest is null)
                 continue;
 
-            var totalCountField = manifest.GetField("TotalEventCount", BindingFlags.Public | BindingFlags.Static);
-            var offsetProperty = manifest.GetProperty("Offset", BindingFlags.Public | BindingFlags.Static);
+            var totalCountField = manifest.GetField(countFieldName, BindingFlags.Public | BindingFlags.Static);
+            var offsetProperty = manifest.GetProperty(offsetPropertyName, BindingFlags.Public | BindingFlags.Static);
             var idField = manifest.GetField("Id", BindingFlags.Public | BindingFlags.Static);
 
-            if (totalCountField is null || offsetProperty is null || idField is null)
+            if (idField is null)
             {
                 Logger.LogError("Assembly {Assembly} has ServerRpcManifest but is missing expected members - possible generator version mismatch.", assembly.GetName().Name);
+                continue;
+            }
+
+            // A set built before this space existed simply has nothing in it, which is not an error:
+            // the mod predates the direction and reserves none of its codes.
+            if (totalCountField is null || offsetProperty is null)
+            {
+                Logger.LogDebug(
+                    "Assembly {Assembly} declares no {Space} RPC codes, so none were reserved for it.",
+                    assembly.GetName().Name, space);
                 continue;
             }
 
@@ -287,7 +321,9 @@ internal class Mod : ModHostBase
             var offset = offsetProvider.GetNextOffset(count);
             offsetProperty.SetValue(null, offset);
 
-            Logger.LogInformation("Assigned server RPC offset {Offset} ({Count} events) to contract set {Id}", offset, count, id);
+            Logger.LogInformation(
+                "Assigned {Space} RPC offset {Offset} ({Count} events) to contract set {Id}",
+                space, offset, count, id);
         }
     }
 

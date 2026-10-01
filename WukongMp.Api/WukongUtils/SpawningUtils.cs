@@ -5,7 +5,7 @@ using b1;
 using b1.BGW;
 using BtlShare;
 using ReadyM.SDK.Client.Entities;
-using ReadyM.SDK.Core;
+using ReadyM.SDK.Archetypes.Core;
 using ReadyM.SDK.Entities;
 using ReadyM.Wukong.Common.ECS.Components;
 using UnrealEngine.Engine;
