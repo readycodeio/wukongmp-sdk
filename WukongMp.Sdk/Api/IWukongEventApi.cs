@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using LiteNetLib;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer.Protocol;
 using WukongMp.Sdk.Entities;
@@ -10,6 +9,7 @@ namespace WukongMp.Sdk.Api;
 /// <summary>
 /// Provides events related to gameplay, player actions, and multiplayer interactions in Wukong Multiplayer.
 /// </summary>
+[Obsolete("Use IGameEvents instead.")]
 public interface IWukongEventApi
 {
     /// <summary>

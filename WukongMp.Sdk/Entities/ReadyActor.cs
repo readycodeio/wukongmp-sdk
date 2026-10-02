@@ -1,3 +1,4 @@
+using System;
 using Friflo.Engine.ECS;
 using WukongMp.Sdk.Api;
 using WukongMp.Sdk.Api.Implementation;
@@ -5,6 +6,7 @@ using WukongMp.Sdk.Api.Implementation;
 namespace WukongMp.Sdk.Entities;
 
 /// A ReadyActor is an entity that has a mapped Pawn.
+[Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
 public readonly struct ReadyActor : IReadyEntity<ReadyActor>, IReadyConvertable<ReadyActor, ReadyObject>
 {
     internal IWukongSynchronizationApi Api { get; }

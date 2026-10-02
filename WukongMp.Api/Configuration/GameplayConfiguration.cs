@@ -36,9 +36,6 @@ public sealed class GameplayConfiguration(ILogger logger)
     [Obsolete("To be replaced by data sync direction after refactoring")]
     internal bool SyncTamerTeamFromGameToEcs { get; set; }
 
-    [Obsolete("To be replaced by data sync direction after refactoring")]
-    internal bool OverrideLocalPlayerTeamFromGlobalEntity { get; set; }
-
     private Func<bool>? disableTamerAttackQuery;
 
     internal void SetDisableTamerAttackQuery(Func<bool> query)

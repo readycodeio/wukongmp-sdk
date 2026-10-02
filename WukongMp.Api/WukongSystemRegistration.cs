@@ -53,7 +53,6 @@ internal sealed class WukongSystemRegistration(
         new DespawnOtherMainCharactersSystem(archetypeEvent, playerState, wukongArchetype, playerPawnState, eventBus, logger),
         new SyncMainCharactersSystem(playerState, modeManager, eventBus, configuration, gameplayEventRouter, mappedField, logger),
         new EnableCollisionAfterCutsceneSystem(playerState),
-        new UpdateMarkersSystem(),
         new FreeCameraMovementSystem(eventBus, freeCameraManager, freeCameraController),
         new AfterMainCharacterDeathSystem(eventBus, playerState),
         new DebugViewSystem(eventBus, widgetManager)

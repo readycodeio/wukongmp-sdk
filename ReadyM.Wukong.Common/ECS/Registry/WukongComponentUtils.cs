@@ -28,6 +28,5 @@ internal static class WukongComponentUtils
             {
                 HpMaxMulPercent = 100,
             })
-            .Add<TransformComponent>()
-            .Add<TeamComponent>();
+            .Add<TransformComponent>();
 }

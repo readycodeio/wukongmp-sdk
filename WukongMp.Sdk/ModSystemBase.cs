@@ -1,16 +1,19 @@
-﻿using Friflo.Engine.ECS.Systems;
+﻿using System;
+using Friflo.Engine.ECS.Systems;
+using ReadyM.SDK.Client.Systems;
 
 namespace WukongMp.Sdk;
 
 /// Base class for plugin systems. Adds itself to the update loop on creation and removes itself on disposal.
+[Obsolete("Use [Service] attribute instead.")]
 public abstract class ModSystemBase
 {
     protected readonly ref struct UpdateTick(float deltaTime, float time)
     {
-        /// <summary> The time in seconds since the last tick. </summary>
+        /// The time in seconds since the last tick. 
         public readonly float deltaTime = deltaTime;
 
-        /// <summary> The time at the beginning of the current frame since application start. </summary>
+        /// The time at the beginning of the current frame since application start. 
         public readonly float time = time;
     }
 
@@ -20,6 +23,9 @@ public abstract class ModSystemBase
 
         protected override void OnUpdateGroup()
         {
+            if (!ModSystems.Running)
+                return;
+
             modSystem.OnUpdate(new UpdateTick(Tick.deltaTime, Tick.time));
         }
     }

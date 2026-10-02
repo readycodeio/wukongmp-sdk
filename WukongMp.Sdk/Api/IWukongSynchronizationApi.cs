@@ -29,14 +29,16 @@ public interface IWukongSynchronizationApi
     /// Gets a reference to a component on the global entity. Throws if there is no global entity, which is
     /// the case whenever the client is not in an area.
     /// </summary>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     ref T GetGlobalComponent<T>() where T : struct, IComponent;
 
     /// <summary>
     /// Copies a component off the global entity, returning false if there is no global entity. Safe to call
     /// from a system, which keeps ticking after a disconnect.
     /// </summary>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     bool TryGetGlobalComponent<T>(out T value) where T : struct, IComponent;
-    
+
     /// <summary>
     /// Gets a value indicating whether the player is in an area.
     /// </summary>
@@ -65,43 +67,51 @@ public interface IWukongSynchronizationApi
     /// <summary>
     /// Gets the local main character.
     /// </summary>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     ReadyMainCharacter? LocalMainCharacter { get; }
 
     /// <summary>
     /// Gets a list of all players on the server.
     /// </summary>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     IReadOnlyList<PlayerId> AllPlayers { get; }
 
     /// <summary>
     /// Gets a list of players in the current area.
     /// </summary>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     IReadOnlyList<PlayerId> AreaPlayers { get; }
 
     /// <summary>
     /// Gets a list of all tamers (monsters).
     /// </summary>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     EntityList<ReadyTamer> AllTamers { get; }
 
     /// <summary>
     /// Gets a list of tamers (monsters) in the current area.
     /// </summary>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     EntityList<ReadyTamer> AreaTamers { get; }
-    
+
     /// <summary>
     /// Gets the tamer entity associated with the specified actor.
     /// </summary>
     /// <param name="actor">The tamer actor to find the tamer entity for.</param>
     /// <returns>The tamer entity, or <c>null</c> if not found.</returns>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     ReadyTamer? GetTamerEntityByActor(ABGUTamerBase? actor);
 
     /// <summary>
     /// Gets a list of all main characters.
     /// </summary>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     EntityList<ReadyMainCharacter> AllMainCharacters { get; }
 
     /// <summary>
     /// Gets a list of main characters in the current area.
     /// </summary>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     EntityList<ReadyMainCharacter> AreaMainCharacters { get; }
 
     /// <summary>
@@ -109,6 +119,7 @@ public interface IWukongSynchronizationApi
     /// </summary>
     /// <param name="actor">The actor to find the player entity for.</param>
     /// <returns>The player entity, or <c>null</c> if not found.</returns>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     ReadyMainCharacter? GetPlayerEntityByActor(AActor? actor);
 
     /// <summary>
@@ -116,6 +127,7 @@ public interface IWukongSynchronizationApi
     /// </summary>
     /// <param name="targetCharacter">The character to find the player entity for.</param>
     /// <returns>The player entity, or <c>null</c> if not found.</returns>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     ReadyMainCharacter? GetPlayerEntityByLastTransformation(BGUCharacterCS? targetCharacter);
 
     /// <summary>
@@ -132,6 +144,7 @@ public interface IWukongSynchronizationApi
     /// </summary>
     /// <param name="playerId">The player ID.</param>
     /// <returns>The main character, or <c>null</c> if not found.</returns>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     ReadyMainCharacter? GetMainCharacterByPlayerId(PlayerId playerId);
 
     /// <summary>
@@ -154,11 +167,13 @@ public interface IWukongSynchronizationApi
     /// </summary>
     /// <param name="character">The character to enable spectator mode for.</param>
     /// <param name="reason">The reason for enabling spectator mode.</param>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     void EnableSpectatorMode(ReadyMainCharacter character, SpectatorReason reason);
 
     /// <summary>
     /// Disables spectator mode for the specified character.
     /// </summary>
     /// <param name="character">The character to disable spectator mode for.</param>
+    [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
     void DisableSpectatorMode(ReadyMainCharacter character);
 }

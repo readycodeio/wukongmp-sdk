@@ -1,3 +1,4 @@
+using System;
 using b1;
 using WukongMp.Api.ECS.Entities;
 
@@ -8,6 +9,7 @@ public static class ReadyActorExtensions
     extension<TSelf>(TSelf obj)
         where TSelf : struct, IReadyEntity<TSelf>, IReadyConvertable<TSelf, ReadyActor>
     {
+        [Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
         public BGUCharacterCS? Pawn
         {
             get
