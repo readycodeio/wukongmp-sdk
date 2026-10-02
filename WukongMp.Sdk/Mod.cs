@@ -132,10 +132,6 @@ internal class Mod : ModHostBase
 
             // After the entry points, because a mod registers its mappings in Start.
             Logger.LogInformation("Applied {Count} set(s) of shape mappings", DI.Instance.ApplyShapeMappings());
-            // Again here, because a mod's classes are only declared once its assembly is loaded,
-            // which is later than the SDK first registers what it knows about.
-            RpcHandlerRegistry.RegisterAll(DI.Instance, RpcSide.Client);
-
             SetUpClientRpcOffsets();
             SetUpServerRpcOffsets();
             DebugUtils.LogUe4SsPresence();
