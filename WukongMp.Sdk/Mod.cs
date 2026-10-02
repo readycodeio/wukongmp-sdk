@@ -19,6 +19,7 @@ using ReadyM.SDK.Client;
 using ReadyM.SDK.Client.Entities;
 using ReadyM.SDK.Client.Systems;
 using ReadyM.SDK.Mods;
+using ReadyM.SDK.Services;
 
 using UnrealEngine.Engine;
 using WukongMp.Api;
@@ -138,6 +139,9 @@ internal class Mod : ModHostBase
             DetectSdkVersion();
             RegisterKeybinds(DI.Instance);
             DI.Instance.StartHostedServices();
+            
+            Logger.LogInformation("Started {Count} service(s)", ServiceRegistry.StartAll(DI.Instance));
+
             StartRelayClient();
         });
     }
