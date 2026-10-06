@@ -128,10 +128,14 @@ internal class Mod : ModHostBase
 
         Utils.TryRunOnGameThread(() =>
         {
-            AddModSystemsToEcs();
-            StartModEntryPoints();
+            // Before both: the updates system ticks what the mods declared, and an entry point
+            // resolves its own [Service]s in Init.
+            DI.Instance.RegisterModDeclarations();
 
-            // After the entry points, because a mod registers its mappings in Start.
+            AddModSystemsToEcs();
+            InitModEntryPoints();
+
+            // After the entry points, because a mod registers its mappings in Init.
             Logger.LogInformation("Applied {Count} set(s) of shape mappings", DI.Instance.ApplyShapeMappings());
             SetUpClientRpcOffsets();
             SetUpServerRpcOffsets();
@@ -181,16 +185,16 @@ internal class Mod : ModHostBase
         });
     }
 
-    /// Builds and starts the entry point of every mod that declares one, in load order.
-    private void StartModEntryPoints()
+    /// Builds and initializes the entry point of every mod that declares one, in load order.
+    private void InitModEntryPoints()
     {
-        var started = ModEntryRegistry.StartAll(
+        var initialized = ModEntryRegistry.InitAll(
             LoadedMods.All.Select(loaded => (loaded.Assembly, loaded.Directory)),
             DI.Instance,
             PatchMod,
-            (assembly, ex) => Logger.LogError(ex, "Failed to start the mod in {Assembly}", assembly.GetName().Name));
+            (assembly, ex) => Logger.LogError(ex, "Failed to initialize the mod in {Assembly}", assembly.GetName().Name));
 
-        Logger.LogInformation("Started {Count} mod entry point(s)", started);
+        Logger.LogInformation("Initialized {Count} mod entry point(s)", initialized);
     }
 
     /// <summary>Applies the Prelude patches a mod's assembly declares.</summary>

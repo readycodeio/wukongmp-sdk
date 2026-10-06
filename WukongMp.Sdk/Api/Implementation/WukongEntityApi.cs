@@ -31,32 +31,6 @@ internal sealed class WukongEntityApi(
     IMappedEventManager mappedEvent
 ) : IWukongEntityApi
 {
-    public T GetGlobalMixin<T>() where T : struct, IArchetypeMixin
-    {
-        foreach (var world in entities.Query<World>())
-        {
-            if (world.TryAs(out T mixin))
-            {
-                return mixin;
-            }
-
-            throw new ComponentNotFoundException($"World archetype does not carry the {typeof(T).Name} mixin");
-        }
-
-        throw new ComponentNotFoundException("World entity is missing");
-    }
-
-    public bool TryGetGlobalMixin<T>(out T value) where T : struct, IArchetypeMixin
-    {
-        foreach (var world in entities.Query<World>())
-        {
-            return world.TryAs(out value);
-        }
-
-        value = default;
-        return false;
-    }
-
     public Area? CurrentArea
     {
         get

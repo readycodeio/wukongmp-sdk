@@ -14,18 +14,6 @@ namespace WukongMp.Sdk.Api;
 public interface IWukongEntityApi
 {
     /// <summary>
-    /// Gets a reference to a mixin on the global entity. Throws if there is no global entity, which is
-    /// the case whenever the client is not in an area.
-    /// </summary>
-    T GetGlobalMixin<T>() where T : struct, IArchetypeMixin;
-
-    /// <summary>
-    /// Copies a mixin off the global entity, returning false if there is no global entity. Safe to call
-    /// from a system, which keeps ticking after a disconnect.
-    /// </summary>
-    bool TryGetGlobalMixin<T>(out T value) where T : struct, IArchetypeMixin;
-
-    /// <summary>
     /// Gets the current area entity if it exists.
     /// </summary>
     Area? CurrentArea { get; }
