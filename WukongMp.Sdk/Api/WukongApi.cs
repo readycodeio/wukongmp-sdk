@@ -1,6 +1,13 @@
-﻿using ReadyM.Api.DI;
+﻿using System;
+using ReadyM.Api.DI;
+using ReadyM.Api.ECS.Registry;
+using ReadyM.SDK.Client;
+using ReadyM.SDK.Client.Mapping;
+using ReadyM.SDK.Client.Entities;
 using WukongMp.Api;
 using WukongMp.Sdk.Api.Implementation;
+using ReadyM.SDK.Client.Archetypes;
+using WukongMp.Sdk.Events;
 
 namespace WukongMp.Sdk.Api;
 
@@ -12,7 +19,13 @@ public static class WukongApi
 {
     internal static void RegisterApis()
     {
+        Services.RegisterReadyMSdk();
+
+        // After the game's own archetype registrations, whose ids it needs.
+        Services.RegisterSingleton<IArchetypeRegistration, ArchetypeExtensionRegistration>();
+        
         Services.RegisterSingleton<WukongArchetypes>();
+        Services.RegisterSingleton<IGameEvents, GameEvents>();
         Services.RegisterSingleton<IWukongSaveApi, WukongSelfHostedSaveApi>();
         Services.RegisterSingleton<IWukongFileApi, WukongFileApi>();
         Services.RegisterSingleton<IWukongConsoleApi, WukongConsoleApi>();
@@ -22,11 +35,15 @@ public static class WukongApi
         Services.RegisterSingleton<IWukongLocalApi, WukongLocalApi>();
         Services.RegisterSingleton<IWukongInputApi, WukongInputApi>();
         Services.RegisterSingleton<IWukongWidgetApi, WukongWidgetApi>();
+        Services.RegisterSingleton<IWukongEntityApi, WukongEntityApi>();
         Services.RegisterSingleton<IWukongConfigurationApi, WukongConfigurationApi>();
     }
 
     public static IDependencyContainer Services => DI.Instance;
 
+    /// <inheritdoc cref="IWukongEntityApi"/>
+    public static IWukongEntityApi Entities => Services.Resolve<IWukongEntityApi>();
+    
     /// <inheritdoc cref="WukongArchetypes"/>
     /// <remarks>
     /// Safe to use from an <see cref="ReadyM.Api.ECS.Registry.IArchetypeRegistration"/>,
@@ -52,9 +69,11 @@ public static class WukongApi
     public static IWukongSaveApi Saves => Services.Resolve<IWukongSaveApi>();
 
     /// <inheritdoc cref="IWukongEventApi"/>
+    [Obsolete("Use IGameEvents instead.")]
     public static IWukongEventApi Events => Services.Resolve<IWukongEventApi>();
 
     /// <inheritdoc cref="IWukongSynchronizationApi"/>
+    [Obsolete("Use IWukongEntityApi instead.")]
     public static IWukongSynchronizationApi Sync => Services.Resolve<IWukongSynchronizationApi>();
 
     /// <inheritdoc cref="IWukongWidgetApi"/>

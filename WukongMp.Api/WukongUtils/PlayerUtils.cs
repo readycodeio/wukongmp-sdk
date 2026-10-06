@@ -2,6 +2,7 @@
 using b1;
 using BtlB1;
 using BtlShare;
+using Friflo.Engine.ECS;
 using ReadyM.Api.ECS.Worlds;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Mapping.Tags;
@@ -10,6 +11,7 @@ using ReadyM.Wukong.Common.ECS.Components;
 using ReadyM.Wukong.Common.ECS.Values;
 using UnrealEngine.Engine;
 using UnrealEngine.Runtime;
+using WukongMp.Api.ECS.Components;
 using WukongMp.Api.ECS.Entities;
 using WukongMp.Api.ECS.GameEvents;
 using WukongMp.Api.State;
@@ -38,10 +40,8 @@ namespace WukongMp.Api.WukongUtils
             }
         }
 
-        public static void SetPlayerInteractionEnabled(MainCharacterEntity mainEntity, bool enabled)
+        public static void SetPlayerInteractionEnabled(BGUCharacterCS pawn, bool enabled)
         {
-            var pawn = mainEntity.Pawn;
-
             IBUC_SimpleStateData readOnlyData = BGU_DataUtil.GetReadOnlyData<IBUC_SimpleStateData, BUC_SimpleStateData>(pawn);
             var hasCantInteract = readOnlyData.HasSimpleState(EBGUSimpleState.CantInteract);
 
@@ -224,19 +224,19 @@ namespace WukongMp.Api.WukongUtils
             }
         }
 
-        public static void EnableSpectator(MainCharacterEntity mainEntity, SpectatorReason reason)
+        public static void EnableSpectator(Entity mainEntity, SpectatorReason reason)
         {
-            Logging.LogDebug("Enabling spectator mode for player {PlayerId} with reason {Reason}", mainEntity.GetNickname().Nickname, reason);
-            ref var state = ref mainEntity.GetState();
+            Logging.LogDebug("Enabling spectator mode for player {PlayerId} with reason {Reason}", mainEntity.GetComponent<NicknameComponent>().Nickname, reason);
+            ref var state = ref mainEntity.GetComponent<MainCharacterComponent>();
             state.IsSpectator = true;
             state.SpectatorReason = reason;
         }
 
-        public static void DisableSpectator(MainCharacterEntity mainEntity)
+        public static void DisableSpectator(Entity mainEntity)
         {
-            Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetNickname().Nickname);
-            mainEntity.GetState().IsSpectator = false;
-            mainEntity.GetLocalState().IsDuringDeathAnim = false;
+            Logging.LogDebug("Disabling spectator mode for player {PlayerId}", mainEntity.GetComponent<NicknameComponent>().Nickname);
+            mainEntity.GetComponent<MainCharacterComponent>().IsSpectator = false;
+            mainEntity.GetComponent<LocalMainCharacterComponent>().IsDuringDeathAnim = false;
         }
     }
 }

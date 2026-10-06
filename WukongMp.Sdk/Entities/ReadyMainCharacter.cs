@@ -17,6 +17,7 @@ namespace WukongMp.Sdk.Entities;
 /// <summary>
 /// Represents the player character entity in the game.
 /// </summary>
+[Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
 public readonly struct ReadyMainCharacter
     : IReadyEntity<ReadyMainCharacter>,
         IReadyConvertable<ReadyMainCharacter, ReadyCharacter>,
@@ -91,11 +92,15 @@ public readonly struct ReadyMainCharacter
         }
     }
 
+    [Obsolete]
     public bool IsObserver => Entity.GetState().IsSpectator && Entity.GetState().SpectatorReason == SpectatorReason.Api;
+
+    [Obsolete]
     public bool IsSpectator => Entity.GetState().IsSpectator;
 
     // ---
 
+    [Obsolete]
     public void Teleport(Vector3 location, Vector3 rotation)
     {
         DI.Instance.MappedEvent.InvokeInGameAndNotifyEcs(new RequestTeleportEvent(
@@ -105,11 +110,13 @@ public readonly struct ReadyMainCharacter
         ), default(EmptyContext));
     }
 
+    [Obsolete]
     public void RebirthInPlace()
     {
         DI.Instance.MappedEvent.InvokeInGameAndNotifyEcs(new RebirthPlayerEvent(Entity, false), default(EmptyContext));
     }
 
+    [Obsolete]
     public void RebirthAtShrine(int shrineId)
     {
         ref var localMainComp = ref Entity.GetLocalState();
@@ -123,9 +130,15 @@ public readonly struct ReadyMainCharacter
 
     public void EnableInteraction(bool enabled)
     {
-        PlayerUtils.SetPlayerInteractionEnabled(Entity, enabled);
+        if (Entity.Pawn == null)
+        {
+            Logging.LogError("Cannot enable/disable interaction: Player pawn is null.");
+            return;
+        }
+
+        PlayerUtils.SetPlayerInteractionEnabled(Entity.Pawn, enabled);
     }
-    
+
     public ref T Get<T>() where T : struct, IComponent
     {
         return ref Entity.Entity.GetComponent<T>();

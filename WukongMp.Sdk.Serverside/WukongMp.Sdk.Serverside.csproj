@@ -13,15 +13,16 @@
         <CoreSdkRoot Condition="'$(CoreSdkRoot)' == ''">$(MSBuildThisFileDirectory)..\readym-core-sdk</CoreSdkRoot>
     </PropertyGroup>
 
-<ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="2025.2.4"/>
+    <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.8"/>
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="$(CoreSdkRoot)\src\ReadyM.Relay.Server.Sdk\ReadyM.Relay.Server.Sdk.csproj"/>
+        <ProjectReference Include="$(CoreSdkRoot)\src\ReadyM.SDK.Server\ReadyM.SDK.Server.csproj"/>
         <ProjectReference Include="$(CoreSdkRoot)\src\ReadyM.Api.Generators\ReadyM.Api.Generators.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer"/>
-        <ProjectReference Include="..\ReadyM.Wukong.Common\ReadyM.Wukong.Common.csproj" />
+        <ProjectReference Include="..\ReadyM.Wukong.Common\ReadyM.Wukong.Common.csproj"/>
+        <ProjectReference Include="..\WukongMp.Sdk.Common\WukongMp.Sdk.Common.csproj"/>
     </ItemGroup>
 
 </Project>

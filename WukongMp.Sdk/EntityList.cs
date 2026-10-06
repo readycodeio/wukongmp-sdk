@@ -1,10 +1,12 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using Friflo.Engine.ECS;
 using WukongMp.Sdk.Api.Implementation;
 
 namespace WukongMp.Sdk;
 
+[Obsolete("Part of old 0.x SDK. Use SDK 1.0 methods instead.")]
 public readonly struct EntityList<T> : IEnumerable<T>
     where T : struct, IReadyEntity<T>
 {

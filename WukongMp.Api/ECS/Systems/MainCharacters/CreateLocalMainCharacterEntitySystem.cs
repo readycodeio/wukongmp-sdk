@@ -78,10 +78,7 @@ internal class CreateLocalMainCharacterEntitySystem(ClientState clientState, Wuk
         }
 
         var pawnTeamId = pawn.GetTeamIDInCS();
-        mainEntity.SetTeam(new TeamComponent
-        {
-            TeamId = pawnTeamId,
-        });
+        player.TeamId = pawnTeamId;
 
         localMainComp.IsPlayerSynced = true;
         playerState.InvokeMainCharacterEntityInitialized(mainEntity);

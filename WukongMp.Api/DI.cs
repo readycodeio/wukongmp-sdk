@@ -22,12 +22,14 @@ using ReadyM.Api.Mapping.Data;
 using ReadyM.Api.Mapping.Events;
 using ReadyM.Api.Mapping.Policies.Data;
 using ReadyM.Api.Mapping.Policies.Event;
+using ReadyM.Api.Mapping.Policies.Data.Common;
 using ReadyM.Api.Mapping.Policies.Event.Common;
 using ReadyM.Api.Multiplayer.Client;
 using ReadyM.Api.Multiplayer.ECS.Archetypes;
 using ReadyM.Api.Multiplayer.ECS.Jobs;
 using ReadyM.Api.Multiplayer.ECS.Managers;
 using ReadyM.Api.Multiplayer.ECS.Registry;
+using ReadyM.SDK.Client;
 using ReadyM.Api.Multiplayer.ECS.Systems;
 using ReadyM.Api.Multiplayer.RPC;
 using ReadyM.Api.Multiplayer.Serialization;
@@ -140,11 +142,8 @@ internal sealed class DI : IDependencyContainer
             return;
 
         Container.RegisterInstance(loggerFactory);
-        var loggerFactoryMethod = typeof(LoggerFactory).GetMethod("CreateLogger")!;
-
-        Container.Register(typeof(ILogger<>), made: Made.Of(
-            req => loggerFactoryMethod.MakeGenericMethod(req.Parent.ImplementationType),
-            ServiceInfo.Of<LoggerFactory>()));
+        
+        Container.Register(typeof(ILogger<>), typeof(Logger<>), ifAlreadyRegistered: IfAlreadyRegistered.Replace);
         Container.RegisterInstance(LoggerFactory.CreateLogger("Default"));
     }
 
@@ -193,6 +192,7 @@ internal sealed class DI : IDependencyContainer
 
         Container.Register<INetworkedComponentRegistration, DefaultNetworkedComponentRegistration>();
         Container.Register<INetworkedComponentRegistration, WukongNetworkedComponentRegistration>();
+        Container.Register<INetworkedComponentRegistration, ReplicatedShapeRegistration>();
         Container.Register<INetworkedComponentRegistry, NetworkedComponentRegistry>();
         Container.RegisterMany<CustomComponentNetworkRegistry>(nonPublicServiceTypes: true);
 
@@ -249,6 +249,7 @@ internal sealed class DI : IDependencyContainer
         Container.Register<DataSideChannel>();
 
         Container.Register<IMappingDataPolicyFactory, OwnershipDataPolicyFactory>();
+        Container.Register<IMappingDataPolicyFactory, PropagationDataPolicyFactory>();
         Container.Register<IMappingEventPolicyFactory, OwnershipEventPolicyFactory>();
         Container.Register<IMappingEventPolicyFactory, MasterClientEventPolicyFactory>();
         Container.Register<IMappingEventPolicyFactory, RunOnMasterClientOnlyEventPolicyFactory>();

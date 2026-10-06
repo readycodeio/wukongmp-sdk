@@ -16,8 +16,6 @@ public partial struct PlayerComponent
 
     /// <summary>
     /// This is the players' Team ID, used in PvP, possibly in the future in creative mode
-    /// This is separate separated out from the TeamID on the main character which describes directly the team of the
-    /// underlying game actor.
     /// </summary>
     private int _teamId;
 }

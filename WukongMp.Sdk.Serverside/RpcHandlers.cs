@@ -1,16 +1,18 @@
 ﻿using Microsoft.Extensions.Logging;
 using ReadyM.Api.Idents;
 using ReadyM.Api.Multiplayer;
-using ReadyM.Api.Multiplayer.ECS.Components;
-using ReadyM.Relay.Server.Sdk.Ecs;
 using ReadyM.Relay.Server.Sdk.Rpc;
-using ReadyM.Wukong.Common.ECS.Components;
+using ReadyM.SDK.Archetypes.Core;
+using ReadyM.SDK.Archetypes.Core;
+using ReadyM.SDK.Server.Entities;
 using ReadyM.Wukong.Common.Rpc;
+using WukongMp.Sdk.Common.Archetypes;
+using WukongMp.Sdk.Common.Archetypes.Mixins;
 
 namespace WukongMp.Sdk.Serverside;
 
 [ServerRpcFor(typeof(SdkRpcContracts))]
-internal partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandlersBase
+internal partial class RpcHandlers(IEntities ecs, ILogger logger) : ServerRpcHandlersBase
 {
     private readonly Dictionary<int, HashSet<PlayerId>> _skipMovieRequests = new();
 
@@ -28,8 +30,12 @@ internal partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandle
         }
 
         var connectedPlayers = 0;
-        ecs.Query<MainCharacterComponent>((ref _) => { connectedPlayers++; });
-
+        
+        foreach (var _ in ecs.Query<MainCharacter>())
+        {
+            connectedPlayers++;
+        }
+        
         var response = new SkipMovieData
         {
             SequenceId = sequenceId,
@@ -51,13 +57,13 @@ internal partial class RpcHandlers(EcsApi ecs, ILogger logger) : ServerRpcHandle
 
     partial void OnMovieStarted(RpcContext context, int sequenceId, AreaId areaId)
     {
-        ecs.Query<MovieComponent, AreaScopeComponent>((ref movie, ref area) =>
+        foreach (var area in ecs.Query<Area>())
         {
             if (areaId == area.AreaId)
             {
-                movie.AddStartedSequences(sequenceId);
+                area.AddStartedSequences(sequenceId);
                 logger.LogDebug("Marked movie {Id} as started in area {AreaId}", sequenceId, areaId);
             }
-        });
+        }
     }
 }
