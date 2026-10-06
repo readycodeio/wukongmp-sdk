@@ -6,6 +6,9 @@ This repository is the source of the three NuGet packages a mod references, and 
 
 Writing a mod? You want the packages, not this repository. Building or changing the SDK? Read on.
 
+The `develop` branch is the currently worked-on version.
+For stable releases, check out the tags.
+
 ## Packages
 
 A mod is three projects, and there is one package per project, so a project only sees the
@@ -19,19 +22,6 @@ assemblies that exist in the process it runs in:
 
 Client and Server both depend on Common and neither depends on the other. Shared code
 therefore cannot reference client-only API and then fail when the server loads it.
-
-## Layout
-
-| project | tfm | |
-|---|---|---|
-| `WukongMp.Api` | `netstandard2.0` | the game-facing layer: Harmony patches, game state, chat, UI |
-| `WukongMp.Sdk` | `netstandard2.0` | the client-side surface a mod derives from |
-| `WukongMp.Sdk.Serverside` | `net10.0` | the server-side surface a mod derives from |
-| `ReadyM.Wukong.Common` | `netstandard2.0`, `net10.0` | Wukong component types both sides agree on |
-| `Packaging/` | | packaging-only projects, one per NuGet package |
-
-`netstandard2.0` is not a stylistic choice: anything the game process loads has to target what
-that runtime accepts.
 
 ## Build
 
