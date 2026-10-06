@@ -18,7 +18,6 @@ $modFilesCore = @(
     "Friflo.Json.Fliox.dll",
     "HttpMachine.dll",
     "IHttpMachine.dll",
-    "JetBrains.Annotations.dll",
     "Microsoft.Bcl.Memory.dll",
     "Microsoft.Bcl.Numerics.dll",
     "Nito.AsyncEx.Context.dll",
