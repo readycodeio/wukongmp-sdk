@@ -3,7 +3,7 @@ using WukongMp.Sdk.Common.Archetypes.Mixins;
 
 namespace WukongMp.Sdk.Common.Archetypes;
 
-[Archetype]
+[Archetype(replicated: true)]
 [Include(typeof(Transform))]
 [Include(typeof(Health))]
 [Include(typeof(DisplayedNickname))]
