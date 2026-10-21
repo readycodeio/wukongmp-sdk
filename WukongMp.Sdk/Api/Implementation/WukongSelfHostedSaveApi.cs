@@ -13,14 +13,14 @@ namespace WukongMp.Sdk.Api.Implementation;
 internal class WukongSelfHostedSaveApi : IWukongSaveApi
 {
     private readonly ILogger logger;
-    
+
     private readonly string baseUrl;
     private readonly Dictionary<string, string> headers;
 
     public WukongSelfHostedSaveApi(ILogger logger)
     {
         this.logger = logger;
-        
+
         var jwtToken = WukongApi.Configuration.GetLaunchParameter("JWT_TOKEN", "");
         if (string.IsNullOrWhiteSpace(jwtToken))
         {
@@ -41,7 +41,7 @@ internal class WukongSelfHostedSaveApi : IWukongSaveApi
     public async Task<FileInfo?> DownloadWorldSaveAsync(CancellationToken ct = default)
     {
         var httpClient = new BouncyCastleHttpsClient(logger);
-        var bytes = await httpClient.GetBytesAsync(new Uri($"{baseUrl}/api/save/{SaveFileType.WorldSave}"), headers, ct);
+        var bytes = await httpClient.GetBytesAsync(new Uri($"{baseUrl}/api/save/{FileType.WorldSave}"), headers, ct);
 
         if (bytes is null)
             return null;
@@ -52,14 +52,14 @@ internal class WukongSelfHostedSaveApi : IWukongSaveApi
     public async Task<bool> UploadWorldSaveAsync(byte[] content, CancellationToken ct = default)
     {
         var httpClient = new BouncyCastleHttpsClient(logger);
-        var code = await httpClient.PutBytesAsync(new Uri($"{baseUrl}/api/save/{SaveFileType.WorldSave}"), headers, content, ct);
+        var code = await httpClient.PutBytesAsync(new Uri($"{baseUrl}/api/save/{FileType.WorldSave}"), headers, content, ct);
         return code == HttpStatusCode.NoContent;
     }
 
     public async Task<FileInfo?> DownloadPlayerSaveAsync(CancellationToken ct = default)
     {
         var httpClient = new BouncyCastleHttpsClient(logger);
-        var bytes = await httpClient.GetBytesAsync(new Uri($"{baseUrl}/api/save/{SaveFileType.PlayerSave}"), headers, ct);
+        var bytes = await httpClient.GetBytesAsync(new Uri($"{baseUrl}/api/save/{FileType.PlayerSave}"), headers, ct);
 
         if (bytes is null)
             return null;
@@ -70,7 +70,7 @@ internal class WukongSelfHostedSaveApi : IWukongSaveApi
     public async Task<bool> UploadPlayerSaveAsync(byte[] content, CancellationToken ct = default)
     {
         var httpClient = new BouncyCastleHttpsClient(logger);
-        var code = await httpClient.PutBytesAsync(new Uri($"{baseUrl}/api/save/{SaveFileType.PlayerSave}"), headers, content, ct);
+        var code = await httpClient.PutBytesAsync(new Uri($"{baseUrl}/api/save/{FileType.PlayerSave}"), headers, content, ct);
         return code == HttpStatusCode.NoContent;
     }
 }

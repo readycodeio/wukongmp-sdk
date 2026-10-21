@@ -3,6 +3,6 @@ using ReadyM.Wukong.Common.ECS.Components;
 
 namespace WukongMp.Sdk.Common.Archetypes.Mixins;
 
-[ArchetypeMixin]
+[ArchetypeMixin(Replication.OwnershipBased)]
 [ExplicitComponent(typeof(MonsterAnimationComponent))]
 public readonly partial struct MonsterAnimation;

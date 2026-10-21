@@ -4,7 +4,7 @@ using WukongMp.Sdk.Common.Archetypes;
 
 namespace WukongMp.Sdk.Archetypes.Mixins;
 
-[ArchetypeMixin]
+[ArchetypeMixin(Replication.None)]
 [Extends(typeof(MainCharacter))]
 [ExplicitComponent(typeof(LocalMainCharacterComponent))]
 public readonly partial struct LocalCharacterData

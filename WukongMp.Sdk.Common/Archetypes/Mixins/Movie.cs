@@ -4,7 +4,7 @@ using ReadyM.Wukong.Common.ECS.Components;
 
 namespace WukongMp.Sdk.Common.Archetypes.Mixins;
 
-[ArchetypeMixin]
+[ArchetypeMixin(Replication.ServerAuthoritative)]
 [ExplicitComponent(typeof(MovieComponent))]
 [ExplicitCollection("StartedSequences")]
 [Extends(typeof(Area))]

@@ -6,7 +6,7 @@ using ReadyM.Wukong.Common.ECS.Values;
 
 namespace WukongMp.Sdk.Common.Archetypes.Mixins;
 
-[ArchetypeMixin]
+[ArchetypeMixin(Replication.OwnershipBased)]
 [ExplicitComponent(typeof(MainCharacterComponent))]
 public readonly partial struct MainCharacterData
 {

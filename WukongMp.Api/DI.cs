@@ -194,7 +194,7 @@ internal sealed class DI : IDependencyContainer
         Container.Register<INetworkedComponentRegistration, WukongNetworkedComponentRegistration>();
         Container.Register<INetworkedComponentRegistration, ReplicatedShapeRegistration>();
         Container.Register<INetworkedComponentRegistry, NetworkedComponentRegistry>();
-        Container.RegisterMany<CustomComponentNetworkRegistry>(nonPublicServiceTypes: true);
+        Container.RegisterMany<NetworkedComponentJobRegistry>(nonPublicServiceTypes: true);
 
         // The schema has to exist before the first EntityStore. Every mod assembly is loaded by now: the
         // loader loads all of them before it initializes any, and this runs from the SDK mod's init.
@@ -225,7 +225,6 @@ internal sealed class DI : IDependencyContainer
 
         Container.Register<ReceiveSystem>();
         Container.Register<ClientEcsUpdateLoop>();
-        Container.Register<SerializationJobRegistry>();
         Container.Register<ClientState>();
         Container.Register<WukongPlayerState>();
         Container.Register<IClientEntityManager, ClientNetworkedEntityState>();

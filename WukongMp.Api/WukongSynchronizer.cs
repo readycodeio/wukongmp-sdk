@@ -20,7 +20,7 @@ internal sealed class WukongSynchronizer(
     ClientWukongArchetypeRegistration wukongArchetype,
     INetworkedEntityManager netManager,
     ClientOwnershipManager clientOwnership,
-    SerializationJobRegistry jobRegistry,
+    NetworkedComponentJobRegistry jobRegistry,
     INetworkedComponentRegistry netComponentRegistry,
     IRelayClient relayClient,
     ReceiveSystem schedulerSystem,

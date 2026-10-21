@@ -5,7 +5,7 @@ using Yooni.Native.Container;
 
 namespace WukongMp.Sdk.Common.Archetypes.Mixins;
 
-[ArchetypeMixin]
+[ArchetypeMixin(Replication.OwnershipBased)]
 [ExplicitComponent(typeof(PlayerComponent))]
 [Extends(typeof(Player))]
 public readonly partial struct PlayerData

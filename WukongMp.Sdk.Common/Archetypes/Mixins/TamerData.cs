@@ -4,7 +4,7 @@ using Yooni.Native.Container;
 
 namespace WukongMp.Sdk.Common.Archetypes.Mixins;
 
-[ArchetypeMixin]
+[ArchetypeMixin(Replication.OwnershipBased)]
 [ExplicitComponent(typeof(TamerComponent))]
 [ExplicitCollection("HoldingPlayers")]
 public readonly partial struct TamerData

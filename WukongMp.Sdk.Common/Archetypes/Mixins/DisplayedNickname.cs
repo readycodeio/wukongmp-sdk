@@ -4,7 +4,7 @@ using Yooni.Native.Container;
 
 namespace WukongMp.Sdk.Common.Archetypes.Mixins;
 
-[ArchetypeMixin]
+[ArchetypeMixin(Replication.OwnershipBased)]
 [ExplicitComponent(typeof(NicknameComponent))]
 public readonly partial struct DisplayedNickname
 {

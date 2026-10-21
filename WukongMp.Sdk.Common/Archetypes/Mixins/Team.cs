@@ -3,7 +3,7 @@ using ReadyM.Wukong.Common.ECS.Components;
 
 namespace WukongMp.Sdk.Common.Archetypes.Mixins;
 
-[ArchetypeMixin]
+[ArchetypeMixin(Replication.OwnershipBased)]
 [ExplicitComponent(typeof(TeamComponent))]
 public readonly partial struct Team
 {

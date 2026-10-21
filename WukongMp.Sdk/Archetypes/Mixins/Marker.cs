@@ -5,7 +5,7 @@ using WukongMp.Sdk.Common.Archetypes;
 
 namespace WukongMp.Sdk.Archetypes.Mixins;
 
-[ArchetypeMixin]
+[ArchetypeMixin(Replication.None)]
 [Extends(typeof(MainCharacter))]
 [Extends(typeof(Tamer))]
 [ExplicitComponent(typeof(MarkerComponent))]

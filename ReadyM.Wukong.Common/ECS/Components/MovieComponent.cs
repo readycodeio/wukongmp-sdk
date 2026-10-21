@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using ReadyM.Api.ECS.Components;
+using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Generators;
 using Yooni.Native.Container;
 using Yooni.Native.LowLevel;
@@ -11,7 +12,7 @@ namespace ReadyM.Wukong.Common.ECS.Components;
 /// </summary>
 [DeriveINetworkedComponent]
 [StructLayout(LayoutKind.Auto)]
-public partial struct MovieComponent : INativeInit
+public partial struct MovieComponent : INativeInit, IServerAuthoritative
 {
     private NativeList<int> _startedSequences;
 
