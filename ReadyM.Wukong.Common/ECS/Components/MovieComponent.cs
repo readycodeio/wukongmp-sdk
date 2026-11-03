@@ -2,8 +2,8 @@
 using ReadyM.Api.ECS.Components;
 using ReadyM.Api.Mapping.Tags;
 using ReadyM.Api.Multiplayer.Generators;
-using Yooni.Native.Container;
-using Yooni.Native.LowLevel;
+using ReadyM.Native.Container;
+using ReadyM.Native.LowLevel;
 
 namespace ReadyM.Wukong.Common.ECS.Components;
 
