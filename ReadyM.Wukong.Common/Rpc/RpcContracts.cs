@@ -1,5 +1,4 @@
 ﻿using ReadyM.Api.Idents;
-using ReadyM.Api.Multiplayer;
 using ReadyM.SDK.Attributes;
 
 namespace ReadyM.Wukong.Common.Rpc;
